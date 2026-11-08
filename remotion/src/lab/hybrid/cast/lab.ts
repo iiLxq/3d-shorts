@@ -211,6 +211,8 @@ export class CastLab {
     const keys: Key<Pose>[] = [
       { f: 0, v: POSES.idle }, { f: 13, v: POSES.idle }, { f: 16, v: DIP, ease: "out" },
       { f: 25, v: POSES.alarm, ease: "backOut" }, { f: 38, v: mixPose(POSES.alarm, POSES.lookUp, 0.25) },
+      // mid key: the right hand drops out and forward first (arc in front of the body), then lands on the chest
+      { f: 44, v: { ...mixPose(mixPose(POSES.alarm, POSES.lookUp, 0.25), POSES.relief, 0.55), reachR: [-0.16, 1.22, 0.42], reachW: 0.8 }, ease: "glide" },
       { f: 50, v: POSES.relief, ease: "glide" }, { f: 60, v: mixPose(POSES.relief, POSES.idle, 0.15) },
     ];
     let p = keyed(keys, f, mixPose);

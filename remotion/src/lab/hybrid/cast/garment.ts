@@ -210,7 +210,7 @@ export function mergeIdx(gs: THREE.BufferGeometry[]) {
     if (!g.getAttribute("uv")) g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(g.getAttribute("position").count * 2), 2));
     if (!g.getAttribute("normal")) g.computeVertexNormals();
     if (!g.index) { const n = g.getAttribute("position").count; g.setIndex([...Array(n).keys()]); }
-    g.morphAttributes = {};
+    g.morphAttributes = {} as typeof g.morphAttributes;
     return g;
   });
   return mergeGeometries(norm)!;

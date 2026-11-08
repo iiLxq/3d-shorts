@@ -20,7 +20,7 @@ export const T = {
   SNAP: 104,             // ropes part (story)
   LURCH: 110,            // car lurches (story)
   XRAY: [142, 164],      // sweep SOLID -> X-RAY, top down, while the camera starts down the rail
-  TRAVEL: [138, 206],    // camera travel: Rafa medium -> gear insert
+  TRAVEL: [128, 206],    // camera travel: Rafa medium -> gear insert
   FORCE: [150, 160, 184, 194], // red force arrow in / out
   SOLID: [190, 206],     // print sweep X-RAY -> SOLID up through the gear (before the bite)
   TRIP: 198,             // governor trips, wedges start to ride up (story)
@@ -29,7 +29,7 @@ export const T = {
   REWIND: [227, 233],    // story rewinds 7 frames
   SLOW: [233, 250],      // slow-mo replay at 0.35x (replay bite on screen ~f247)
   RAMP: [250, 260],      // 0.35x -> 1x
-  BACK: [252, 296],      // glide back to Rafa
+  BACK: [228, 294],      // glide back to Rafa (eases in under the slow-mo replay)
 } as const;
 
 /** story time S(f) */
@@ -130,15 +130,15 @@ export const calloutAt = (f: number) => ({ draw: glide((f - 3) / 27), alpha: 1 -
 export type CamKey = { f: number; pos: [number, number, number]; look: [number, number, number]; fov: number };
 export const CAM: CamKey[] = [
   { f: 0, pos: [0.30, 3.30, 7.4], look: [0.10, 0.45, -0.8], fov: 40 },      // BLUEPRINT patent plate, high, pushing down the shaft
-  { f: 74, pos: [0.05, 2.05, 5.3], look: [-0.10, 0.95, -0.6], fov: 40 },    // print sweep done: medium-wide
-  { f: 104, pos: [-0.02, 1.62, 4.4], look: [-0.16, 1.28, -0.6], fov: 40 },  // Rafa medium, snap above
-  { f: 138, pos: [-0.03, 1.52, 4.05], look: [-0.15, 1.18, -0.6], fov: 40 }, // creep through the lurch
-  { f: 174, pos: [0.95, 0.06, 2.55], look: [0.97, -0.36, -0.88], fov: 36 },  // crane down/right: roof edge-on, gear through the gap
-
+  { f: 74, pos: [0.22, 1.85, 5.3], look: [-0.10, 0.95, -0.6], fov: 40 },    // print sweep done: medium-wide, descending
+  { f: 104, pos: [0.30, 1.24, 4.35], look: [-0.20, 1.30, -0.6], fov: 40 },  // low 3/4 from the right on Rafa, ropes above
+  { f: 120, pos: [0.33, 1.13, 4.08], look: [-0.18, 1.24, -0.6], fov: 40 },  // creep through the snap + lurch, travel eases in
+  { f: 176, pos: [0.80, 0.42, 2.95], look: [0.94, -0.30, -0.88], fov: 36 }, // crane down/right (X-RAY): roof edge-on, gear through the gap
   { f: 206, pos: [0.965, -0.27, 0.5], look: [0.98, -0.43, -0.9], fov: 34 },  // dolly in: side-on insert, jaws above the caption band
-  { f: 252, pos: [0.968, -0.28, 0.36], look: [0.98, -0.43, -0.9], fov: 34 },  // slow push through bite/freeze/replay
-  { f: 296, pos: [-0.04, 1.44, 3.6], look: [-0.16, 1.14, -0.4], fov: 40 },  // glide back to relieved Rafa
-  { f: 300, pos: [-0.045, 1.435, 3.5], look: [-0.16, 1.14, -0.4], fov: 40 },
+  { f: 228, pos: [0.967, -0.276, 0.43], look: [0.98, -0.43, -0.9], fov: 34 }, // slow push through bite + freeze
+  { f: 258, pos: [0.93, 0.02, 1.85], look: [0.86, -0.26, -0.78], fov: 37 },  // pull back along the lens axis under the slow-mo replay
+  { f: 294, pos: [0.45, 1.30, 3.6], look: [0.18, 0.62, -0.6], fov: 42 },    // crane up/back: relieved Rafa + the green gear in one frame
+  { f: 300, pos: [0.445, 1.30, 3.53], look: [0.18, 0.62, -0.6], fov: 42 },  // settle creep
 ];
 /** monotone cubic (Fritsch-Carlson weighted harmonic tangents): C1, never overshoots a key, a channel that reverses
  *  direction stops at that key; a creep next to a fast move makes the move ease in/out by itself. */
@@ -175,13 +175,13 @@ export function camAt(f: number): CamAt {
   const look = new THREE.Vector3(g(0, "look"), g(1, "look"), g(2, "look"));
   const fov = cr(CAM, f, (k) => k.fov);
   // shakes: snap (small), lurch (main), bite (insert, short), replay bite (half)
-  const s = shake(f, T.SNAP, 0.006) + shake(f, T.LURCH, 0.03) + shake(f, T.BITE, 0.006) + shake(f, 247, 0.003);
+  const s = shake(f, T.SNAP, 0.006) + shake(f, T.LURCH, 0.03) + shake(f, T.BITE, 0.006) + shake(f, 247, 0.0015);
   look.y += s; pos.y += s * 0.35;
   const roll = shake(f, T.LURCH + 1, 0.012);
   return { pos, look, fov, follow: followAt(f), roll };
 }
 /** DOF focus target in car space: Rafa's chest/head -> gear -> Rafa */
-export function focusAt(f: number): { w: number } { return { w: smooth(150, 190, f) * (1 - smooth(256, 284, f)) }; }
+export function focusAt(f: number): { w: number } { return { w: smooth(140, 190, f) * (1 - smooth(245, 285, f)) }; }
 
 // ------------------------------------------------------------------------------------------- Rafa (story)
 const WORK: Pose = { ...POSES.idle, head: [0.3, 0.22, -0.04], neck: [0.12, 0.05, -0.03] };

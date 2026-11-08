@@ -145,8 +145,8 @@ export function charMat(cu: CastUniforms, color: string, o: CharMatOpts = {}) {
     if (face) f = f.replace("#include <color_fragment>", "#include <color_fragment>\ndiffuseColor.rgb = paintFace(diffuseColor.rgb, vOP);");
     if (strand) f = f.replace("#include <color_fragment>", `#include <color_fragment>
       { float sf = strandField(vOP);
-        diffuseColor.rgb *= 1.0 - uStrand.x * 0.55 * smoothstep(0.15, 0.85, -sf);
-        diffuseColor.rgb = mix(diffuseColor.rgb, uStrandL, uStrand.x * 0.55 * smoothstep(0.55, 0.95, sf)); }`);
+        diffuseColor.rgb *= 1.0 - uStrand.x * 0.3 * smoothstep(0.4, 0.95, -sf);
+        diffuseColor.rgb = mix(diffuseColor.rgb, uStrandL, uStrand.x * 0.35 * smoothstep(0.7, 0.98, sf)); }`);
     if (fold) {
       // crease pigment: the valleys are painted a touch darker (brand: only the shadow plane, the top step stays exact)
       f = f.replace("#include <color_fragment>", "#include <color_fragment>\nfloat gFH = foldH(vFold, vOP); diffuseColor.rgb *= 1.0 - 0.22 * gCrease;");

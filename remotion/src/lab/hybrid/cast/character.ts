@@ -30,7 +30,7 @@ export type CharacterSpec = {
   hair: { style: "crop" | "bun" | "bob" | "none"; color: string };
   face: {
     beard: number; beardColor?: string; beardGrey?: string; iris: string; brow: string; lip: string; browW?: number; eyeScale?: number; nose?: number; jaw?: number;
-    eyeTilt?: number; lashW?: number; age?: number; // polish v2 (optional)
+    eyeTilt?: number; lashW?: number; age?: number; planes?: number; // polish v2 (optional)
   };
   body?: { shoulder?: number; waist?: number; hip?: number; limb?: number; depth?: number };
   outfit: {
@@ -136,7 +136,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
   const faceU = makeFaceUniforms({
     skin: spec.skin, lip: spec.face.lip, iris: spec.face.iris, brow: spec.face.brow, lash: pal.lash ?? "#241a18",
     beard: spec.face.beardColor ?? spec.hair.color, beardGrey: spec.face.beardGrey ?? spec.hair.color, beardAmt: spec.face.beard,
-    browW: spec.face.browW ?? 1, eyeScale: spec.face.eyeScale ?? 1, eyeTilt: spec.face.eyeTilt, lashW: spec.face.lashW, age: spec.face.age,
+    browW: spec.face.browW ?? 1, eyeScale: spec.face.eyeScale ?? 1, eyeTilt: spec.face.eyeTilt, lashW: spec.face.lashW, age: spec.face.age, planes: spec.face.planes,
   } as FaceStyle, P.skull);
   faceU.uFE.value.w = spec.face.eyeScale ?? 1;
 
@@ -146,7 +146,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
   const clothWarm: [string, number] = ["#8a7a6c", 0.22];
   const mat = {
     skin: M(spec.skin, { rim: 0.3, emissive: spec.skin, emissiveIntensity: 0.07, spec: 0.25, gloss: 18, specTh: 0.9 }),
-    face: M(spec.skin, { rim: 0.3, face: faceU, emissive: spec.skin, emissiveIntensity: 0.07, bounce: acc.has("helmet") ? 0.42 : 0.18, spec: 0.22, gloss: 18, specTh: 0.95 }),
+    face: M(spec.skin, { rim: 0.3, face: faceU, emissive: spec.skin, emissiveIntensity: 0.07, bounce: acc.has("helmet") ? 0.42 : 0.34, spec: 0.22, gloss: 18, specTh: 0.95 }),
     // amber jacket: lit step = brand (look's brand lock); shadow plane + folds = warm amber-brown (uWarm)
     top: M(O.topColor, { rim: 0.45, fold: 1.25, warm: isBrandTop ? ["#5a3a26", 0.86] : clothWarm, brushScale: 6 }),
     trim: M(O.trim, { fold: 1.0, warm: clothWarm }),
@@ -157,7 +157,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
     shoe: M(O.shoeColor, { spec: 0.35, gloss: 30, specTh: 0.6 }), sole: M(pal.sole ?? "#2A2526"), toe: M(pal.toe ?? O.shoeColor, { spec: 0.5, gloss: 40, specTh: 0.55 }),
     glove: M(O.gloves ?? spec.skin, { rim: O.gloves ? 0.35 : 0.3 }),
     hair: M(spec.hair.color, { brush: 0.8, brushScale: 11, rim: 0.25, spec: 0.5, gloss: 26, specTh: 0.55,
-      strand: { k: 1, n: spec.hair.style === "bun" ? 46 : 60, focus: spec.hair.style === "bun" ? V(0, P.skull.y * 1.05, -P.skull.z * 0.45) : V(0, P.skull.y * 1.2, -P.skull.z * 0.2), light: "#7a6052" } }),
+      strand: { k: 1, n: spec.hair.style === "bun" ? 22 : 60, focus: spec.hair.style === "bun" ? V(0, P.skull.y * 1.05, -P.skull.z * 0.45) : V(0, P.skull.y * 1.2, -P.skull.z * 0.2), light: "#7a6052" } }),
     beard: M(spec.face.beardColor ?? spec.hair.color, { brush: 0.9, brushScale: 14, rim: 0.2, jaw: faceU }),
     leather: M(pal.leather ?? "#6C4733", { spec: 0.4, gloss: 30, specTh: 0.6 }), metal: M(pal.metal ?? "#9AA6AE", { rim: 0.8, spec: 0.9, gloss: 90, specTh: 0.45, metal: 0.7 }),
     dark: M(pal.dark ?? "#23262E", { spec: 0.6, gloss: 60, specTh: 0.5 }),
@@ -256,9 +256,10 @@ export function buildCharacter(spec: CharacterSpec): Character {
     { y: P.shoulderY + 0.03 * s, rx: X * 0.7, rzF: 0.082 * s, rzB: 0.088 * s, e: 0.86, cz: -0.014 * s },
     { y: yTop, rx: 0.074 * s, rzF: 0.068 * s, rzB: 0.074 * s, e: 1, cz: -0.012 * s },
   ] : [
-    { y: hemY, rx: 0.162 * s * hipK, rzF: 0.12 * s * dep, rzB: 0.122 * s * dep, e: 0.85, cz: 0.002 * s },
-    { y: hemY + 0.06 * s, rx: 0.156 * s * hipK, rzF: 0.113 * s * dep, rzB: 0.116 * s * dep, e: 0.85 },
-    { y: P.spineY, rx: 0.135 * s * W, rzF: 0.1 * s * dep, rzB: 0.098 * s * dep, e: 0.84 },
+    { y: hemY, rx: 0.17 * s * hipK, rzF: 0.122 * s * dep, rzB: 0.126 * s * dep, e: 0.85, cz: 0.002 * s },
+    { y: hemY + 0.06 * s, rx: 0.168 * s * hipK, rzF: 0.118 * s * dep, rzB: 0.122 * s * dep, e: 0.85 },
+    { y: P.hipsY + 0.02 * s, rx: 0.158 * s * hipK, rzF: 0.113 * s * dep, rzB: 0.115 * s * dep, e: 0.84 },
+    { y: P.spineY + 0.02 * s, rx: 0.13 * s, rzF: 0.1 * s * dep, rzB: 0.098 * s * dep, e: 0.84 },
     { y: P.chestY, rx: 0.15 * s, rzF: 0.118 * s * dep, rzB: 0.106 * s * dep, e: 0.78 },
     { y: P.shoulderY - 0.06 * s, rx: X + 0.016 * s, rzF: 0.108 * s * dep, rzB: 0.104 * s * dep, e: 0.62, cz: -0.004 * s },
     { y: P.shoulderY + 0.006 * s, rx: X + 0.016 * s, rzF: 0.09 * s * dep, rzB: 0.094 * s * dep, e: 0.62, cz: -0.01 * s },
@@ -288,8 +289,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
   for (const sg of [1, -1]) tk.put(mat.seam, loftRibbon(TL, [[hemY + 0.03 * s, sg * 1.62], [P.chestY, sg * 1.6], [P.shoulderY - 0.07 * s, sg * 1.62]], 0.006 * s, 0.0016 * s));
   if (work) {
     // navy yoke (two-tone hi-vis): shoulders + upper back
-    tk.put(mat.trim, loftGeo(TL, { y0: P.shoulderY - 0.035 * s, y1: yTop, rows: 10, cols: 56, inflate: 0.0025 * s }));
-    tk.put(mat.seam, loftBand(TL, P.shoulderY - 0.04 * s, P.shoulderY - 0.033 * s, 0.003 * s, 56, 1));
+    tk.put(mat.trim, loftGeo(TL, { y0: P.shoulderY - 0.05 * s, y1: yTop, a0: 0.95, a1: Math.PI * 2 - 0.95, rows: 10, cols: 44, inflate: 0.0025 * s }));
     // zip placket + zipper teeth line
     tk.put(mat.trim, loftRibbon(TL, [[hemY + 0.004 * s, 0], [P.spineY, 0], [P.chestY, 0], [yTop - 0.004 * s, 0]], 0.032 * s, 0.004 * s, 12, 0.003 * s));
     tk.put(mat.dark, loftRibbon(TL, [[hemY + 0.006 * s, 0], [P.chestY, 0], [yTop - 0.006 * s, 0]], 0.006 * s, 0.0075 * s, 12));
@@ -317,10 +317,10 @@ export function buildCharacter(spec: CharacterSpec): Character {
     // blazer: blouse V (width grows to the neck), notched lapels with relief, front edge line, buttons, welt pockets
     const vb = P.chestY - 0.07 * s;
     const vPts: [number, number][] = [[vb, 0], [P.chestY + 0.04 * s, 0], [yTop - 0.006 * s, 0]];
-    tk.put(mat.under, loftRibbon(TL, vPts, 0.001, 0.003 * s, 12).computeVertexNormals() as unknown as THREE.BufferGeometry);
+    void vPts;
     const vN: THREE.Vector3[] = [], vP: THREE.Vector3[] = [];
     for (let i = 0; i <= 20; i++) { const y = THREE.MathUtils.lerp(vb, yTop - 0.004 * s, i / 20); vP.push(TL.at(y, 0).addScaledVector(TL.normal(y, 0), 0.0035 * s)); vN.push(TL.normal(y, 0)); }
-    tk.put(mat.under, stripGeo(vP, vN, (t) => THREE.MathUtils.lerp(0.006, 0.13, Math.pow(t, 0.8)) * s));
+    tk.put(mat.under, stripGeo(vP, vN, (t) => THREE.MathUtils.lerp(0.006, 0.095, Math.pow(t, 0.9)) * s));
     for (const sg of [1, -1]) {
       const lp: [number, number][] = [[vb - 0.005 * s, sg * 0.04], [P.chestY + 0.02 * s, sg * 0.24], [P.shoulderY - 0.04 * s, sg * 0.42], [yTop - 0.002 * s, sg * 0.75]];
       const pts: THREE.Vector3[] = [], nr: THREE.Vector3[] = [];
@@ -535,9 +535,9 @@ export function buildCharacter(spec: CharacterSpec): Character {
     add(chest, new THREE.CylinderGeometry(0.0052 * s, 0.0052 * s, 0.014 * s, 8), mat.metal, { p: fp.p.clone().add(V(0, 0.032 * s, 0)), q: fp.q, hull: false });
   }
   if (acc.has("radio")) {
-    // cross strap (right hip -> left shoulder -> back) + a radio with antenna on the left chest
-    const strap: [number, number][] = [[hemY + 0.05 * s, -0.9], [P.spineY, -0.45], [P.chestY + 0.02 * s, 0.15], [P.shoulderY - 0.02 * s, 0.6], [P.shoulderY + 0.024 * s, 1.25],
-      [P.shoulderY - 0.02 * s, Math.PI - 0.6], [P.chestY, Math.PI - 0.1], [P.spineY, -Math.PI + 0.5]];
+    // harness strap over the left shoulder + a radio with antenna on the left chest
+    const strap: [number, number][] = [[P.chestY + 0.05 * s, 0.3], [P.shoulderY - 0.03 * s, 0.62], [P.shoulderY + 0.024 * s, 1.25],
+      [P.shoulderY - 0.03 * s, Math.PI - 0.62], [P.chestY + 0.02 * s, Math.PI - 0.45]];
     const sk = kit();
     sk.put(mat.dark, loftRibbon(TL, strap, 0.034 * s, 0.009 * s, 10, 0.003 * s));
     sk.skin(torsoW, torsoF);
@@ -825,7 +825,11 @@ export function buildCharacter(spec: CharacterSpec): Character {
         // blend: move the target from the FK palm toward the reach point
         const sg = S === "L" ? 1 : -1;
         const palm = cur.clone().add(V(-sg * 0.012 * s, -0.075 * s, 0).applyQuaternion(wr.getWorldQuaternion(tmpQ)));
-        ch.handIK(S, palm.lerp(tgt, Math.min(1, rw)));
+        // reaches to the own chest/belly (hand on heart): elbow out, down and a touch forward, so the forearm arcs in
+        // front of the torso instead of cutting through it (the generic pole points the elbow back)
+        const self = Math.abs(rt[0]) < 0.16 && rt[2] < 0.36 && rt[1] > 0.9 && rt[1] < 1.5;
+        const pole = self ? V(sg * 1.0, -0.55, 0.25).applyQuaternion(root.getWorldQuaternion(new THREE.Quaternion())) : undefined;
+        ch.handIK(S, palm.lerp(tgt, Math.min(1, rw)), pole);
       }
       updateContacts(); updateBends();
     },

@@ -67,6 +67,7 @@ export type FaceStyle = {
   eyeTilt?: number;                                    // outer-corner lift (+ = cat-eye), polish v2
   lashW?: number;                                      // upper lash-line weight (1 = house)
   age?: number;                                        // 0..1: under-eye bags, cheek hollows, brow ridge shadow
+  planes?: number;                                     // 0..1: painted light planes (cheekbone tops, brow, nose bridge)
 };
 
 export function makeFaceUniforms(style: FaceStyle, radii: THREE.Vector3) {
@@ -81,7 +82,7 @@ export function makeFaceUniforms(style: FaceStyle, radii: THREE.Vector3) {
     uIrisC: { value: new THREE.Color(style.iris) }, uBrowC: { value: new THREE.Color(style.brow) },
     uLashC: { value: new THREE.Color(style.lash) }, uBeardC: { value: new THREE.Color(style.beard) },
     uBeardC2: { value: new THREE.Color(style.beardGrey) }, uBeardAmt: { value: style.beardAmt }, uBrowW: { value: style.browW },
-    uFS: { value: new THREE.Vector4(style.eyeTilt ?? 0, style.lashW ?? 1, style.age ?? 0, 0) },
+    uFS: { value: new THREE.Vector4(style.eyeTilt ?? 0, style.lashW ?? 1, style.age ?? 0, style.planes ?? 0.5) },
   };
 }
 export type FaceUniforms = ReturnType<typeof makeFaceUniforms>;
@@ -273,6 +274,11 @@ vec3 paintFace(vec3 col, vec3 op){
   col = mix(col, col * vec3(1.12, 0.84, 0.8), chk * (0.25 + 0.45 * uFD.w) * front);
   float hol = fillSd(abs(p.y + 0.30 + 0.55 * (ax - 0.45)) - 0.05 + j1, 0.03) * smoothstep(0.38, 0.5, ax) * (1.0 - smoothstep(0.66, 0.74, ax));
   col = mix(col, col * vec3(0.8, 0.72, 0.8), hol * (0.35 + 0.35 * uFS.z) * (1.0 - 0.6 * uFD.w) * front);
+  // painted LIGHT planes (gouache: the planes that face the lamp get a lighter, warmer, opaque stroke)
+  float lpC = fillSd(ell(vec2(ax, p.y), vec2(0.46, -0.13), vec2(0.15, 0.06)) + j1 * 4.0, 0.03);       // cheekbone tops
+  float lpB = fillSd(ell(p, vec2(0.0, 0.42), vec2(0.36, 0.1)) + j1 * 3.0, 0.05);                       // forehead / brow plane
+  float lpN = fillSd(abs(p.x + 0.012) - 0.028 + j1 * 0.5, 0.01) * step(-0.36, p.y) * step(p.y, 0.08); // nose bridge
+  col = mix(col, col * vec3(1.32, 1.18, 1.04), clamp(lpC * 0.55 + lpB * 0.3 + lpN * 0.5, 0.0, 1.0) * uFS.w * front);
   float nose = 1.0 - smoothstep(0.0, 1.0, length((p - vec2(0.0, -0.34)) * vec2(1.0 / 0.11, 1.0 / 0.09)));
   col = mix(col, col * vec3(1.1, 0.86, 0.82), nose * 0.35 * front);
   float un = fillSd(ell(p, vec2(0.0, -0.455), vec2(0.13, 0.03)) + j1, 0.02);
@@ -288,9 +294,10 @@ vec3 paintFace(vec3 col, vec3 op){
     float n2 = bnz(op.xy / uFR.y * 5.0 + 0.41);
     vec2 fl = normalize(vec2(-0.45 * p.x, -1.0));
     vec2 pr = vec2(-fl.y, fl.x);
-    float cs = dot(p, pr) * 70.0 + n1 * 5.0 + nq.z * 3.0;
+    float cs = dot(p, pr) * (52.0 + 22.0 * n2) + n1 * 9.0 + sin(dot(p, fl) * 7.0 + n2 * 4.0) * 2.2 + nq.z * 3.0;
     float strand = sin(cs) * 0.5 + 0.5;
-    float along = sin(dot(p, fl) * 16.0 + floor(cs / 6.2832) * 2.3 + n2 * 2.0) * 0.5 + 0.5;
+    float rnd = fract(sin(floor(cs / 6.2832) * 12.9898) * 43758.5453);
+    float along = sin(dot(p, fl) * (11.0 + 9.0 * rnd) + rnd * 6.2832 + n2 * 2.0) * 0.5 + 0.5;
     float axn = abs(nq.x);
     float yb = mix(-0.43, -0.02, smoothstep(0.30, 0.98, axn)) - 0.07 * smoothstep(0.12, 0.30, axn) * (1.0 - smoothstep(0.30, 0.6, axn));
     float edge = yb + (strand - 0.5) * 0.045 + n1 * 0.05;            // hair-tip edge, not a clean line
@@ -299,8 +306,8 @@ vec3 paintFace(vec3 col, vec3 op){
     float mous = fillSd(max(abs(p.x) - 0.27, max((-0.555 - 0.35 * p.x * p.x) - p.y, p.y - (-0.468 - 0.1 * abs(p.x)))) + n2 * 0.02 + (strand - 0.5) * 0.012, 0.006);
     float dens = uBeardAmt;
     vec3 base = uBeardC * (0.85 + 0.4 * n1);
-    vec3 bc = mix(base, uBeardC2, smoothstep(0.72, 0.9, strand) * smoothstep(0.35, 0.7, along));
-    bc = mix(bc, uBeardC * 0.6, smoothstep(0.25, 0.05, strand) * 0.6);
+    vec3 bc = mix(base, uBeardC2, smoothstep(0.8, 0.95, strand) * smoothstep(0.5, 0.8, along) * step(0.35, rnd));
+    bc = mix(bc, uBeardC * 0.55, smoothstep(0.3, 0.05, strand) * smoothstep(0.3, 0.6, 1.0 - along) * 0.7);
     col = mix(col, bc, clamp(max(bm, mous) * dens * (0.9 + 0.2 * n1), 0.0, 1.0));
     gInk += mous * 0.3 * front;
   }
