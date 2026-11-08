@@ -48,7 +48,8 @@ function useCamera(st: State) {
   const cam = camera as THREE.PerspectiveCamera;
   cam.position.copy(st.cam.pos);
   cam.fov = st.cam.fov;
-  cam.near = 0.05; cam.far = 6000;
+  const inside = st.shot === 5 || st.shot === 8 || st.shot === 15 || (st.shot >= 18 && st.shot <= 20);
+  cam.near = inside ? 0.05 : 0.6; cam.far = 6000; // larger near plane outside = no z-fighting on the runway
   const fwd = st.cam.look.clone().sub(st.cam.pos).normalize();
   cam.up.set(0, 1, 0).applyAxisAngle(fwd, st.cam.roll);
   cam.lookAt(st.cam.look);
@@ -167,8 +168,8 @@ const Plane: React.FC<{ st: State }> = ({ st }) => {
         <LookMesh geo={hatch.geo} m={hatch.m} st={st} />
       </group>
       {st.hatch > 0.02 && (
-        <mesh position={[RAT_PIVOT.x, -3.0, RAT_PIVOT.z + 0.95]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[0.82, 2.25]} /><meshBasicMaterial color="#0d0f13" side={THREE.DoubleSide} />
+        <mesh position={[RAT_PIVOT.x - 0.02, -2.97, RAT_PIVOT.z + 0.95]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.62, 2.2]} /><meshBasicMaterial color="#0d0f13" side={THREE.DoubleSide} />
         </mesh>
       )}
       {/* RAT */}
@@ -307,7 +308,7 @@ const Ground: React.FC<{ st: State }> = ({ st }) => {
   }
   return (
     <group position={[0, st.groundY, 0]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, -1500]}><planeGeometry args={[6000, 6000]} /><meshLambertMaterial color="#8b9a5e" /></mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, -1500]}><planeGeometry args={[6000, 6000]} /><meshLambertMaterial color="#8b9a5e" /></mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -900]}><planeGeometry args={[60, 2400]} /><meshLambertMaterial map={rw} /></mesh>
       {cars}
       <hemisphereLight args={["#ffffff", "#776655", 1.2]} />

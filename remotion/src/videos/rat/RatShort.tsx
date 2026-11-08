@@ -22,8 +22,11 @@ function project(st: State, p: THREE.Vector3) {
 const Background: React.FC<{ st: State }> = ({ st }) => {
   if (st.scene === "pinwheel") return <AbsoluteFill style={{ background: "linear-gradient(#5d9be0, #cfe2f5 70%, #e9eef2)" }} />;
   if (st.bg === "blueprint" || st.bg === "xray") {
-    const base = st.bg === "blueprint" ? "#0B1A33" : "#07142a";
-    const g = st.bg === "blueprint" ? 0.09 : 0.05;
+    // continuous blend blueprint -> x-ray background (no pop at the switch)
+    const x = st.bg === "xray" && st.xray >= 0.99 ? 1 : st.xray;
+    const mixc = (a: number[], b: number[]) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * x)).join(",")})`;
+    const base = mixc([11, 26, 51], [7, 20, 42]);
+    const g = 0.09 + (0.05 - 0.09) * x;
     return (
       <AbsoluteFill style={{
         backgroundColor: base,

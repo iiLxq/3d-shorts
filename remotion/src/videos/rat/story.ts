@@ -4,7 +4,8 @@ import * as THREE from "three";
 import { RAT_PIVOT, COCKPIT, YOKE_POS } from "./plane";
 
 export const FPS = 30;
-export const GEAR_H = 5.1; // fuselage centre height above ground on its main gear
+export const GEAR_H = 5.1;
+export const END_CUT = 57.45; // white-flash cut from the present-day climb back into the opening blueprint // fuselage centre height above ground on its main gear
 export const DURATION = 58.5;
 export const FRAMES = Math.round(DURATION * FPS); // 1755
 
@@ -128,7 +129,7 @@ const CENTER = V(0, -0.5, 1);
 // over-the-shoulder from the right seat onto the captain and yoke
 const PILOT_CAM: Cam = { pos: V(0.95, COCKPIT.eyeY + 0.5, COCKPIT.z + 0.75), look: V(-0.5, COCKPIT.eyeY - 0.3, COCKPIT.z - 0.35), fov: 55, roll: 0 };
 export function stateLanding(t: number) { const k = lin(t, 51.2, 53.4); const zz = lerp(-120, 15, 1 - (1 - k) * (1 - k)); return V(0, 0, -zz); }
-export const OPEN_CAM = (t: number) => creep(orbitCam(V(0, -0.5, -7), 80, -30, -14, 40, 0.42), (t - 0) * FPS, 0.002);
+export const OPEN_CAM = (t: number) => creep(orbitCam(V(0, -0.5, -7), 80, -30, -14, 40, 0.42), (t - 0) * FPS, 0.0045);
 
 function camFor(shot: number, t: number): Cam {
   const f = (t - SHOTS[shot]) * FPS; // frames into shot
@@ -158,8 +159,8 @@ function camFor(shot: number, t: number): Cam {
     case 21: return creep({ pos: V(6, 22, 70), look: V(0, -60, -320), fov: 42, roll: 0 }, f, 0.002);
     case 22: { const p = stateLanding(t); return { pos: V(-15, 2.6, -48), look: V(p.x, 3.6, p.z - 8), fov: 40, roll: 0 }; }
     case 23: {
-      const climb = creep(orbitCam(V(0, 0, -8), 110, -128, 8, 38, 0.25), f, 0.0015);
-      return glideCam(climb, OPEN_CAM(0), smoother(lin(t, 57.25, 58.45)));
+      if (t < END_CUT) return creep(orbitCam(V(0, 0, -2), 120, -52, -6, 38, -0.22), f, 0.002);
+      return glideCam(orbitCam(V(0, -0.5, -7), 96, -44, -10, 40, 0.42), OPEN_CAM(0), smoother(lin(t, END_CUT, 58.45)));
     }
   }
   return OPEN_CAM(t);
@@ -223,13 +224,10 @@ export function stateAt(tVideo: number): State {
   } else if (t < 53.65) {
     st.bg = "sepia"; st.sepia = 1; st.printZ = 1e6; st.lines = 0; st.fill = 0;
   } else {
-    st.bg = "sky"; st.printZ = 1e6;
-    // final dissolve back to the opening blueprint frame
-    const d = smoother(lin(t, 57.25, 58.45));
-    st.printZ = lerp(32, -30, d);
-    st.lines = 1; st.fill = 1;
-    if (d > 0.5) st.bg = "blueprint";
-    st.engines = d > 0.98 ? 1 : 1; // engines running again in the present day
+    // present day (solid), then a white-flash cut back into the opening blueprint so the Short loops
+    if (t < END_CUT) { st.bg = "sky"; st.printZ = 1e6; st.lines = 0; st.fill = 0; }
+    else { st.bg = "blueprint"; st.printZ = -1e6; st.lines = 1; st.fill = 1; }
+    st.engines = 1;
   }
 
   // shot specifics
@@ -270,7 +268,12 @@ export function stateAt(tVideo: number): State {
   if (shot >= 23) { st.rat = 0; st.hatch = 0; st.ratGlow = 0; st.propBlur = 0; }
   if (shot === 5 || shot === 8 || shot === 15) st.inner = 0;
   if (shot === 1) st.ghost = 1;
-  if (shot === 23) { st.planeRot = new THREE.Euler(0.12 * (1 - smooth(lin(t, 57.25, 58.4))), 0, 0); st.flash = Math.max(0, 1 - (t - 53.65) / 0.3); }
+  if (shot === 23) {
+    st.flash = Math.max(0, 1 - (t - 53.65) / 0.3);
+    if (t < END_CUT) { st.planeRot = new THREE.Euler(0.1, 0, 0); st.planePos = V(0, 0, 0); }
+    else st.flash = Math.max(0, 0.9 * (1 - (t - END_CUT) / 0.22));
+  }
+  if (shot === 0) st.planePos = V(0, 0.35 * Math.sin(t * 2.6), 0); // gentle bob: first frames already move (0 at t=0, so the loop still matches)
 
   const m = meterAt(t); st.meter = m.m; st.meterGreen = m.green; st.meterA = m.a;
   if (shot === 0 && t < 0.4) st.flash = 0;
