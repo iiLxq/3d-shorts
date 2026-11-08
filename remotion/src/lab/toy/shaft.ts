@@ -386,7 +386,7 @@ export function buildShaft(): Shaft {
   const workTarget = new THREE.Object3D(); car.add(workTarget); workTarget.position.set(-0.3, 0.7, -0.4); work.target = workTarget;
 
   // figure mount + contact shadows
-  const figureMount = new THREE.Group(); figureMount.position.set(-0.36, 0, 0.0); car.add(figureMount);
+  const figureMount = new THREE.Group(); figureMount.position.set(-0.46, 0, 0.14); car.add(figureMount);
   const contactMat = new THREE.MeshBasicMaterial({ map: radial("contact", 0, 0.8), color: 0x000000, transparent: true, opacity: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
   const contact: THREE.Mesh[] = [];
   for (let i = 0; i < 3; i++) {
@@ -421,7 +421,7 @@ export function buildShaft(): Shaft {
   const sg = new THREE.BufferGeometry();
   sg.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(NS * 3), 3));
   sg.setAttribute("color", new THREE.Float32BufferAttribute(new Float32Array(NS * 3), 3));
-  const sparks = new THREE.Points(sg, new THREE.PointsMaterial({ size: 0.022, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, map: radial("spark", 0.1, 1.5) }));
+  const sparks = new THREE.Points(sg, new THREE.PointsMaterial({ size: 0.04, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, map: radial("spark", 0.1, 1.5) }));
   sparks.frustumCulled = false; world.add(sparks); tag(sparks, { role: "fx" });
 
   const ropeAnchor = new THREE.Object3D(); ropeAnchor.position.set(0.0, 1.6, -0.15); car.add(ropeAnchor);

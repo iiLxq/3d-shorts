@@ -1,8 +1,8 @@
 // Post chain for the paper set "photographed with a real lens":
-//   RenderPass -> LensBlur (thin-lens gather, own pass) -> Bloom + Neutral tone map + Grade (warm hi / cool lo, lifted vignette)
+//   RenderPass -> LensBlur (thin-lens gather, own pass) -> Bloom + hue-preserving shoulder tone map + Grade (warm hi / cool lo, lifted vignette)
 import * as THREE from "three";
 import {
-  EffectComposer, RenderPass, EffectPass, Effect, EffectAttribute, BloomEffect, ToneMappingEffect, ToneMappingMode, BlendFunction, KernelSize,
+  EffectComposer, RenderPass, EffectPass, Effect, EffectAttribute, BloomEffect, BlendFunction, KernelSize,
 } from "postprocessing";
 
 const lensFrag = /* glsl */ `
@@ -73,8 +73,14 @@ export class LensBlurEffect extends Effect {
 // Display-referred grade after tone mapping: gentle S, split tone (warm highs, cool lows), lifted navy vignette, flash.
 const gradeFrag = /* glsl */ `
 uniform float uWarm; uniform float uVig; uniform vec3 uLift; uniform vec3 uVigCol; uniform float uFlash; uniform vec3 uFlashCol; uniform float uContrast;
+vec3 toneCurve(vec3 c) {
+  float pk = max(max(c.r, c.g), c.b);
+  if (pk <= 0.8) return c;
+  float np = 0.8 + 0.2 * (1.0 - exp(-(pk - 0.8) / 0.2));
+  return c * (np / pk);
+}
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  vec3 c = inputColor.rgb;
+  vec3 c = toneCurve(max(inputColor.rgb, 0.0));
   vec3 s = pow(max(c, 0.0), vec3(1.0 / 2.2));        // to display-ish gamma
   float y = dot(s, vec3(0.2126, 0.7152, 0.0722));
   // soft S-curve around mid grey
@@ -117,9 +123,8 @@ export class Post {
     this.lens = new LensBlurEffect(40);
     this.composer.addPass(new EffectPass(camera, this.lens));
     this.bloom = new BloomEffect({ blendFunction: BlendFunction.ADD, intensity: 0.7, luminanceThreshold: 0.82, luminanceSmoothing: 0.25, mipmapBlur: false, kernelSize: KernelSize.LARGE, resolutionScale: 0.5 });
-    const tm = new ToneMappingEffect({ mode: ToneMappingMode.NEUTRAL });
     this.grade = new GradeEffect();
-    this.composer.addPass(new EffectPass(camera, this.bloom, tm, this.grade));
+    this.composer.addPass(new EffectPass(camera, this.bloom, this.grade));
   }
   setSize(w: number, h: number) { this.composer.setSize(w, h, false); }
   render() { this.composer.render(); }

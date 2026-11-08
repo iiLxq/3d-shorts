@@ -473,7 +473,6 @@ export class World {
     this.head.target.position.copy(lp).addScaledVector(aim, 3);
     this.head.target.updateMatrixWorld(true);
     this.head.intensity = st.look === "solid" ? 3.0 : 1.0;
-    (P.lampLens.mesh.material as THREE.Material[]).forEach(() => {});
     // ropes (intact or snapped)
     const top = SHAFT.y1, hitchY = st.carY + 0.98;
     this.ropes.forEach((r, i) => {

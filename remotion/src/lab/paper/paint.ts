@@ -23,31 +23,24 @@ export const PRUSSIAN = "#123d7c";   // cyanotype paper
 export const PRUSSIAN_D = "#0d2c5c";
 export const BP_LINE = "#e8f8ff";    // printed blueprint line (white with a cyan cast)
 
-// ---------- Khronos PBR Neutral tone map + inversion (keeps brand hex exact on screen) ----------
-function neutral(c: number[]) {
-  const sc = 0.8 - 0.04, de = 0.15;
-  let [r, g, b] = c;
-  const x = Math.min(r, g, b);
-  const off = x < 0.08 ? x - 6.25 * x * x : 0.04;
-  r -= off; g -= off; b -= off;
-  const peak = Math.max(r, g, b);
-  if (peak < sc) return [r, g, b];
-  const d = 1 - sc;
-  const np = 1 - (d * d) / (peak + d - sc);
-  r *= np / peak; g *= np / peak; b *= np / peak;
-  const gg = 1 - 1 / (de * (peak - np) + 1);
-  return [r + (np - r) * gg, g + (np - g) * gg, b + (np - b) * gg];
+// ---------- hue-preserving shoulder tone map (GLSL twin in post.ts) + exact inversion ----------
+// Linear below 0.8; above, the max channel rolls off toward 1.0 and all channels scale together (no desaturation),
+// so brand colours with a 255 channel (#FF3B3B, #39FF88, #35D7FF, #FFB020) land exactly on screen.
+export const TONE_K = 0.8;
+export function toneCurve(c: number[]) {
+  const pk = Math.max(c[0], c[1], c[2]);
+  if (pk <= TONE_K) return c;
+  const np = TONE_K + (1 - TONE_K) * (1 - Math.exp(-(pk - TONE_K) / (1 - TONE_K)));
+  return c.map((v) => (v * np) / pk);
 }
-/** Linear scene colour that lands on `hex` (sRGB) after Neutral tone mapping. */
+/** Linear scene colour that lands on `hex` (sRGB) after the tone curve. */
 export function untone(hex: string, gain = 1) {
   const t = new THREE.Color(hex); // linear
-  const tgt = [t.r, t.g, t.b];
-  let x = [...tgt];
-  for (let i = 0; i < 80; i++) {
-    const y = neutral(x);
-    x = x.map((v, k) => Math.max(0, v + (tgt[k] - y[k]) * 1.0));
-  }
-  return new THREE.Color(x[0] * gain, x[1] * gain, x[2] * gain);
+  const c = [t.r, t.g, t.b];
+  const tp = Math.min(Math.max(c[0], c[1], c[2]), 0.998);
+  let s = 1;
+  if (tp > TONE_K) s = (TONE_K - (1 - TONE_K) * Math.log(1 - (tp - TONE_K) / (1 - TONE_K))) / tp;
+  return new THREE.Color(c[0] * s * gain, c[1] * s * gain, c[2] * s * gain);
 }
 
 // ---------- canvas helpers ----------

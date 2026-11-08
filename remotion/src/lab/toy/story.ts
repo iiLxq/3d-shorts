@@ -28,7 +28,7 @@ const base = (): Spec => ({
   focus: "head", lensK: 26, tilt: 5,
   pose: POSES.work, expr: EXPR.calm, blink: 0, figYaw: -0.3,
   carY: 0, ropeUp: 0, ropeSway: 0, snapped: false,
-  jaw: 0, jawGlow: 0.25, lever: 0,
+  jaw: 0, jawGlow: 0.1, lever: 0,
   alarm: 0.15, flash: 0, shake: [0, 0, 0],
   sparks: [], labels: false, arrows: false, cone: 1, seed: 0,
 });
@@ -53,7 +53,7 @@ export function faceSpec(i: number): Spec {
   s.pose = k === "calm" ? POSES.face : k === "alarm" ? POSES.faceAlarm : POSES.faceRelief;
   s.lensK = 34; s.tilt = 0;
   s.alarm = k === "alarm" ? 1.0 : 0.05;
-  s.jawGlow = k === "relief" ? 2.2 : 0.25;
+  s.jawGlow = k === "relief" ? 2.2 : 0.1;
   s.cone = 0.6;
   return s;
 }
@@ -98,7 +98,7 @@ export function motionSpec(f: number): Spec {
   // governor trips, lever lifts the wedges, jaws bite the rail
   s.lever = smoother((f - F_TRIP) / 5) * 0.55;
   s.jaw = f >= F_CLAMP ? 1 : Math.pow(clamp01((f - (F_TRIP + 3)) / (F_CLAMP - F_TRIP - 3)), 2);
-  s.jawGlow = 0.25 + (f >= F_CLAMP ? 2.0 + 5.5 * decay(f, F_CLAMP, 4) : 0);
+  s.jawGlow = 0.1 + 0.25 * s.jaw + (f >= F_CLAMP ? 1.8 + 7 * decay(f, F_CLAMP, 4) : 0);
   s.flash = f >= F_CLAMP ? [0.42, 0.22, 0.1, 0.04][f - F_CLAMP] ?? 0 : 0;
   // alarm beacon pulses from the reaction until just after the clamp
   const on = clamp01((f - 32) / 2) * (1 - clamp01((f - F_CLAMP - 4) / 8));
@@ -122,7 +122,7 @@ export function motionSpec(f: number): Spec {
   }
   s.blink = [12, 13, 14, 15].includes(f) ? [0.5, 1, 1, 0.5][f - 12] : [F_CLAMP, F_CLAMP + 1, F_CLAMP + 2].includes(f) ? [0.7, 1, 0.5][f - F_CLAMP] : 0;
   s.sparks = [];
-  if (f >= F_SNAP && f < F_SNAP + 14) s.sparks.push({ at: "hitch", t: (f - F_SNAP) / FPS });
+  if (f >= F_SNAP && f < F_SNAP + 18) s.sparks.push({ at: "hitch", t: (f - F_SNAP) / FPS });
   if (f >= F_CLAMP - 2 && f < F_CLAMP + 22) s.sparks.push({ at: "jaw", t: (f - F_CLAMP + 2) / FPS });
   s.lensK = 26; s.tilt = 5;
   return s;
