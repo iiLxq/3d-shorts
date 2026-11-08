@@ -4,7 +4,7 @@
 // Units: metres. Root at the ground between the feet, +y up, character faces +z, L = character's left = +x.
 import * as THREE from "three";
 import { BRAND, U, syncLookFlags } from "../look/shade";
-import { sculpt, sculptPoint, SculptOpts, rbox, extrude, roundedRectShape, band, ribbon, limbGeo, tube } from "./sculpt";
+import { sculpt, sculptPoint, SculptOpts, rbox, extrude, roundedRectShape, band, ribbon, limbGeo, tube, merge } from "./sculpt";
 import { charMat, hullMat, lockMat, CastUniforms } from "./mat";
 import { EXPR, ExprName, FaceParams, FaceStyle, makeFaceUniforms, applyFaceParams, mixFace } from "./face";
 import { JOINTS, JointName, Pose, HandCurl, HandShape, HANDS } from "./poses";
@@ -40,7 +40,7 @@ export type Proportions = {
 const BUILD: Record<Build, { sh: number; limb: number; dep: number; waist: number; hip: number }> = {
   slim: { sh: 0.9, limb: 0.86, dep: 0.9, waist: 0.88, hip: 0.97 },
   average: { sh: 1.0, limb: 1.0, dep: 1.0, waist: 1.0, hip: 1.0 },
-  broad: { sh: 1.08, limb: 1.1, dep: 1.06, waist: 1.04, hip: 1.02 },
+  broad: { sh: 1.07, limb: 1.05, dep: 1.05, waist: 1.03, hip: 1.02 },
 };
 
 export function proportions(spec: CharacterSpec): Proportions {
@@ -50,12 +50,12 @@ export function proportions(spec: CharacterSpec): Proportions {
   const spineY = hipsY + 0.1 * s, chestY = spineY + 0.13 * s;
   const chin = H - h, neckY = chin - 0.062 * s, headJY = chin + 0.022 * s, skullY = H - h / 2;
   const shoulderY = neckY - 0.034 * s;
-  const shoulderX = 0.178 * s * b.sh * (k.shoulder ?? 1);
+  const shoulderX = 0.166 * s * b.sh * (k.shoulder ?? 1);
   return {
     H, h, s, ankleY, kneeY, hipJY, hipsY, spineY, chestY, neckY, headJY, skullY, shoulderY, shoulderX,
     clavX: 0.035 * s, hipX: 0.088 * s * b.hip * (k.hip ?? 1),
     upperArm: 0.17 * H, foreArm: 0.142 * H, thigh: hipJY - kneeY, shin: kneeY - ankleY,
-    skull: new THREE.Vector3(h * 0.305, h * 0.49, h * 0.385), topY: H,
+    skull: new THREE.Vector3(h * 0.318, h * 0.49, h * 0.385), topY: H,
   };
 }
 
@@ -102,6 +102,13 @@ function surfaceFrame(o: SculptOpts, d: THREE.Vector3, lift = 0) {
   return { p: p.addScaledVector(n, lift), q, n };
 }
 
+/** stand-up collar: a lathed ring wall (radius r0 at the base -> r1 at the top, height h, wall thickness t) */
+function collarGeo(r0: number, r1: number, h: number, t: number) {
+  const wall = new THREE.CylinderGeometry(r1, r0, h, 40, 1, true); wall.translate(0, h / 2, 0);
+  const lip = new THREE.TorusGeometry(r1 - t * 0.1, t * 0.55, 8, 40); lip.rotateX(Math.PI / 2); lip.translate(0, h, 0);
+  return merge([wall, lip]);
+}
+
 function blobTexture() {
   const c = document.createElement("canvas"); c.width = c.height = 128;
   const g = c.getContext("2d")!;
@@ -128,8 +135,8 @@ export function buildCharacter(spec: CharacterSpec): Character {
   const mats: THREE.MeshLambertMaterial[] = [];
   const M = (color: string, o: Parameters<typeof charMat>[2] = {}) => { const m = charMat(cu, color, o); mats.push(m); return m; };
   const mat = {
-    skin: M(spec.skin, { rim: 0.3 }),
-    face: M(spec.skin, { rim: 0.3, face: faceU }),
+    skin: M(spec.skin, { rim: 0.3, emissive: spec.skin, emissiveIntensity: 0.07 }),
+    face: M(spec.skin, { rim: 0.3, face: faceU, emissive: spec.skin, emissiveIntensity: 0.07 }),
     top: M(O.topColor, { rim: 0.45 }),
     trim: M(O.trim),
     under: M(O.under ?? O.trim),
@@ -138,7 +145,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
     tape: M(pal.tape ?? "#C9D4D6", { rim: 0.6, emissive: pal.tape ?? "#C9D4D6", emissiveIntensity: 0.12 }),
     shoe: M(O.shoeColor), sole: M(pal.sole ?? "#2A2526"), toe: M(pal.toe ?? O.shoeColor),
     glove: M(O.gloves ?? spec.skin, { rim: O.gloves ? 0.35 : 0.3 }),
-    hair: M(spec.hair.color, { brush: 0.9, brushScale: 11 }),
+    hair: M(spec.hair.color, { brush: 0.9, brushScale: 11, rim: 0.18 }),
     leather: M(pal.leather ?? "#6C4733"), metal: M(pal.metal ?? "#9AA6AE", { rim: 0.8 }), dark: M(pal.dark ?? "#23262E"),
     helmet: M(pal.helmet ?? "#EDE6D8", { rim: 0.55 }), helmetDk: M(pal.helmetDark ?? "#B9B2A6"),
     wood: M(pal.wood ?? "#8A6040"), card: M(pal.card ?? "#E9E4DA"), accent: M(pal.accent ?? O.trim),
@@ -195,15 +202,15 @@ export function buildCharacter(spec: CharacterSpec): Character {
   const hem = O.top === "blazer" ? 0.13 * s : 0.1 * s;
   const abLo = P.hipsY - hem, abHi = P.chestY + 0.06 * s;
   const abO: SculptOpts = {
-    r: [0.158 * s * waistK, (abHi - abLo) / 2, 0.118 * s * dep], e1: 0.5, e2: 0.74, taperBot: 1.04 * Math.sqrt(hipK / waistK), taperTop: 1.0,
-    bulge: 0.006 * s, seg: [44, 26],
+    r: [0.142 * s * waistK, (abHi - abLo) / 2, 0.104 * s * dep], e1: 0.55, e2: 0.8, taperBot: 1.12 * Math.sqrt(hipK / waistK), taperTop: 1.0,
+    bulge: 0.0, seg: [44, 26],
   };
   const abP = V(0, (abLo + abHi) / 2 - P.spineY, 0.002 * s);
   add(spine, sculpt(abO), mat.top, { p: abP });
   const chLo = P.chestY - 0.075 * s, chHi = P.neckY + 0.018 * s;
   const chO: SculptOpts = {
-    r: [P.shoulderX * 0.9, (chHi - chLo) / 2, 0.128 * s * dep], e1: 0.5, e2: 0.74, taperBot: 0.86, taperTop: 0.98, taperTopZ: 0.9, seg: [48, 30],
-    disp: (d) => -0.034 * s * sstep(0.25, 0.85, Math.abs(d.x)) * sstep(0.15, 0.9, d.y)            // sloped trapezius
+    r: [P.shoulderX * 1.06, (chHi - chLo) / 2, 0.124 * s * dep], e1: 0.5, e2: 0.8, taperBot: 0.84, taperBotZ: 0.92, taperTop: 1.0, taperTopZ: 0.86, seg: [48, 30],
+    disp: (d) => -0.026 * s * sstep(0.2, 0.75, Math.abs(d.x)) * sstep(0.25, 0.95, d.y)            // sloped trapezius
       + 0.008 * s * (gauss(d, D(0.42, 0.22, 0.88), 0.32) + gauss(d, D(-0.42, 0.22, 0.88), 0.32))  // chest planes
       + 0.006 * s * (gauss(d, D(0.45, 0.3, -0.88), 0.3) + gauss(d, D(-0.45, 0.3, -0.88), 0.3)),   // shoulder blades
   };
@@ -220,8 +227,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
 
   if (O.top === "workJacket") {
     // stand-up collar, zip placket, chest pockets with flaps, radio loop, reflective tape (2 hoops + braces over the shoulders)
-    const col = add(chest, new THREE.TorusGeometry(0.07 * s, 0.02 * s, 12, 36), mat.trim, { p: V(0, P.neckY - P.chestY + 0.012 * s, -0.008 * s), r: [Math.PI / 2 - 0.25, 0, 0] });
-    col.scale.set(1.05, 1.0, 1.25);
+    add(chest, collarGeo(0.074 * s, 0.068 * s, 0.04 * s, 0.008 * s), mat.trim, { p: V(0, P.neckY - P.chestY - 0.012 * s, -0.004 * s), r: [-0.22, 0, 0], sc: [1.05, 1, 1.12] });
     add(chest, ribbon(chO, [D(0, 0.8, 0.6), D(0, 0.3, 1), D(0, -0.5, 1), D(0, -1, 0.3)], 0.028 * s, 0.003 * s), mat.trim, { p: chP, hull: false });
     add(spine, ribbon(abO, [D(0, 1, 0.3), D(0, 0.2, 1), D(0, -0.7, 1), D(0, -1, 0.2)], 0.028 * s, 0.003 * s), mat.trim, { p: abP, hull: false });
     add(chest, ribbon(chO, [D(0, 0.8, 0.6), D(0, 0.3, 1), D(0, -0.5, 1), D(0, -1, 0.3)], 0.006 * s, 0.0055 * s), mat.dark, { p: chP, hull: false });
@@ -242,16 +248,15 @@ export function buildCharacter(spec: CharacterSpec): Character {
     }
   } else {
     // blazer: shirt V, lapels, buttons, welt pockets
-    const vGeo = sculpt({ r: [0.07 * s, 0.12 * s, 0.02 * s], e1: 0.9, e2: 0.6, taperBot: 0.15, seg: [24, 18] });
-    onSurf(chest, chO, chP, D(0, 0.42, 1), vGeo, mat.under, -0.008 * s);
+    const vGeo = sculpt({ r: [0.05 * s, 0.09 * s, 0.016 * s], e1: 0.9, e2: 0.6, taperBot: 0.2, seg: [24, 18] });
+    onSurf(chest, chO, chP, D(0, 0.55, 1), vGeo, mat.under, -0.006 * s);
     for (const sg of [1, -1]) {
       add(chest, ribbon(chO, [D(sg * 0.12, 0.92, 0.38), D(sg * 0.3, 0.55, 0.92), D(sg * 0.12, 0.05, 1), D(sg * 0.02, -0.25, 1)], 0.04 * s, 0.006 * s, 8), mat.top, { p: chP });
       add(chest, ribbon(chO, [D(sg * 0.16, 0.9, 0.42), D(sg * 0.34, 0.55, 0.92), D(sg * 0.16, 0.05, 1), D(sg * 0.05, -0.25, 1)], 0.008 * s, 0.009 * s, 8), mat.seam, { p: chP, hull: false });
       onSurf(spine, abO, abP, D(sg * 0.55, -0.35, 0.85), rbox(0.09 * s, 0.012 * s, 0.01 * s, 0.004 * s), mat.seam, 0.002 * s);
     }
     for (const y of [-0.05, -0.32]) onSurf(spine, abO, abP, D(0.02, y, 1), new THREE.CylinderGeometry(0.008 * s, 0.008 * s, 0.006 * s, 14).rotateX(Math.PI / 2), mat.dark, 0.004 * s);
-    const col = add(chest, new THREE.TorusGeometry(0.064 * s, 0.014 * s, 10, 32), mat.under, { p: V(0, P.neckY - P.chestY + 0.006 * s, -0.004 * s), r: [Math.PI / 2 - 0.3, 0, 0] });
-    col.scale.set(1.0, 1.0, 1.2);
+    add(chest, collarGeo(0.068 * s, 0.062 * s, 0.035 * s, 0.006 * s), mat.under, { p: V(0, P.neckY - P.chestY - 0.006 * s, -0.004 * s), r: [-0.25, 0, 0], sc: [1.0, 1, 1.1] });
   }
 
   // ------------------------------------------------------------------ tool belt / belt
@@ -280,7 +285,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
   const hc = new THREE.Group(); hc.name = "skull"; hc.position.set(0, P.skullY - P.headJY, 0.018 * s); head.add(hc);
   const R = P.skull, jawK = spec.face.jaw ?? 1;
   const skullO: SculptOpts = {
-    r: [R.x, R.y, R.z], e1: 0.86, e2: 0.82, taperBot: 0.8, taperBotZ: 0.96, seg: [72, 56],
+    r: [R.x, R.y, R.z], e1: 0.84, e2: 0.82, taperBot: 0.86, taperBotZ: 0.97, seg: [72, 56],
     disp: (d) => {
       let v = 0;
       for (const sg of [1, -1]) {
@@ -298,8 +303,8 @@ export function buildCharacter(spec: CharacterSpec): Character {
   };
   add(hc, sculpt(skullO), mat.face);
   const ns = spec.face.nose ?? 1;
-  onSurf(hc, skullO, V(0, 0, 0), D(0, -0.16, 1), sculpt({ r: [0.016 * s * ns, 0.03 * s * ns, 0.022 * s * ns], e1: 0.8, e2: 0.85, taperTop: 0.5, taperBot: 1.15, leanTop: [0, -0.012 * s], seg: [20, 16] }), mat.skin, -0.006 * s, new THREE.Euler(-0.12, 0, 0));
-  for (const sg of [1, -1]) onSurf(hc, skullO, V(0, 0, 0), D(sg * 0.12, -0.3, 0.98), sculpt({ r: [0.011 * s * ns, 0.009 * s, 0.01 * s], seg: [14, 10] }), mat.skin, -0.002 * s);
+  onSurf(hc, skullO, V(0, 0, 0), D(0, -0.16, 1), sculpt({ r: [0.0135 * s * ns, 0.027 * s * ns, 0.018 * s * ns], e1: 0.85, e2: 0.9, taperTop: 0.55, taperBot: 1.25, leanTop: [0, -0.01 * s], seg: [20, 16] }), mat.skin, -0.007 * s, new THREE.Euler(-0.1, 0, 0));
+  for (const sg of [1, -1]) onSurf(hc, skullO, V(0, 0, 0), D(sg * 0.12, -0.3, 0.98), sculpt({ r: [0.0095 * s * ns, 0.008 * s, 0.009 * s], seg: [14, 10] }), mat.skin, -0.003 * s);
   for (const sg of [1, -1]) {
     const ear = onSurf(hc, skullO, V(0, 0, 0), D(sg, -0.02, -0.1), sculpt({ r: [0.022 * s, 0.032 * s, 0.008 * s], e1: 0.8, e2: 0.8, taperBot: 0.75, seg: [16, 12] }), mat.skin, -0.002 * s, new THREE.Euler(0, -0.35, 0));
     void ear;
@@ -314,7 +319,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
         const base = skullO.disp!(d, pp) + 0.007 * s + (style === "bun" ? 0.004 * s : 0);
         // hairline: the front recedes inside the skull (crop: higher/back; bun/bob: on the forehead)
         const front = style === "crop" ? sstep(0.15, 0.5, d.z) * sstep(-0.3, 0.2, d.y) : sstep(0.55, 0.8, d.z) * sstep(0.62, 0.38, d.y);
-        const side = style === "bob" ? 0 : sstep(0.25, -0.1, d.y) * sstep(0.2, 0.6, d.z); // around the ears
+        const side = style === "bob" ? 0 : sstep(0.32, 0.05, d.y) * sstep(-0.35, 0.1, d.z); // above/around the ears, nape stays
         return base - 0.03 * s * Math.max(front, side) + (style === "bob" ? 0.01 * s * sstep(0.0, -0.6, d.y) : 0);
       },
     };
@@ -332,8 +337,8 @@ export function buildCharacter(spec: CharacterSpec): Character {
   // helmet + headlamp
   let lampAnchor: THREE.Object3D | undefined;
   if (acc.has("helmet")) {
-    const helm = new THREE.Group(); helm.position.set(0, R.y * 0.34, -0.008 * s); hc.add(helm);
-    const shellO: SculptOpts = { r: [R.x * 1.32, R.y * 0.86, R.z * 1.2], e1: 0.78, e2: 0.88, seg: [60, 26], theta: [0, Math.PI / 2 + 0.03], taperTop: 0.96 };
+    const helm = new THREE.Group(); helm.position.set(0, R.y * 0.5, -0.01 * s); hc.add(helm);
+    const shellO: SculptOpts = { r: [R.x * 1.2, R.y * 0.7, R.z * 1.1], e1: 0.78, e2: 0.88, seg: [60, 26], theta: [0, Math.PI / 2 + 0.03], taperTop: 0.96 };
     add(helm, sculpt(shellO), mat.helmet);
     add(helm, band(shellO, -0.012 * s, 0.006 * s, 0.006 * s, 64, 2), mat.helmet);          // rolled rim
     add(helm, band(shellO, 0.028 * s, 0.044 * s, 0.003 * s, 64, 2), mat.dark);           // lamp strap
@@ -341,7 +346,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
     add(helm, sculpt({ r: [0.013 * s, 0.024 * s, shellO.r[2] * 0.98], e1: 0.55, e2: 0.6, theta: [0, Math.PI / 2], seg: [16, 18] }), mat.helmet, { p: V(0, shellO.r[1] * 0.83, -0.004 * s) });
     for (const sg of [1, -1]) add(helm, ribbon(shellO, [D(sg * 0.42, 0.25, 0.9), D(sg * 0.34, 0.92, 0.2), D(sg * 0.42, 0.25, -0.9)], 0.014 * s, 0.004 * s, 10), mat.helmetDk, { hull: false });
     // cap-style peak (front only): the silhouette read from the side
-    add(helm, sculpt({ r: [R.x * 1.08, 0.009 * s, 0.062 * s], e1: 0.35, e2: 0.9, seg: [36, 8], flatBack: 0.4 }), mat.helmet, { p: V(0, 0.002 * s, shellO.r[2] * 0.97), r: [0.2, 0, 0] });
+    add(helm, sculpt({ r: [R.x * 1.0, 0.008 * s, 0.05 * s], e1: 0.35, e2: 0.9, seg: [36, 8], flatBack: 0.4 }), mat.helmet, { p: V(0, 0.0, shellO.r[2] * 0.95), r: [0.12, 0, 0] });
     if (acc.has("headlamp")) {
       const lamp = new THREE.Group(); lamp.position.set(0, 0.038 * s, shellO.r[2] * 1.0); lamp.rotation.x = 0.12; helm.add(lamp);
       add(lamp, rbox(0.06 * s, 0.04 * s, 0.034 * s, 0.01 * s), mat.dark);
@@ -355,7 +360,7 @@ export function buildCharacter(spec: CharacterSpec): Character {
     const g = new THREE.Group(); hc.add(g);
     const fs = roundedRectShape(0.05 * s, 0.034 * s, 0.012 * s);
     fs.holes.push(roundedRectShape(0.042 * s, 0.026 * s, 0.009 * s));
-    const ex = 0.3 * R.y * (spec.face.eyeScale ?? 1);
+    const ex = 0.3 * R.y * (spec.face.eyeScale ?? 1) * 1.15;
     const ez = R.z * Math.sqrt(Math.max(0, 1 - Math.pow(ex / R.x, 2.2)));
     for (const sg of [1, -1]) {
       const ep = V(sg * ex, 0, ez);
@@ -379,8 +384,8 @@ export function buildCharacter(spec: CharacterSpec): Character {
   for (const S of ["L", "R"] as const) {
     const sg = S === "L" ? 1 : -1;
     const sh = J[`shoulder${S}`], el = J[`elbow${S}`], wr = J[`wrist${S}`];
-    const ua0 = 0.057 * s * limbK, ua1 = 0.047 * s * limbK, fa0 = 0.047 * s * limbK, fa1 = 0.037 * s * limbK;
-    add(sh, sculpt({ r: [ua0 * 1.12, ua0 * 1.08, ua0 * 1.1], seg: [24, 16] }), mat.top);                      // shoulder cap
+    const ua0 = 0.051 * s * limbK, ua1 = 0.043 * s * limbK, fa0 = 0.043 * s * limbK, fa1 = 0.034 * s * limbK;
+    add(sh, sculpt({ r: [ua0 * 0.97, ua0 * 0.97, ua0 * 0.97], seg: [24, 16] }), mat.top, { p: V(0, -0.012 * s, 0) }); // shoulder cap
     add(sh, limbGeo(P.upperArm, ua0, ua1, { bulge: 0.004 * s }), mat.top);
     add(el, sculpt({ r: [ua1, ua1, ua1], seg: [20, 14] }), mat.top);
     add(el, limbGeo(P.foreArm, fa0 * 1.02, fa1, { bulge: 0.003 * s }), mat.top);

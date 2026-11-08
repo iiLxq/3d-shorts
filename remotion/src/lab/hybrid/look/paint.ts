@@ -316,7 +316,7 @@ export const brickTex = () => painterlyField("brick", 1024, "#5A5F66", 33, (g, r
   const rows = 16, cols = 4, bh = S / rows, bw = S / cols;
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols + 1; x++) {
     const ox = (y % 2) * bw / 2, X = x * bw - ox, Y = y * bh;
-    const l = 0.30 + r() * 0.12, h = 12 + r() * 16, s = 0.22 + r() * 0.12;
+    const l = 0.30 + r() * 0.12, h = 340 + r() * 26, s = 0.10 + r() * 0.08; // muted umber-violet: red is reserved for danger
     g.fillStyle = hsl(h, s, l); g.fillRect(X + 4, Y + 4, bw - 8, bh - 8);
     // painted strokes on the brick
     for (let k = 0; k < 14; k++) {

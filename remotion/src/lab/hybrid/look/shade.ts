@@ -35,7 +35,7 @@ export const U = {
   uSweepOn: { value: 0 },                                  // 1 = print sweep active
   uSweep: { value: new THREE.Vector4(0, 1, 0, -100) },     // plane: points with dot(n,p) < w show uState2
   uSweepSoft: { value: 0.06 },                             // half width of the blend band (m)
-  uSweepGlow: { value: 0.55 },                             // cyan "print head" glow on the band
+  uSweepGlow: { value: 0.3 },                              // cyan "print head" glow on the band
   uShadeFloor: { value: 0.10 },                            // shadow pigment floor: dark albedos never go black
   uShadeK: { value: 1.15 },                                // shadow (indirect) strength
 };
@@ -67,7 +67,10 @@ export type GouacheOpts = {
   tint?: number;        // how much the light hue tints the paint (1 default, brand materials ignore it at the top step)
   lock?: 0 | 1 | 2;     // always render in this state (ignores uState / sweep)
   tooth?: number;       // object-anchored pigment granulation (default 0.06)
-  shoulder?: number;    // overbright hot-spot step (1 default; 0 for matte)
+  shoulder?: number;    // overbright shoulder step (1 default; 0 for matte)
+  hot?: number;         // 0..1 lamp hot spot: the hottest part of the key pool is painted as a pale mix toward the light
+                        //   colour (pale props, helmets, tape, painted metal near the lamp). Off by default (walls!)
+  xrayLift?: number;    // X-RAY value floor for kept-painted (xray: 0) parts so they read inside shells (default 0.6)
   fog?: number;         // haze multiplier (1 default)
   bpLine?: number;      // blueprint Fresnel fill strength (1 default)
 };
@@ -75,7 +78,7 @@ export type GouacheOpts = {
 const RAMP = /* glsl */ `
 float paintRamp(float x, float sh){
   // three painted value steps (top step total 1.06); the hot-spot shoulder is hotSpot() below
-  return 0.30*smoothstep(0.04,0.07,x) + 0.36*smoothstep(0.23,0.29,x) + 0.40*smoothstep(0.63,0.72,x);
+  return 0.30*smoothstep(0.04,0.07,x) + 0.36*smoothstep(0.23,0.29,x) + 0.40*smoothstep(0.63,0.72,x) + 0.30*sh*smoothstep(1.3,2.2,x);
 }
 // lamp hot spot: where the irradiance is strongest the paint is mixed toward the light colour (opaque pale pool)
 float hotSpot(float x){ return smoothstep(1.0, 1.7, x); }`;
@@ -127,6 +130,7 @@ export function gouache(o: GouacheOpts = {}) {
     uBrandOn: { value: o.brand ? 1 : 0 }, uBrandCol: { value: o.brand ? untone(o.brand) : new THREE.Color(0, 0, 0) },
     uBrandFloor: { value: o.brandFloor ?? 0 },
     uTint: { value: o.tint ?? 1 }, uLock: { value: o.lock ?? -1 }, uTooth: { value: o.tooth ?? 0.06 },
+    uHot: { value: o.hot ?? 0 }, uXrayLift: { value: o.xrayLift ?? 0.6 },
     uShoulder: { value: o.shoulder ?? 1 }, uFogK: { value: o.fog ?? 1 }, uBpLine: { value: o.bpLine ?? 1 },
   };
   m.userData.u = local;
@@ -150,7 +154,7 @@ export function gouache(o: GouacheOpts = {}) {
         varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2; varying vec3 vOP; varying vec3 vON;
         uniform float uState, uState2, uSweepOn, uSweepSoft, uSweepGlow; uniform vec4 uSweep;
         uniform float uCard, uRim, uGrid, uBrushAmt, uBrushScale, uFogDen, uBpFill, uXray, uXrayDim;
-        uniform float uAnchor, uSpec, uGloss, uSpecTh, uMetal, uResin, uBrandOn, uBrandFloor, uTint, uLock, uTooth, uShoulder, uFogK, uBpLine, uShadeFloor, uShadeK;
+        uniform float uHot, uXrayLift, uAnchor, uSpec, uGloss, uSpecTh, uMetal, uResin, uBrandOn, uBrandFloor, uTint, uLock, uTooth, uShoulder, uFogK, uBpLine, uShadeFloor, uShadeK;
         uniform vec3 uBrandCol;
         uniform sampler2D uBrush, uPaper;
         uniform vec3 uShadeLo, uShadeHi, uFogCol, uFogHi, uRimCol, uNavy, uCyan;
@@ -183,8 +187,9 @@ export function gouache(o: GouacheOpts = {}) {
           float hk = smoothstep(-3.0, 4.0, vWP.y);
           vec3 shadeCol = mix(uShadeLo, uShadeHi, hk);
           vec3 ind = reflectedLight.indirectDiffuse + (alb * (0.6 + 0.3 * bn) + uShadeFloor) * shadeCol * uShadeK * (uCard > 0.5 ? 1.9 : 1.0);
-          float hot = hotSpot(Lb) * uShoulder * (1.0 - uBrandOn);
-          vec3 dir = alb * hue * q * (1.0 + 0.25 * hot);
+          float hot = hotSpot(L * (1.0 + (bn - 0.5) * 0.12)) * uHot * (1.0 - uBrandOn);   // opt-in, unbrushed: no hairy edges
+          if (uXray < 0.5 && abs(uState - 1.0) < 0.5) q = max(q, uXrayLift * 1.06);    // X-RAY: kept-painted parts read even inside shells
+          vec3 dir = alb * hue * q;
           dir = mix(dir, mix(hue, vec3(1.0), 0.45) * (0.84 + 0.2 * lumv(alb)), hot * 0.72);
           if (uBrandOn > 0.5) {
             // brand lock: top step = exact brand colour whatever the light colour; lower steps fall into the shade
@@ -266,8 +271,8 @@ export function gouache(o: GouacheOpts = {}) {
             vec3 gw2 = fwidth(vWP);
             vec3 gl2 = 1.0 - smoothstep(vec3(0.0), gw2 * 1.8, abs(fract(vWP - 0.5) - 0.5));
             vec3 an = abs(wn);
-            float grid = an.z > 0.5 ? max(gl.x, gl.y) * 0.3 + max(gl2.x, gl2.y) * 0.5 : an.x > 0.5 ? max(gl.z, gl.y) * 0.3 + max(gl2.z, gl2.y) * 0.5 : max(gl.x, gl.z) * 0.3 + max(gl2.x, gl2.z) * 0.5;
-            bp += uCyan * (grid * uGrid * 0.55 + fr * 0.10 * uBpLine + 0.012);
+            float grid = an.z > 0.5 ? max(gl.x, gl.y) * 0.16 + max(gl2.x, gl2.y) * 0.5 : an.x > 0.5 ? max(gl.z, gl.y) * 0.16 + max(gl2.z, gl2.y) * 0.5 : max(gl.x, gl.z) * 0.16 + max(gl2.x, gl2.z) * 0.5;
+            bp += uCyan * (grid * uGrid * 0.36 + fr * 0.10 * uBpLine + 0.012);   // calm paper: room for FIG./callout overlays
             bp = mix(bp, uCyan * 0.18 + uNavy, smoothstep(6.0, 22.0, d) * 0.6); // cyan haze glow far away
             aB = a0 * uBpFill;
           }
@@ -323,7 +328,7 @@ export function setSweep(from: 0 | 1 | 2, to: 0 | 1 | 2, plane: { offset: number
   const n = (plane.normal ?? new THREE.Vector3(0, 1, 0)).clone().normalize();
   U.uSweep.value.set(n.x, n.y, n.z, plane.offset);
   U.uSweepSoft.value = plane.soft ?? 0.06;
-  U.uSweepGlow.value = plane.glow ?? 0.55;
+  U.uSweepGlow.value = plane.glow ?? 0.3;
   U.uSweepOn.value = 1;
   syncLookFlags();
 }

@@ -58,7 +58,7 @@ export class LookBench {
     const side = new THREE.Mesh(new THREE.PlaneGeometry(5, 5.5), mConc); side.rotation.y = Math.PI / 2; side.position.set(-1.6, 2.75, 0.5); side.receiveShadow = true; S.add(side);
 
     // ---- guide rail: T-profile with a machined (bright, glinting) head, dark web, brackets
-    const mRailHead = gouache({ map: rep(steelTex("railhead", "#9AA6B0", 3), 1, 12), spec: 1, gloss: 140, specTh: 0.35, metal: 1, rim: 0.7, brushScale: 3 });
+    const mRailHead = gouache({ map: rep(steelTex("railhead", "#9AA6B0", 3), 1, 12), spec: 1, gloss: 140, specTh: 0.35, metal: 1, rim: 0.7, brushScale: 3, hot: 0.6 });
     const mRailWeb = gouache({ map: rep(steelTex("railweb", "#4E5C6A", 5), 1, 10), spec: 0.6, gloss: 50, specTh: 0.6, metal: 0.6, rim: 0.4, brushScale: 3 });
     const rail = new THREE.Group(); rail.position.set(0.62, 0, -1.25); S.add(rail);
     const head = new THREE.Mesh(new RoundedBoxGeometry(0.036, 4.6, 0.07, 3, 0.009), mRailHead); head.castShadow = head.receiveShadow = true; head.position.set(0, 2.3, 0.07); rail.add(head);
@@ -82,8 +82,8 @@ export class LookBench {
     const mTrous = gouache({ color: "#2B3A55", brush: 0.6, rim: 0.35, xray: 0 });
     const mBoot = gouache({ color: "#3A2A22", spec: 0.5, gloss: 40, specTh: 0.7, xray: 0 });
     const mSkin = gouache({ color: "#B07A56", rim: 0.3, xray: 0, spec: 0.25, gloss: 18, specTh: 0.9 });
-    const mHelm = gouache({ color: "#E8DCC0", spec: 0.85, gloss: 90, specTh: 0.5, rim: 0.3, xray: 0 });
-    const mTape = gouache({ color: "#D5E0E3", spec: 0.85, gloss: 14, specTh: 0.5, xray: 0, brush: 0.3 }); // retro-reflective tape: broad bright sheen
+    const mHelm = gouache({ color: "#E8DCC0", spec: 0.85, gloss: 90, specTh: 0.5, rim: 0.3, xray: 0, hot: 0.5 });
+    const mTape = gouache({ color: "#D5E0E3", spec: 0.85, gloss: 14, specTh: 0.5, xray: 0, brush: 0.3, hot: 1 }); // retro-reflective tape: broad bright sheen
     for (const s of [-1, 1]) {
       const leg = capsule(0.075, 0.68, mTrous); leg.position.set(s * 0.11, 0.48, 0); fig.add(leg);
       const boot = box(0.13, 0.11, 0.26, mBoot); boot.position.set(s * 0.11, 0.055, 0.04); fig.add(boot);
@@ -107,7 +107,7 @@ export class LookBench {
       brandMat(BRAND.amber, { kind: "fabric" }), brandMat(BRAND.green, { kind: "enamel" }), brandMat(BRAND.red, { kind: "plastic" }), brandMat(BRAND.cyan, { kind: "enamel" }),
       gouache({ map: rep(steelTex("brushed", "#A9B3BC", 31), 1, 1), spec: 1, gloss: 160, specTh: 0.35, metal: 1, rim: 0.6, brushScale: 4 }),
       gouache({ color: "#1C1F26", spec: 0.95, gloss: 220, specTh: 0.3, rim: 0.5, brush: 0.4 }),
-      gouache({ color: "#E8DCC0", spec: 0.8, gloss: 80, specTh: 0.45, rim: 0.3 }),
+      gouache({ color: "#E8DCC0", spec: 0.8, gloss: 80, specTh: 0.45, rim: 0.3, hot: 1 }),
       gouache({ map: rep(concreteTex(), 0.4, 0.4), rim: 0.15, brushScale: 1.5 }),
     ];
     mats.forEach((m, i) => {

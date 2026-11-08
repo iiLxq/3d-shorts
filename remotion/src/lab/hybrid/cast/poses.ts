@@ -107,7 +107,7 @@ export const POSES = {
   /** alarm recoil: knees bend, torso leans back away from the threat, shoulders shrug, both arms up and out */
   alarm: {
     lift: -0.14, shift: -0.04, stance: 1.55, footL: [0.04, 0.1, 0.3], footR: [-0.02, -0.05, -0.25],
-    hips: [-0.12, 0, 0], spine: [-0.06, 0, 0], chest: [-0.1, 0, 0], neck: [-0.12, 0, 0], head: [-0.32, 0, 0],
+    hips: [-0.1, 0, 0], spine: [-0.04, 0, 0], chest: [-0.08, 0, 0], neck: [-0.06, 0, 0], head: [-0.1, 0, 0],
     clavL: [0, 0, 0.22], clavR: [0, 0, -0.22],
     shoulderL: [-1.15, 0.25, 0.85], elbowL: [-1.35, 0.0, 0], wristL: [-0.35, 0, -0.2],
     shoulderR: [-1.15, -0.25, -0.85], elbowR: [-1.35, 0.0, 0], wristR: [-0.35, 0, 0.2], handL: "splay", handR: "splay",

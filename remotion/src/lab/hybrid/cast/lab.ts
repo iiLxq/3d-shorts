@@ -21,7 +21,7 @@ export class CastLab {
   r: THREE.WebGLRenderer; scene = new THREE.Scene(); cam = new THREE.PerspectiveCamera(30, 1, 0.05, 60);
   ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 40);
   rig = new THREE.Group(); key: THREE.SpotLight; fill: THREE.DirectionalLight; rim: THREE.DirectionalLight;
-  floor: THREE.Mesh; rafa: Character; noor: Character; silMat = new THREE.MeshBasicMaterial({ color: "#121a22" });
+  floor: THREE.Mesh; back!: THREE.Mesh; rafa: Character; noor: Character; silMat = new THREE.MeshBasicMaterial({ color: "#121a22" });
   W: number; H: number;
   constructor(public cvs: HTMLCanvasElement, W: number, H: number, dpr: number) {
     this.W = W; this.H = H;
@@ -43,10 +43,10 @@ export class CastLab {
     this.rig.add(this.key); sc.add(this.key.target);
     this.fill = new THREE.DirectionalLight("#8cc0dd", 0.32); this.fill.position.set(3, 1.6, 1.2); this.rig.add(this.fill);
     this.rim = new THREE.DirectionalLight("#a9d8ff", 0.55); this.rim.position.set(1.5, 2.8, -3.2); this.rig.add(this.rim);
-    this.floor = new THREE.Mesh(new THREE.CircleGeometry(6, 64), gouache({ color: "#56646a", grid: 0.6, brush: 0.5, brushScale: 1.2, rim: 0 }));
+    this.floor = new THREE.Mesh(new THREE.CircleGeometry(6, 64), gouache({ color: "#56646a", grid: 0.6, brush: 0.5, brushScale: 1.2, rim: 0, xray: 0.5, anchor: "world" }));
     this.floor.rotation.x = -Math.PI / 2; this.floor.receiveShadow = true; sc.add(this.floor);
     const back = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 9, 64, 1, true), gouache({ color: "#2b4250", side: THREE.BackSide, brush: 0.6, brushScale: 0.5, rim: 0, grid: 0.4 }));
-    back.position.y = 4.4; sc.add(back);
+    back.position.y = 4.4; sc.add(back); this.back = back;
     this.rafa = buildCharacter(RAFA); this.noor = buildCharacter(NOOR);
     sc.add(this.rafa.root, this.noor.root);
   }
@@ -123,7 +123,7 @@ export class CastLab {
       c.root.updateMatrixWorld(true);
       const eye = c.eyeAnchor.getWorldPosition(new THREE.Vector3());
       const tgt = eye.clone().add(V(0, -0.06, 0));
-      this.lookAt(this.cam, tgt.clone().add(V(0.42, 0.06, 1.25)), tgt, 21);
+      this.lookAt(this.cam, tgt.clone().add(V(0.3, 0.08, 1.3)), tgt, 21);
       this.cell(x, y, cw, ch, this.cam);
       ov.labels.push({ x: x + 18, y: y + 40, text: e.toUpperCase(), size: 26 });
     });
@@ -145,7 +145,7 @@ export class CastLab {
       // head ~ c.dims.h tall -> 120 px of a 480 px row => visible height = 4 heads
       const vis = c.dims.h * ch / 120, fov = 28, d = vis / 2 / Math.tan((fov / 2) * Math.PI / 180);
       const tgt = V(eye.x, eye.y - vis * 0.27, eye.z);
-      this.lookAt(this.cam, tgt.clone().add(V(Math.sin(0.45) * d, 0.05, Math.cos(0.45) * d)), tgt, fov);
+      this.lookAt(this.cam, tgt.clone().add(V(Math.sin(0.22) * d, 0.05, Math.cos(0.22) * d)), tgt, fov);
       this.cell(x, y, cw, ch, this.cam);
       ov.labels.push({ x: x + 16, y: y + 34, text: `${e.toUpperCase()} · face ≈120 px @1080`, size: 22 });
     });
@@ -157,24 +157,24 @@ export class CastLab {
     this.only(A, B); this.place(A, -0.42); this.place(B, 0.42);
     A.setPose(POSES.stand); B.setPose(POSES.stand); this.face(A, "neutral"); this.face(B, "smiling");
     const top = 2.18, bot = -0.07, wM = (top - bot) * (1080 / 1250);
-    const o = this.ortho; o.left = -wM / 2; o.right = wM / 2; o.top = top; o.bottom = bot; o.position.set(0, 1, 10); o.lookAt(0, 1, 0); o.updateProjectionMatrix();
+    const o = this.ortho; o.left = -wM / 2; o.right = wM / 2; o.top = top; o.bottom = bot; o.position.set(0, 0, 10); o.lookAt(0, 0, 0); o.updateProjectionMatrix();
     this.rig.rotation.y = 0;
     this.cell(0, 0, 1080, 1250, o);
     const toY = (m: number) => ((top - m) / (top - bot)) * 1250, toX = (m: number) => ((m + wM / 2) / wM) * 1080;
-    for (const [c, x0, x1, side] of [[A, -1.02, -0.05, -1], [B, 0.05, 1.02, 1]] as [Character, number, number, number][]) {
+    for (const [c, x0, x1, side] of [[A, -0.86, -0.05, -1], [B, 0.05, 0.86, 1]] as [Character, number, number, number][]) {
       const h = c.dims.h;
       for (let k = 0; k <= Math.ceil(c.spec.heads); k++) {
         const ym = Math.min(c.dims.H, k * h), y = toY(c.dims.H - ym);
         if (k > c.spec.heads + 0.01) continue;
         ov.lines.push({ x1: toX(x0), y1: y, x2: toX(x1), y2: y, color: BRAND.cyan, dash: k !== 0, w: k === 0 ? 2.5 : 1.4 });
-        if (k > 0) ov.labels.push({ x: side < 0 ? toX(x0) - 8 : toX(x1) + 8, y: (toY(c.dims.H - (k - 1) * h) + y) / 2 + 8, text: `${k}`, size: 22, anchor: side < 0 ? "end" : "start", color: BRAND.cyan });
+        if (k > 0) ov.labels.push({ x: side < 0 ? toX(x0) + 4 : toX(x1) - 4, y: (toY(c.dims.H - (k - 1) * h) + y) / 2 + 8, text: `${k}`, size: 24, anchor: side < 0 ? "start" : "end", color: BRAND.cyan });
       }
       const yb = toY(0);
       ov.lines.push({ x1: toX(x0), y1: yb, x2: toX(x1), y2: yb, color: BRAND.cyan, w: 2.5 });
       ov.labels.push({ x: toX((x0 + x1) / 2), y: toY(c.dims.H) - 64, text: `${c.spec.name.toUpperCase()} · ${c.spec.heightM.toFixed(2)} m · ${c.spec.heads} HEADS`, size: 24, anchor: "middle", color: BRAND.cyan });
     }
     // silhouettes (the 0.5 s read): side + 3/4 of each, flat dark
-    this.scene.overrideMaterial = this.silMat; this.floor.visible = false;
+    this.scene.overrideMaterial = this.silMat; this.floor.visible = false; this.back.visible = false;
     const sw = 270, sh = 640, y0 = 1270;
     const sil: [Character, number][] = [[A, Math.PI / 2], [A, 0.75], [B, 0.75], [B, -Math.PI / 2]];
     sil.forEach(([c, yaw], i) => {
@@ -183,7 +183,7 @@ export class CastLab {
       o.left = -w2 / 2; o.right = w2 / 2; o.top = t2; o.bottom = b2; o.updateProjectionMatrix();
       this.cell(i * sw, y0, sw, sh, o, "#cfd6d4");
     });
-    this.scene.overrideMaterial = null; this.floor.visible = true;
+    this.scene.overrideMaterial = null; this.floor.visible = true; this.back.visible = true;
     ov.labels.push({ x: 18, y: y0 + 34, text: "SILHOUETTE READ", size: 22, color: "#16242f" });
   }
 
@@ -227,7 +227,7 @@ export class CastLab {
     const gaze: [number, number] = f < 16 ? [0.05, -0.35] : f < 40 ? [0.02, 0.55] : [0.0, 0.15];
     this.face(c, keyed(fk, f, mixFace), gaze, blink);
     const u = f / 59, push = u * u * (3 - 2 * u);
-    const d = 4.3 - 0.45 * push, a = 0.5 + 0.05 * push;
+    const d = 4.3 - 0.45 * push, a = 0.42 + 0.06 * push;
     this.lookAt(this.cam, V(Math.sin(a) * d, 1.05 + 0.04 * push, Math.cos(a) * d), V(0, 0.98 + 0.03 * push, 0), 30);
     // full look pipeline (ink, bloom, grade, bg blur) on the motion test
     this.post ??= createPost(this.r, this.scene, this.cam, { msaa: 2, dof: true });

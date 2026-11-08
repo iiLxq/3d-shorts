@@ -92,7 +92,7 @@ export const FACE_VERT = /* glsl */ `
   {
     vec3 nq = position / uFR;
     float jaw = (uFC.y * 0.10 + uFD.y * 0.02) * uFR.y;
-    float k = smoothstep(-0.48, -0.85, nq.y) * smoothstep(-0.55, 0.2, nq.z);
+    float k = (1.0 - smoothstep(-0.85, -0.48, nq.y)) * smoothstep(-0.55, 0.2, nq.z);
     transformed.y -= jaw * k;
     transformed.z -= jaw * k * 0.25;
   }`;
@@ -108,7 +108,7 @@ float sdSeg(vec2 p, vec2 a, vec2 b){ vec2 pa = p - a, ba = b - a; float h = clam
 float bnz(vec2 p){ return texture2D(uBrush, p).r - 0.5; }
 
 vec3 paintEye(vec3 col, vec2 p, float s, float lidT, float lidB, float front){
-  float es = uFE.w;
+  float es = uFE.w * 1.15;
   vec2 q = (p - vec2(s * 0.30 * es, 0.0)) / es; q.x *= s;            // mirrored: +x = outward
   float w = 0.145;
   float t = q.x / w, at = abs(t);
@@ -136,7 +136,7 @@ vec3 paintEye(vec3 col, vec2 p, float s, float lidT, float lidB, float front){
   float ir = 0.056;
   float di = length(q - ic);
   float iris = fillSd(di - ir, 0.0015);
-  vec3 irc = uIrisC * mix(1.25, 0.55, smoothstep(ir * 0.5, ir, di)) * mix(0.7, 1.15, smoothstep(0.03, -0.04, q.y - ic.y));
+  vec3 irc = uIrisC * mix(1.25, 0.55, smoothstep(ir * 0.5, ir, di)) * mix(0.7, 1.15, (1.0 - smoothstep(-0.04, 0.03, q.y - ic.y)));
   irc = mix(irc, sl(vec3(0.05, 0.04, 0.04)), fillSd(di - ir * 0.42, 0.001));
   irc *= mix(1.0, 0.55, smoothstep(yT - 0.03, yT, q.y));               // lid shadow on the iris
   float cat = fillSd(length(q - ic - vec2(-0.022 * s, 0.024)) - 0.0145, 0.001);
@@ -145,7 +145,7 @@ vec3 paintEye(vec3 col, vec2 p, float s, float lidT, float lidB, float front){
   col = mix(col, ec, eye);
   // upper lash line: thick, heavier at the outer end with a short flick (the main readability stroke)
   float th = mix(0.0085, 0.017, smoothstep(-0.6, 1.0, t)) * (0.85 + 0.3 * clamp(open, 0.0, 1.0));
-  float lash = fillSd(abs(q.y - yT - th * 0.35) - th + jit * 0.4, 0.0015) * smoothstep(1.12, 0.98, at + max(0.0, -t) * 0.05);
+  float lash = fillSd(abs(q.y - yT - th * 0.35) - th + jit * 0.4, 0.0015) * (1.0 - smoothstep(0.98, 1.12, at + max(0.0, -t) * 0.05));
   float flick = fillSd(sdSeg(q, vec2(w * 0.95, yT + 0.002), vec2(w * 1.18, yT + 0.022)) - 0.0065, 0.0015);
   lash = max(lash, flick * smoothstep(0.1, 0.4, open));
   col = mix(col, uLashC, lash * front);
@@ -175,7 +175,7 @@ vec3 paintBrow(vec3 col, vec2 p, float s, float inY, float outY, float pull, flo
 
 vec3 paintMouth(vec3 col, vec2 p, float front){
   float clench = uFD.y, open = uFC.y, teeth = uFD.x;
-  float hw = 0.19 * uFC.x * (1.0 + 0.22 * clench);
+  float hw = 0.21 * uFC.x * (1.0 + 0.22 * clench);
   vec2 q = p - vec2(0.0, -0.585);
   float t = q.x / hw, at = abs(t);
   float k = max(0.0, 1.0 - t * t);
@@ -245,8 +245,8 @@ vec3 paintFace(vec3 col, vec3 op){
     float ax = abs(nq.x);
     float yb = mix(-0.43, -0.02, smoothstep(0.30, 0.98, ax)) - 0.06 * smoothstep(0.12, 0.30, ax) * (1.0 - smoothstep(0.30, 0.6, ax));
     float n1 = bnz(op.xy / uFR.y * 2.0 + op.z * 1.3);
-    float bm = smoothstep(yb + 0.04, yb - 0.04, nq.y + n1 * 0.08) * smoothstep(-0.65, -0.25, nq.z);
-    float mous = smoothstep(-0.40, -0.47, nq.y) * (1.0 - smoothstep(0.22, 0.36, ax));   // moustache zone: lighter
+    float bm = (1.0 - smoothstep(yb - 0.04, yb + 0.04, nq.y + n1 * 0.08)) * smoothstep(-0.35, 0.0, nq.z);
+    float mous = (1.0 - smoothstep(-0.47, -0.40, nq.y)) * (1.0 - smoothstep(0.22, 0.36, ax));   // moustache zone: lighter
     float dens = uBeardAmt * mix(1.0, 0.6, mous * step(nq.y, -0.40) * step(-0.56, nq.y));
     float sp = texture2D(uBrush, op.xy / uFR.y * 4.0 + vec2(0.37, op.z * 3.0)).r;
     vec3 bc = mix(uBeardC, uBeardC2, smoothstep(0.55, 0.75, sp));
@@ -255,7 +255,7 @@ vec3 paintFace(vec3 col, vec3 op){
   col = paintBrow(col, p, 1.0, uFA.x, uFA.z, uFD.z, front);
   col = paintBrow(col, p, -1.0, uFA.y, uFA.w, uFD.z, front);
   // furrow between the brows, worry lines on the forehead
-  float fur = fillSd(abs(abs(p.x) - 0.045 - 0.01 * (p.y - 0.2)) - 0.006, 0.003) * smoothstep(0.12, 0.16, p.y) * smoothstep(0.30, 0.24, p.y);
+  float fur = fillSd(abs(abs(p.x) - 0.045 - 0.01 * (p.y - 0.2)) - 0.006, 0.003) * smoothstep(0.12, 0.16, p.y) * (1.0 - smoothstep(0.24, 0.30, p.y));
   col = mix(col, col * vec3(0.72, 0.58, 0.58), fur * uFD.z * 0.7 * front);
   float worry = clamp(max(uFA.x, uFA.y) - 0.45, 0.0, 1.0);
   for (int i = 0; i < 2; i++) {
