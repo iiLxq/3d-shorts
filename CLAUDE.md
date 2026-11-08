@@ -18,6 +18,68 @@ The person you work for runs the channel from an **iPhone only (no laptop or PC)
 6. **Facts are verified.** Any historical or technical claim in the script is checked against sources before VO is generated (e.g. dates, names, how a mechanism works).
 7. **Deliver in a way a phone can open.** Big files fail to preview on iPhone. See §13.
 8. **Spending credits:** ElevenLabs generations spend the user's subscription credits. Generate VO only from a final, approved script; default to 2 takes; never re-run a generation as a "retry".
+9. **Every video uses the "Fail-Safe Files" signature style below.** Where it conflicts with older guidance further down (colors, caption-safe zone, ending), the signature style wins.
+
+---
+
+## Signature style: Fail-Safe Files
+
+The channel's recognizable look. Apply all of it to **every** video, from the script stage on (plan the three states and the meter in the shot list).
+
+### 1. Three visual states per video
+| State | Beat | Look |
+|---|---|---|
+| **BLUEPRINT** | Hook | Navy `#0B1A33` background with a faint grid. Everything drawn as glowing cyan `#35D7FF` line art (edge/wireframe shader). Short technical labels in caps, e.g. `CABLE · FLOOR 18`. |
+| **X-RAY** | Rising action → conflict | Outer shells turn translucent with a Fresnel edge glow. Camera dives inside the object. Red `#FF3B3B` force arrows show where the danger acts. |
+| **SOLID** | Payoff | The blueprint "prints" into fully lit 3D (lines fill into shaded surfaces), and the safety mechanism lights up in safety-green `#39FF88`. |
+
+Engine needs: an edge/wireframe mode, a translucent X-ray mode with Fresnel edges, a blueprint→solid "print" transition uniform, a grid background, force-arrow geometry (shaft + cone), and a text/label overlay.
+
+### 2. Fixed color code (every video, never reassigned)
+| Color | Meaning |
+|---|---|
+| Cyan `#35D7FF` | Structure |
+| Red `#FF3B3B` | Danger / force |
+| Safety-green `#39FF88` | The fail-safe |
+| Amber `#FFB020` | The person at risk |
+| Sepia | History |
+
+This replaces the older color meanings in §8 (orange "mechanism working" is now safety-green; white flash stays a transition/impact effect, not a meaning color).
+
+### 3. Danger meter
+- A vertical gauge on the **LEFT** edge of the frame. **Never on the right** (the platform buttons sit there).
+- It fills and shifts green → red as the threat builds, synced to the beat sheet.
+- The instant the safety engages, it **crashes back to green**, on the same frame as the engagement event.
+
+### 4. Engagement moment
+When the safety catches: hold a **0.5 s freeze-frame**, then play a **slow-motion replay** of the mechanism engaging (use story-time remapping, §7.1). Plan the extra time in the shot list. The VO must leave room for it (a `[short pause]` or the stop line).
+
+### 5. History tag
+Sepia grade + film grain + a **rubber-stamp date overlay** (red/ink stamp, slight rotation, stamp-in with a small shake), e.g. `1854 · E. OTIS`.
+
+### 6. Loop ending
+The final frame returns to the **opening blueprint frame** (same camera, same line art) so the Short loops seamlessly. This replaces the old "fade to black" ending in §4.2. Check it by comparing the last frame against the first frame.
+
+### 7. Safe zones
+Labels, stamps and the meter stay out of the **caption zone (y 1050–1350)** and out of the **bottom 20%** of the frame (y > 1536). Labels also stay off the right edge.
+
+### 8. Sound logo
+Reuse the same brand sounds in every video, from `assets/brand/`:
+- Blueprint **"pen scratch"** intro (hook),
+- **Rising alarm** that follows the danger meter,
+- **"CLUNK + chime"** when the safety engages.
+
+Never re-synthesize them per video; mix them like SFX (§12). If `assets/brand/` is empty or a sound is missing, **tell the user** before building the mix so they can be created together.
+
+### QC additions (§14)
+- [ ] Hook in BLUEPRINT, conflict in X-RAY, payoff in SOLID.
+- [ ] Colors match the fixed color code.
+- [ ] Meter on the left, rises with the threat, crashes to green on the engagement frame.
+- [ ] 0.5 s freeze + slow-mo replay at the engagement.
+- [ ] History has sepia, grain and a date stamp.
+- [ ] Last frame matches the first frame (loop).
+- [ ] No label or meter in y 1050–1350 or the bottom 20%.
+- [ ] Brand sounds from `assets/brand/` used.
 
 ---
 
@@ -189,6 +251,7 @@ film/
   concat.txt, video_raw.mp4
 vo/
   vo.mp3, vo.wav, captions.py, captions.ass, audio.py, sfx.wav, music.wav
+assets/brand/      # brand sound logo (pen scratch, alarm, clunk + chime), reused every video
 ```
 
 ---
