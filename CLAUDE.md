@@ -447,13 +447,13 @@ assets/brand/      # FIXED brand sounds, reused every video, never changed
 
 ## 13. Delivery to an iPhone
 
-- Files over ~50 MB often hang in the in-app viewer. Always also make a **phone copy**: 2-pass H.264 at ~2.3 Mbps + AAC 128k → ≈18–19 MB (1080×1920 kept).
+- Files over ~50 MB often hang in the in-app viewer. Always also make a **phone copy**: 2-pass H.264 at ~1.9 Mbps + AAC 128k → ≈15 MB for 60 s (1080×1920 kept). It must stay **under 16 MB** (measured artifact per-file cap).
 - For full quality, publish an **artifact page** with:
-  - a `<video controls playsinline>` streaming the ≤19 MB copy (artifact files are capped at 20 MiB each, 64 MiB per publish call, **256 MiB total per artifact**),
-  - the full file **split into 19,922,944-byte parts** (`split -b … -d -a 2`, verify with `cat | cmp`), uploaded over several publish calls,
+  - a `<video controls playsinline>` streaming the ≤15 MB copy (artifact files are capped at **16 MB each** (measured Nov 2026), 64 MiB per publish call, **256 MiB total per artifact**),
+  - the full file **split into 15,728,640-byte parts** (`split -b 15728640 -d -a 2 --additional-suffix=.mp4`, verify with `cat | cmp`), uploaded over several publish calls (≤4 parts per call),
   - a **Save full quality** button that fetches parts (3 in parallel, streaming reader, live "x / y MB" counter, 45 s stall watchdog), builds a Blob, and calls the `downloads` capability `save({filename, data: blob})` → iOS share sheet → **Save Video**,
-  - a **Save smaller copy** button for the 18 MB version.
-  - Declare `downloads` after the first publish. Tell the user to keep the page open and the screen on while it prepares.
+  - a **Save smaller copy** button for the 15 MB version.
+  - Declare `capabilities: {downloads: {}}` (with `contract: "latest"`) on the second publish. Template: `videos/01_ram_air_turbine/delivery/index.html`. Tell the user to keep the page open and the screen on while it prepares.
 - Default deliverable = **no captions** (user captions in CapCut). Offer the captioned version only when asked.
 
 ---
@@ -493,6 +493,10 @@ ASS subtitles burned with libass:
 8. Applause and impacts masked spoken words → time effects into gaps.
 9. A 200 MB MP4 never loaded on the iPhone viewer → phone copy + artifact page with chunked download.
 10. One artifact can hold at most 256 MiB → don't keep two full-quality versions on one page.
+11. The artifact host refused an 18 MB file (per-file cap is 16 MB, not 20 MiB) → 15 MiB parts and a ~15 MB phone copy.
+12. Grain over a 16 s section tripled the full file (317 MB) → grain `alls=5`, CRF 18 (~100 MB).
+13. Ending with a blueprint↔solid sweep caused flicker on overlapping surfaces → end with a white-flash cut into the opening frame instead.
+14. Far camera + near plane 0.05 made the runway flicker → use near 0.6 m outside, 0.05 only inside the cockpit.
 
 ---
 
