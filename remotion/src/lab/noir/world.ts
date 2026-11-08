@@ -115,8 +115,8 @@ export function buildWorld(): World {
   const hand = add(car, box(CAR_W - 0.2, 0.035, 0.035), mSteel, [0, -1.55, -CAR_D / 2 + 0.08], { edges: false }); xrayOnly.push(hand);
   const roof = add(car, box(CAR_W + 0.04, 0.045, CAR_D + 0.04), mRoof, [0, -0.0225, 0], { thr: 20 });
   notXray.push(roof);
-  const roofGlaze = new THREE.Mesh(roof.geometry, glazeMaterial(BRAND.cyan, 0.8)); roofGlaze.position.copy(roof.position); car.add(roofGlaze); xrayOnly.push(roofGlaze);
-  const cabLamp = add(car, box(0.5, 0.03, 0.2), new THREE.MeshBasicMaterial({ color: lin("#fff1d6").multiplyScalar(2.2) }), [0, -0.08, 0], { cast: false, edges: false }); xrayOnly.push(cabLamp);
+  const roofGlaze = new THREE.Mesh(roof.geometry, glazeMaterial(BRAND.cyan, 0.22)); roofGlaze.position.copy(roof.position); car.add(roofGlaze); xrayOnly.push(roofGlaze);
+  
   const cabLight = new THREE.PointLight(lin("#ffe2b8"), 0, 4, 1.2); cabLight.position.set(0, -0.3, 0); car.add(cabLight); cabLight.userData.xray = true;
   (car.userData as { cabLight?: THREE.PointLight }).cabLight = cabLight;
   // crosshead + stiles

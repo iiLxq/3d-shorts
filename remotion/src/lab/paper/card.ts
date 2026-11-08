@@ -149,6 +149,13 @@ export class Card {
     // structure/person/mech keep their print in x-ray; shells turn into vellum
     const eff: Look = look === "xray" && role !== "shell" ? (role === "structure" ? "blueprint" : "solid") : look;
     const map = this.paint(eff);
+    if (role === "fx") {
+      // marker-ink force arrows: unlit, scaled so the base ink lands exactly on brand red after tone mapping
+      const lin = new THREE.Color(BRAND.red), u = untone(BRAND.red);
+      const face = new THREE.MeshBasicMaterial({ map, color: new THREE.Color(u.r / lin.r, u.g / Math.max(lin.g, 1e-4), u.b / Math.max(lin.b, 1e-4)) });
+      const side = new THREE.MeshBasicMaterial({ color: new THREE.Color("#ffd2cf") });
+      return [face, side];
+    }
     if (eff === "solid") {
       const face = new THREE.MeshStandardMaterial({
         map, bumpMap: bump, bumpScale: o.bump ?? 0.004,

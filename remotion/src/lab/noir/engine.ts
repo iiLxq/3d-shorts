@@ -84,14 +84,14 @@ export function frameAt(comp: Comp, f: number): Frame {
     base.pose = { ...(k === "calm" ? POSES.idle : k === "alarm" ? POSES.alarm : POSES.relief) };
     if (k === "alarm") { base.handF = "splay"; base.handN = "splay"; base.beacon = 1; base.headAim = 1; }
     if (k === "relief") { base.jaw = 1; base.jawGlow = 0.8; base.handN = "relax"; }
-    base.cam.fov = 40; // the face camera is placed by the engine relative to the eye anchor
+    base.cam.fov = 34; // the face camera is placed by the engine relative to the eye anchor
     return base;
   }
   // ---------- motion: 90 f ----------
   const fr = base; fr.t = 2 + f / 30;
   // slow eased push-in along the view axis (+ a slight rise), whole clip
   const push = glide(f / 89);
-  const MP = new THREE.Vector3(1.05, 1.62, 2.35), ML = new THREE.Vector3(-0.42, 0.98, -0.25);
+  const MP = new THREE.Vector3(1.2, 1.55, 2.75), ML = new THREE.Vector3(-0.45, 1.0, -0.3);
   const dir = MP.clone().sub(ML);
   fr.cam.pos = ML.clone().add(dir.multiplyScalar(1 - 0.17 * push)); fr.cam.pos.y += 0.06 * push;
   fr.cam.look = ML.clone(); fr.cam.fov = 46;
@@ -126,7 +126,7 @@ export function frameAt(comp: Comp, f: number): Frame {
   // jaws: ride up the taper the last 4 frames before the clamp, glow peaks on the clamp frame then settles
   fr.jaw = f < CLAMP - 4 ? 0 : clamp01((f - (CLAMP - 4)) / 4);
   fr.jawGlow = f < CLAMP ? 0.12 + 0.5 * fr.jaw : 0.9 + 2.4 * Math.exp(-(f - CLAMP) / 5);
-  if (f >= CLAMP && f < CLAMP + 4) { fr.flash = [0.55, 0.32, 0.16, 0.06][f - CLAMP]; fr.flashCol = new THREE.Color(lin("#c8ffe0")); }
+  if (f >= CLAMP && f < CLAMP + 4) { fr.flash = [0.32, 0.18, 0.08, 0.03][f - CLAMP]; fr.flashCol = new THREE.Color(lin("#c8ffe0")); }
   fr.spark = f >= CLAMP - 1 ? (f - CLAMP + 1) / 30 : -1;
   // camera rides the car with lag (the car sinks in frame), clamp kick decays in 7 f
   const camFollow = fr.carY * 0.82;
@@ -187,12 +187,12 @@ export class NoirEngine {
     w.beacon.intensity = st !== 0 ? 2.6 * Math.max(0, bk - 0.2) : 0;
     ((w.beaconMesh.userData.halo as THREE.Sprite).material as THREE.SpriteMaterial).color.copy(lin(BRAND.red)).multiplyScalar(st === 0 ? 0 : 0.5 * bk);
     w.slitMats.forEach((m) => m.color.copy(st === 0 ? lin(BRAND.cyan).multiplyScalar(1.0) : lin("#bfeaf2").multiplyScalar(3.2)));
-    w.key.intensity = st !== 0 ? 6 : 0; w.slit.intensity = st !== 0 ? 2.6 : 0; w.slit2.intensity = st !== 0 ? 2.2 : 0;
+    w.key.intensity = st !== 0 ? 7 : 0; w.slit.intensity = st !== 0 ? 2.6 : 0; w.slit2.intensity = st !== 0 ? 2.2 : 0;
     w.beams.forEach((m) => (m.uniforms.uT.value = F.t * 30));
     w.hazeMats.forEach((m) => (m.uniforms.uT.value = F.t * 30));
     w.moteMat.uniforms.uT.value = F.t; w.moteMat.uniforms.uCarY.value = 0;
     w.lampCone.visible = st === 2 && comp !== "faces";
-    (w.car.userData.cabLight as THREE.PointLight).intensity = st === 1 ? 3 : 0;
+    (w.car.userData.cabLight as THREE.PointLight).intensity = st === 1 ? 1.4 : 0;
     w.hazeMats.forEach((m) => (m.uniforms.uK.value = (m.userData.k ??= m.uniforms.uK.value) * (st === 1 ? 0.35 : 1)));
     w.beams.forEach((m) => (m.uniforms.uI.value = (m.userData.k ??= m.uniforms.uI.value) * (st === 1 ? 0.4 : 1)));
     this.camera.updateMatrixWorld();
@@ -215,9 +215,9 @@ export class NoirEngine {
     if (comp === "faces") {
       w.car.updateMatrixWorld(true);
       const eye = new THREE.Vector3(); rig.eyeAnchor.getWorldPosition(eye);
-      const look = eye.clone().add(new THREE.Vector3(0.04, -0.17, 0));
+      const look = eye.clone().add(new THREE.Vector3(0.04, -0.12, 0));
       cam.position.copy(look).add(new THREE.Vector3(0.5, 0.12, 1.12));
-      cam.fov = 40; cam.up.set(0, 1, 0); cam.lookAt(look);
+      cam.fov = 34; cam.up.set(0, 1, 0); cam.lookAt(look);
     } else {
       const pos = F.cam.pos.clone(), look = F.cam.look.clone();
       if (comp !== "motion") { pos.y += F.carY; look.y += F.carY; }
@@ -246,7 +246,7 @@ export class NoirEngine {
     // grade
     this.grade.uniforms.get("uFlash")!.value = F.flash;
     (this.grade.uniforms.get("uFlashCol")!.value as THREE.Color).copy(F.flashCol);
-    this.grade.uniforms.get("uVig")!.value = st === 0 ? 0.12 : 0.2;
+    this.grade.uniforms.get("uVig")!.value = st === 0 ? 0.1 : 0.15;
     this.bloom.intensity = st === 0 ? 0.6 : 0.85;
     this.composer.render();
     return { labels: F.labels ? this.labelAnchors() : null, state: st };
@@ -256,7 +256,7 @@ export class NoirEngine {
   ropes(snap: number) {
     const rp = this.w.ropes[1];
     if (snap <= 0) return;
-    const x = rp.x, z = RAIL_Z, B = 2.3; // break height above the hitch
+    const x = rp.x, z = RAIL_Z, B = 1.55; // break height above the hitch
     const t = snap;
     // lower piece: slumps and curls over toward the camera
     const low: THREE.Vector3[] = [];
@@ -267,10 +267,10 @@ export class NoirEngine {
     }
     // upper piece: recoils up with a travelling whip
     const up: THREE.Vector3[] = [];
-    const rise = Math.min(4, t * 9);
+    const rise = Math.min(2.5, t * 5);
     for (let i = 0; i <= 24; i++) {
       const u = i / 24, y = B + rise + u * 14;
-      const amp = 0.28 * Math.exp(-u * 3) * Math.sin(u * 14 - t * 30) * Math.exp(-t * 2);
+      const amp = 0.42 * Math.exp(-u * 2.2) * Math.sin(u * 12 - t * 26) * Math.exp(-t * 1.5);
       up.push(new THREE.Vector3(x + amp, y, z + amp * 0.6));
     }
     const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(low), 32, 0.011, 6, false);

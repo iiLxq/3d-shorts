@@ -324,11 +324,11 @@ export class World {
     post.position.set(-0.66, 0.65, 0.78); post.castShadow = true; c.add(post);
     const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.04, 20), new THREE.MeshStandardMaterial({ color: "#3e4a3f", roughness: 0.7 }));
     foot.position.set(-0.66, 0.02, 0.78); foot.castShadow = foot.receiveShadow = true; c.add(foot);
-    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.2, 24, 1, true), new THREE.MeshStandardMaterial({ color: "#46604c", roughness: 0.6, side: THREE.DoubleSide }));
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.2, 24, 1, true), new THREE.MeshStandardMaterial({ color: "#6f8a74", roughness: 0.55, side: THREE.DoubleSide, emissive: new THREE.Color("#5a3a12"), emissiveIntensity: 0.6 }));
     shade.name = "shade"; c.add(shade);
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), new THREE.MeshBasicMaterial({ color: untone("#ffe2b0", 3.0) }));
     bulb.name = "bulb"; c.add(bulb);
-    const lampPos = new THREE.Vector3(-0.66, 1.36, 0.78), lampAim = new THREE.Vector3(0.15, 0.9, -0.6);
+    const lampPos = new THREE.Vector3(-0.66, 1.36, 0.78), lampAim = new THREE.Vector3(0.35, 0.45, -0.55);
     const dir = lampAim.clone().sub(lampPos).normalize();
     shade.position.copy(lampPos).addScaledVector(dir, -0.06);
     shade.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
@@ -365,7 +365,7 @@ export class World {
     this.head = new THREE.SpotLight("#fff1d6", 3.5, 7, 0.32, 0.5, 2); s.add(this.head, this.head.target);
     this.landing = new THREE.PointLight("#ffcf8f", 1.4, 4.5, 2); this.landing.position.set(0, 2.2, SHAFT.zb + 0.25); s.add(this.landing);
     this.alarmL = new THREE.PointLight("#ff2a22", 0, 5, 2); this.alarmL.position.set(-SHAFT.x + 0.2, 2.45, -0.75); s.add(this.alarmL);
-    this.clampL = new THREE.PointLight("#39ff88", 0, 3, 2); this.car.add(this.clampL); this.clampL.position.set(1.0, 0.35, 0.3);
+    this.clampL = new THREE.PointLight("#39ff88", 0, 1.6, 2); this.car.add(this.clampL); this.clampL.position.set(1.0, 0.35, 0.3);
   }
 
   private buildRopes() {
@@ -419,7 +419,6 @@ export class World {
     const down = arrow(1.1, 0.16, 5001); down.mesh.rotation.z = Math.PI; down.mesh.position.set(0.62, 1.25, 0.55); this.car.add(down.mesh);
     const up = arrow(0.9, 0.11, 5002); up.mesh.position.set(0.3, 1.9, 0.1); this.car.add(up.mesh);
     const brk = arrow(0.6, 0.1, 5003); brk.mesh.rotation.z = -2.3; brk.mesh.position.set(0.55, BREAK_Y - 0.1, 0.15); this.scene.add(brk.mesh);
-    this.arrows.add(down.mesh, up.mesh, brk.mesh);
     this.arrows.userData.list = [down.mesh, up.mesh, brk.mesh];
   }
 
@@ -429,17 +428,17 @@ export class World {
     setLookAll(look);
     this.lookFns.forEach((f) => f(look));
     this.ropes.forEach((r) => { r.lower.material = this.ropeMats.get(look)!; r.upper.material = this.ropeMats.get(look)!; });
-    const fog = look === "solid" ? "#1a2840" : look === "blueprint" ? BRAND.navy : "#0a1a2e";
-    this.scene.fog = new THREE.FogExp2(fog, look === "xray" ? 0.035 : 0.05);
+    const fog = look === "solid" ? "#24344f" : look === "blueprint" ? BRAND.navy : "#0a1a2e";
+    this.scene.fog = new THREE.FogExp2(fog, look === "xray" ? 0.035 : 0.045);
     this.scene.background = new THREE.Color(fog);
     this.backlight.visible = look === "xray";
     this.leaks.forEach((m) => ((m.material as THREE.MeshBasicMaterial).color = look === "solid" ? untone("#ffd59a", 1.6) : look === "blueprint" ? untone(BRAND.cyan, 0.9) : untone("#7fd8f5", 0.22)));
     const bulb = this.car.getObjectByName("bulb") as THREE.Mesh;
     (bulb.material as THREE.MeshBasicMaterial).color = look === "solid" ? untone("#ffe2b0", 3.0) : untone("#e8f8ff", 2.0);
     if (look === "solid") {
-      this.hemi.color.set("#8aa2d6"); this.hemi.groundColor.set("#6a4a32"); this.hemi.intensity = 1.25;
-      this.key.color.set("#ffc68a"); this.key.intensity = 4.2;
-      this.fill.color.set("#9db8ff"); this.fill.intensity = 1.5;
+      this.hemi.color.set("#8aa2d6"); this.hemi.groundColor.set("#7a5638"); this.hemi.intensity = 2.3;
+      this.key.color.set("#ffc68a"); this.key.intensity = 3.4;
+      this.fill.color.set("#9db8ff"); this.fill.intensity = 2.0;
       this.landing.color.set("#ffcf8f"); this.landing.intensity = 2.4;
       this.scene.environmentIntensity = 0.6;
     } else if (look === "blueprint") {
@@ -511,7 +510,7 @@ export class World {
       }
     }
     const fl = st.clampT >= 0 ? Math.exp(-st.clampT * 4) : 0;
-    this.clampL.intensity = st.clamp > 0 ? 1.2 * st.clamp + 14 * fl : 0;
+    this.clampL.intensity = st.clamp > 0 ? 0.2 * st.clamp + 5 * fl : 0;
     // sparks
     this.sparks.forEach((sp, i) => {
       const t = st.clampT - (i % 5) * 0.01;

@@ -47,7 +47,7 @@ export function faceSpec(i: number): Spec {
   const s = base();
   const k = (["calm", "alarm", "relief"] as const)[i] ?? "calm";
   s.camRel = "face";
-  s.cam = { pos: [0.66, 0.05, 1.85], look: [0.0, -0.08, 0], fov: 26 };
+  s.cam = { pos: [0.6, 0.12, 1.75], look: [0.0, -0.02, 0], fov: 26 };
   s.figYaw = 0.25;
   s.expr = EXPR[k];
   s.pose = k === "calm" ? POSES.face : k === "alarm" ? POSES.faceAlarm : POSES.faceRelief;
@@ -79,7 +79,7 @@ export function motionSpec(f: number): Spec {
   s.seed = f;
   // camera: slow eased push-in from establishing to the figure + gear, following the car with lag
   const k = smoother(f / 89);
-  let lag = 0, wl = 0; for (let i = 0; i < 12; i++) { const w = 12 - i; lag += w * fallY(Math.max(0, f - i)); wl += w; } lag /= wl;
+  let lag = 0; for (let i = 0; i <= f; i++) lag += (fallY(i) - lag) * 0.55;
   const p0: V3 = [-1.35, 2.3, 7.0], p1: V3 = [-1.25, 1.3, 4.6];
   const l0: V3 = [-0.42, 1.05, -0.3], l1: V3 = [-0.72, 0.62, -0.1];
   s.cam = {

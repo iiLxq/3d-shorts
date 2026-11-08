@@ -20,8 +20,8 @@ export type Expr = { lidU: number; lidL: number; browY: number; browTilt: number
 
 export const EXPR: Record<"calm" | "alarm" | "relief", Expr> = {
   calm: { lidU: -0.32, lidL: 0.55, browY: 0, browTilt: 0.06, mouth: "calm", gazeX: 0, gazeY: 0 },
-  alarm: { lidU: -1.0, lidL: 1.0, browY: 0.016, browTilt: -0.38, mouth: "alarm", gazeX: 0, gazeY: 0.12 },
-  relief: { lidU: 0.42, lidL: -0.12, browY: 0.008, browTilt: -0.16, mouth: "relief", gazeX: 0, gazeY: 0.05 },
+  alarm: { lidU: -1.0, lidL: 1.0, browY: 0.004, browTilt: -0.55, mouth: "alarm", gazeX: 0, gazeY: 0.12 },
+  relief: { lidU: 0.42, lidL: -0.12, browY: -0.002, browTilt: -0.28, mouth: "relief", gazeX: 0, gazeY: 0.05 },
 };
 
 const D = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z).normalize();
@@ -171,13 +171,14 @@ export function buildFigure(): Figure {
 
   const EYE_D = [D(0.36, 0.02, 0.93), D(-0.36, 0.02, 0.93)];
   const skullO: SculptOpts = {
-    r: [0.158, 0.172, 0.162], e1: 0.82, e2: 0.86, taperBot: 0.94, taperBotZ: 1.0, seg: [64, 48],
+    r: [0.155, 0.172, 0.16], e1: 0.74, e2: 0.74, taperBot: 1.04, taperTop: 0.9, taperBotZ: 1.0, seg: [64, 48],
     disp: (d) => {
       let v = 0;
       for (const e of EYE_D) v -= 0.02 * gauss(d, e, 0.2);
       v += 0.009 * (gauss(d, D(0.5, -0.28, 0.82), 0.3) + gauss(d, D(-0.5, -0.28, 0.82), 0.3)); // cheeks
       v += 0.006 * gauss(d, D(0, 0.3, 0.95), 0.45) * (1 - gauss(d, D(0, 0.06, 1), 0.18)); // brow ridge
-      v += 0.01 * gauss(d, D(0, -0.78, 0.62), 0.28); // chin
+      v += 0.016 * gauss(d, D(0, -0.74, 0.66), 0.22); // chin
+      v -= 0.008 * gauss(d, D(0.62, 0.05, 0.75), 0.18) + 0.008 * gauss(d, D(-0.62, 0.05, 0.75), 0.18); // temples
       v -= 0.006 * gauss(d, D(0, -0.35, 0.94), 0.12); // philtrum hollow under the nose
       return v;
     },
@@ -223,7 +224,7 @@ export function buildFigure(): Figure {
     // brow piece
     const bp = new THREE.Group();
     const s = Math.sign(e.x);
-    bp.position.copy(onSkull(D(e.x * 1.05, 0.36, 0.9), 0.006));
+    bp.position.copy(onSkull(D(e.x * 1.08, 0.25, 0.93), 0.007));
     bp.rotation.y = s * 0.32;
     hc.add(bp); brows.push(bp);
     const browMesh = add(bp, sculpt({ r: [0.036, 0.011, 0.012], e1: 0.55, e2: 0.8, taperTop: 0.9, seg: [20, 10] }), M.hair, "fig");
@@ -231,7 +232,7 @@ export function buildFigure(): Figure {
   }
   // mouths (sculpted shapes, swapped per expression)
   const mouthAnchor = new THREE.Group();
-  const md = D(0, -0.44, 0.9);
+  const md = D(0, -0.53, 0.85);
   mouthAnchor.position.copy(onSkull(md, -0.006));
   mouthAnchor.lookAt(mouthAnchor.position.clone().add(md));
   hc.add(mouthAnchor);
@@ -258,7 +259,7 @@ export function buildFigure(): Figure {
   }
 
   // helmet: crowned shell, brim, ridge, strap, headlamp
-  const helm = new THREE.Group(); helm.position.set(0, 0.03, -0.004); hc.add(helm);
+  const helm = new THREE.Group(); helm.position.set(0, 0.048, -0.004); hc.add(helm);
   const shellO: SculptOpts = { r: [0.18, 0.165, 0.19], e1: 0.72, e2: 0.92, seg: [56, 28], theta: [0, Math.PI / 2 + 0.02] };
   add(helm, sculpt(shellO), M.helmet, "fig", 0, 0, 0, [0.06, 0.12]);
   const brimS = new THREE.Shape(); brimS.absellipse(0, 0, 0.198, 0.212, 0, Math.PI * 2, false, 0);

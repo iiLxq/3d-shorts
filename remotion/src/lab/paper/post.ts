@@ -72,7 +72,7 @@ export class LensBlurEffect extends Effect {
 
 // Display-referred grade after tone mapping: gentle S, split tone (warm highs, cool lows), lifted navy vignette, flash.
 const gradeFrag = /* glsl */ `
-uniform float uWarm; uniform float uVig; uniform vec3 uVigCol; uniform float uFlash; uniform vec3 uFlashCol; uniform float uContrast;
+uniform float uWarm; uniform float uVig; uniform vec3 uLift; uniform vec3 uVigCol; uniform float uFlash; uniform vec3 uFlashCol; uniform float uContrast;
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   vec3 c = inputColor.rgb;
   vec3 s = pow(max(c, 0.0), vec3(1.0 / 2.2));        // to display-ish gamma
@@ -83,9 +83,11 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   // split tone
   float wH = smoothstep(0.45, 1.0, y), wS = 1.0 - smoothstep(0.0, 0.5, y);
   sc += uWarm * (wH * vec3(0.025, 0.008, -0.03) + wS * vec3(-0.012, 0.0, 0.03));
+  // lifted, navy-tinted blacks (no crushed black)
+  sc += (1.0 - smoothstep(0.0, 0.4, y)) * uLift;
   // vignette toward lifted navy (never black)
   vec2 q = uv - 0.5; q.x *= 0.75;
-  float v = smoothstep(0.32, 0.85, length(q) * 1.25);
+  float v = smoothstep(0.42, 0.95, length(q) * 1.2);
   sc = mix(sc, uVigCol, v * uVig);
   sc = mix(sc, uFlashCol, uFlash);
   outputColor = vec4(pow(max(sc, 0.0), vec3(2.2)), inputColor.a);
@@ -95,7 +97,7 @@ export class GradeEffect extends Effect {
     super("GradeEffect", gradeFrag, {
       blendFunction: BlendFunction.SET,
       uniforms: new Map<string, THREE.Uniform>([
-        ["uWarm", new THREE.Uniform(1)], ["uVig", new THREE.Uniform(0.35)], ["uVigCol", new THREE.Uniform(new THREE.Color(0.06, 0.1, 0.18))],
+        ["uWarm", new THREE.Uniform(1)], ["uVig", new THREE.Uniform(0.22)], ["uLift", new THREE.Uniform(new THREE.Color(0.035, 0.05, 0.085))], ["uVigCol", new THREE.Uniform(new THREE.Color(0.06, 0.1, 0.18))],
         ["uFlash", new THREE.Uniform(0)], ["uFlashCol", new THREE.Uniform(new THREE.Color(1, 1, 1))], ["uContrast", new THREE.Uniform(0.35)],
       ]),
     });

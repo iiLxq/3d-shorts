@@ -102,7 +102,7 @@ export function gouache(o: GouacheOpts = {}) {
           // coloured shadow: teal low in the shaft, violet up high; pigment density from the brush field
           float hk = smoothstep(-3.0, 4.0, vWP.y);
           vec3 shadeCol = mix(uShadeLo, uShadeHi, hk);
-          reflectedLight.indirectDiffuse = reflectedLight.indirectDiffuse + alb * shadeCol * (0.6 + 0.3 * bn);
+          reflectedLight.indirectDiffuse = reflectedLight.indirectDiffuse + alb * shadeCol * (0.6 + 0.3 * bn) * (uCard > 0.5 ? 1.9 : 1.0);
         }`)
       .replace("#include <opaque_fragment>", `#include <opaque_fragment>
         {

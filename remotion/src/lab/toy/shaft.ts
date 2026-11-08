@@ -283,7 +283,7 @@ export function buildShaft(): Shaft {
     // housing: back plate, two cheeks with a front window (cut-away), top/bottom bars
     const backP = mesh(rbox(0.035, 0.24, 0.17, 0.008), steelDark, { role: "mech", edges: 30 }, true, true); backP.position.set(-s * 0.075, 0, 0); g.add(backP);
     const cheekB = mesh(rbox(0.16, 0.24, 0.028, 0.008), steel, { role: "mech", edges: 30 }, true, true); cheekB.position.set(s * 0.01, 0, -0.064); g.add(cheekB);
-    for (const y of [-0.1, 0.1]) { const bar = mesh(rbox(0.16, 0.04, 0.028, 0.008), steel, { role: "mech", edges: 30 }, true, true); bar.position.set(s * 0.01, y, 0.064); g.add(bar); }
+    { const bar = mesh(rbox(0.16, 0.04, 0.028, 0.008), steel, { role: "mech", edges: 30 }, true, true); bar.position.set(s * 0.01, 0.1, 0.064); g.add(bar); }
     const side = mesh(rbox(0.03, 0.24, 0.028, 0.006), steel, { role: "mech", edges: 30 }, true, true); side.position.set(-s * 0.055, 0, 0.064); g.add(side);
     
     // wedge jaws (trapezoid extrusions) either side of the blade
@@ -414,7 +414,7 @@ export function buildShaft(): Shaft {
     sh.moveTo(-w, 0); sh.lineTo(w, 0); sh.lineTo(w, -L + hl); sh.lineTo(hw, -L + hl); sh.lineTo(0, -L); sh.lineTo(-hw, -L + hl); sh.lineTo(-w, -L + hl); sh.lineTo(-w, 0);
     const g = extrude(sh, 0.05, 0.012, 3);
     const am = new THREE.MeshBasicMaterial({ color: untone(BRAND.red).multiplyScalar(1.0) });
-    const a1 = new THREE.Mesh(g, am); a1.position.set(0.5, -0.08, CZ1 + 0.2); arrows.add(a1); tag(a1, { role: "fx", edges: 0, hull: true });
+    const a1 = new THREE.Mesh(g, am); a1.scale.setScalar(0.7); a1.position.set(0.32, 0.05, CZ1 + 0.2); arrows.add(a1); tag(a1, { role: "fx", edges: 0, hull: true });
     const a2 = new THREE.Mesh(g, am); a2.scale.setScalar(0.45); a2.position.set(-1.16, 0.15, 0.2); arrows.add(a2); tag(a2, { role: "fx", edges: 0, hull: true });
   }
   const NS = 220;

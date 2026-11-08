@@ -55,7 +55,7 @@ function build(gl: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera
   scene.add(hemi);
   // cool top light from the shaft head (moonlit vent), no shadows: separates silhouettes from the back wall
   const fill = new THREE.DirectionalLight(untone("#9DB4E0"), 1.1);
-  fill.position.set(-1.5, 8, 2); scene.add(fill); scene.add(fill.target);
+  fill.position.set(-2.0, 5, 7); scene.add(fill); scene.add(fill.target);
   // headlamp: cool LED spot from the helmet + faint volumetric cone
   const head = new THREE.SpotLight(untone("#E6EEFF"), 3.2, 7, 0.32, 0.55, 2);
   const headTarget = new THREE.Object3D();
@@ -189,7 +189,7 @@ function apply(b: Built, s: Spec, size: { w: number; h: number }, camera: THREE.
   post.bloom.intensity = solid ? 0.75 : 1.0;
   post.grade.set({
     seed: s.seed, flash: s.flash,
-    grain: solid ? 0.03 : 0.018, vig: solid ? 0.26 : 0.2, lift: solid ? 0.02 : 0.012,
+    grain: solid ? 0.03 : 0.018, vig: solid ? 0.15 : 0.14, lift: solid ? 0.02 : 0.012,
     contrast: solid ? 0.14 : 0.05, sat: solid ? 1.1 : 1.0,
     shadow: solid ? [-0.012, 0.0, 0.03] : [0, 0, 0], hi: solid ? [0.025, 0.01, -0.02] : [0, 0, 0],
   });
@@ -224,7 +224,7 @@ const Labels: React.FC<{ s: Spec }> = ({ s }) => {
   const W = 1080, H = 1920, c = BRAND.cyan;
   const items = [
     { text: "HOIST ROPES · 4×", at: new THREE.Vector3(0, s.carY + 1.9, -0.15), x: 520, y: 330 },
-    { text: "SAFETY GEAR", at: new THREE.Vector3(-1.13, s.carY + 0.02, 0.09), x: 330, y: 1000 },
+    { text: "SAFETY GEAR", at: new THREE.Vector3(-1.13, s.carY + 0.02, 0.09), x: 300, y: 1440 },
     { text: "TECH 07", at: new THREE.Vector3(-0.3, 1.25, 0.05), x: 120, y: 520 },
   ];
   return (

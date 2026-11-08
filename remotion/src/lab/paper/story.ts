@@ -84,7 +84,7 @@ export function motionShot(f: number): Shot {
   }
   // camera: eased push-in along the view axis, follows the car with a 2-frame lag, kick on the clamp
   const c0 = HERO_CAM();
-  const end = { pos: V(-0.25, 2.05, 3.0), target: V(0.4, 0.95, -0.35) };
+  const end = { pos: V(-0.5, 2.3, 3.9), target: V(0.42, 0.92, -0.45) };
   const k = glide(t / 3.0);
   const pos = lerpV(c0.pos, end.pos, k), target = lerpV(c0.target, end.target, k);
   const lagY = dropAt(Math.max(0, t - 2 / FPS)) * 0.92 + carY * 0.08;
@@ -94,7 +94,7 @@ export function motionShot(f: number): Shot {
     const u = f - CLAMP_F, kick = (u % 2 ? -1 : 1) * Math.pow(Math.max(0, 1 - u / 8), 1.5);
     target.y += 0.035 * kick; roll = 0.006 * kick;
   }
-  const s = base("solid", { pos, target, fov: 40, focus: 0, blur: 9, roll }, pose, expr, HEAD.clone().add(V(0, carY, 0)), 0.06 - 0.03 * k);
+  const s = base("solid", { pos, target, fov: 42 - 1.5 * k, focus: 0, blur: 9, roll }, pose, expr, HEAD.clone().add(V(0, carY, 0)), 0.06 - 0.03 * k);
   s.t = t; s.carY = carY; s.snap = ts;
   s.clamp = f >= CLAMP_F - 1 ? clamp01((f - CLAMP_F + 2) / 2) : 0;
   s.clampT = f >= CLAMP_F ? (f - CLAMP_F) / FPS : -1;
