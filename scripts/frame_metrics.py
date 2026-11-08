@@ -31,6 +31,9 @@ Y' < 0.30), bright-line density (white top-hat > 0.12, e.g. blueprint lines), ed
 (Immerkaer, flat regions, x255; needs --width >= 540 to see fine grain).
 """
 import argparse, csv, glob, json, math, os, subprocess, sys
+
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_v, "1")  # light on shared machines: one core
 import numpy as np
 from scipy import ndimage as ndi
 from scipy.cluster.vq import kmeans2
@@ -148,7 +151,14 @@ class StillMetrics:
         conv = np.abs(ndi.convolve(Y, Mk))
         flat = surf & (gm < 0.02)
         noise = float(math.sqrt(math.pi / 2) / 6 * conv[flat].mean() * 255) if flat.sum() > 200 else float("nan")
+        # empty frame: share of 16 px blocks (at 1080 wide) with almost no variation (flat bg, sky, void)
+        bs = max(4, int(round(16 * self.W / 1080)))
+        hb, wb = self.H // bs, self.W // bs
+        blk = Y[:hb * bs, :wb * bs].reshape(hb, bs, wb, bs).std(axis=(1, 3))
+        bkeep = self.keep[:hb * bs].reshape(hb, bs).all(1)
+        empty = float((blk[bkeep] < 0.008).mean()) if bkeep.any() else float("nan")
         d.update(
+            empty_frac=empty,
             luma_mean=float(y.mean()), luma_p1=q[0], luma_p5=q[1], luma_p50=q[3], luma_p95=q[5], luma_p99=q[6],
             contrast_rms=float(y.std()), contrast_p95_p5=q[5] - q[1],
             pct_black=float((y8 < 16).mean() * 100), pct_clip=float((y8 > 245).mean() * 100),
@@ -189,7 +199,7 @@ class PhaseCorr:
         X = X / np.maximum(np.abs(X), 1e-9) * self.lp
         r = np.fft.ifft2(X).real
         i = np.unravel_index(np.argmax(r), r.shape)
-        peak = r[i] / max(self.lp.mean(), 1e-9) / r.size
+        peak = r[i] / max(self.lp.mean(), 1e-9)
         cy = i[0] - self.h if i[0] > self.h // 2 else i[0]
         cx = i[1] - self.w if i[1] > self.w // 2 else i[1]
         n = int(3 * self.ups) + 1
@@ -223,13 +233,14 @@ class Motion:
         out = []
         for y0, x0, _, _ in self.tiles:
             t = gray[y0:y0 + self.th, x0:x0 + self.tw]
-            out.append((self.pc.spec(t), float(t.std())))
+            hp = float((t - ndi.gaussian_filter(t, 2.0)).std())  # fine detail; flat gradients/sky ~0.001
+            out.append((self.pc.spec(t), hp))
         return out
 
     def fit(self, pa, pb):
         rows = []
         for (A, sa), (B, sb), (_, _, px, py) in zip(pa, pb, self.tiles):
-            if min(sa, sb) < 0.012:
+            if min(sa, sb) < 0.003:  # untextured tile: phase correlation would just say 0
                 continue
             dy, dx, pk = self.pc.shift(A, B)
             if pk < 0.06:
@@ -238,6 +249,7 @@ class Motion:
         if len(rows) < 2:
             return None
         r = np.array(rows)
+        p90 = float(np.percentile(np.hypot(r[:, 2], r[:, 3]), 90))  # fastest-moving content (subject), not the fit
         use = np.ones(len(r), bool)
         for _ in range(3):
             q = r[use]
@@ -257,7 +269,7 @@ class Motion:
             if nu.sum() < 2 or (nu == use).all():
                 break
             use = nu
-        return dict(tx=p[0], ty=p[1], s=p[2], r=p[3], n=int(use.sum()), resid=float(np.median(res[use])))
+        return dict(tx=p[0], ty=p[1], s=p[2], r=p[3], n=int(use.sum()), resid=float(np.median(res[use])), p90=p90)
 
 
 class LogPolarZoom:
@@ -371,9 +383,10 @@ def analyse(args):
             fk = mo.fit(hist_prep[0][0], tp) if len(hist_prep) == LAG + 1 else None
             zl = mo.lpz.zoom(hist_prep[0][1], lp) if len(hist_prep) == LAG + 1 else (float("nan"), 0)
             for tag, f in (("l1", f1), ("lk", fk)):
-                for key in ("tx", "ty", "s", "r", "n", "resid"):
+                for key in ("tx", "ty", "s", "r", "n", "resid", "p90"):
                     row[f"{tag}_{key}"] = f[key] if f else float("nan")
             row["zoom_lp_raw"] = zl[0] / LAG
+            row["trackable"] = int(f1 is not None or fk is not None or len(hist_prep) < 2)
             prev_g, prev_small = g, small
         im = Image.fromarray(u8).resize((tw, th), Image.BOX)
         if do_sheets:
@@ -402,7 +415,7 @@ def analyse(args):
         for i in range(1, n):
             loc = np.median(diff[max(1, i - 15):i + 16]) + 1e-4
             spike = diff[i] > 3 * loc and diff[i] > 0.02
-            if abs(lm[i] - lm[i - 1]) > 0.2 or (lm[i] > 0.85 and lm[i - 1] < 0.8):
+            if lm[i] > 0.8 and lm[i] - lm[i - 1] > 0.12:  # white flash (planned transition)
                 flashes.append(i)
                 continue
             if spike and (ncc[i] < 0.6 or (not valid1[i] and ncc[i] < 0.8)):
@@ -466,13 +479,16 @@ def analyse(args):
             r["roll_deg"] = math.degrees(Vs[i, 3] / Rp)
             r["zoom_lp_pct"] = r.pop("zoom_lp_raw") * 100
             r["speed_px720"] = speed[i]
+            lp90 = r.get("lk_p90", float("nan"))
+            sp90 = lp90 / LAG if not math.isnan(lp90) and lp90 / LAG < 1.5 / scale720 else r.get("l1_p90", float("nan"))
+            r["flow_p90_px720"] = (sp90 if not math.isnan(sp90) else 0.0) * scale720
             r["accel_px720"] = acc[i]
             r["jerk_px720"] = jerk[i]
             r["motion_src"] = src_used[i]
             r["cls"] = "cut" if i in breaks else ("hold" if speed[i] < HOLD else "drift" if speed[i] < DRIFT else "move")
             r["cut"] = int(i in cuts); r["flash"] = int(i in flashes)
             for k_ in [k_ for k_ in r if k_.startswith(("l1_", "lk_"))]:
-                if not k_.endswith(("_n", "_resid")):
+                if not k_.endswith(("_n", "_resid", "_p90")):
                     del r[k_]
 
     # ---------------- shots
@@ -536,7 +552,7 @@ STILL_KEYS = ["luma_mean", "luma_p1", "luma_p5", "luma_p50", "luma_p95", "luma_p
               "pct_black", "pct_clip", "sat_mean", "sat_p90", "colorfulness", "chroma_lit_p50", "chroma_lit_p90",
               "shadow_b", "hi_b", "shadow_hue", "hi_hue", "shadow_chroma", "hi_chroma",
               "ink_density", "bright_line_density", "edge_density", "sharp_centre", "sharp_periph", "sharp_ratio",
-              "texture_energy", "surface_frac", "vignette", "noise_sigma"]
+              "texture_energy", "surface_frac", "empty_frac", "vignette", "noise_sigma"]
 
 
 def summarise(rs, motion, idx, a, b, fps, pal_samples, nb):
@@ -552,6 +568,9 @@ def summarise(rs, motion, idx, a, b, fps, pal_samples, nb):
         s["pct_move"] = 100 * cls.count("move") / nn
         s["pct_moving_any"] = s["pct_drift"] + s["pct_move"]
         s["speed_p50"] = pct(sp, 50); s["speed_peak"] = float(sp.max())
+        fp = np.array([r["flow_p90_px720"] for r in rs])
+        s["pct_any_motion"] = 100 * float((fp >= HOLD).mean())  # some region moves (subject or camera)
+        s["flow_p90_p50"] = pct(fp, 50)
         z = np.array([r["zoom_pct"] for r in rs])
         quiet = sp < DRIFT
         s["zoom_quiet_p50_pct"] = pct(z[quiet], 50) if quiet.any() else float("nan")
@@ -572,9 +591,12 @@ def summarise(rs, motion, idx, a, b, fps, pal_samples, nb):
                 nstatic += 1
         s["static_runs_ge4"] = nstatic; s["longest_static"] = longest
         s["diff_p50"] = pct([r["diff"] for r in rs], 50)
+        s["pct_untrackable"] = 100 * float(np.mean([r["trackable"] == 0 for r in rs]))
     px = [p for i, p in pal_samples if a <= i < b]
     if px:
-        P = np.concatenate(px)[:40000].astype(np.float64)
+        P = np.concatenate(px).astype(np.float64)
+        if len(P) > 40000:
+            P = P[np.random.default_rng(2).choice(len(P), 40000, replace=False)]
         try:
             cent, lab_ = kmeans2(P, 6, minit="++", seed=1, iter=20)
             cnt = np.bincount(lab_, minlength=6)
@@ -630,6 +652,7 @@ def write_report(outdir, ov, shots, motion):
               "| metric | value |", "|---|---|",
               f"| hold / drift / move % | {ov['pct_hold']:.1f} / {ov['pct_drift']:.1f} / {ov['pct_move']:.1f} |",
               f"| moving (drift+move) % | {ov['pct_moving_any']:.1f} |",
+              f"| frames where any region moves >= 0.3 (subject/parallax, tile p90) | {ov['pct_any_motion']:.1f} % (p50 {ov['flow_p90_p50']:.2f}) |",
               f"| speed p50 / peak | {ov['speed_p50']:.2f} / {ov['speed_peak']:.1f} |",
               f"| zoom in quiet frames p50 (%/f) | {ov['zoom_quiet_p50_pct']:.3f} |",
               f"| frames zooming >= 0.05 %/f | {ov['pct_zooming']:.1f} % |",
@@ -638,6 +661,7 @@ def write_report(outdir, ov, shots, motion):
               f"| moves (>= 2 px720/f): count, median peak, median attack/release f | {len(mv)}, "
               + (f"{np.median([m['peak'] for m in mv]):.1f}, {np.median([m['attack'] for m in mv]):.0f}/{np.median([m['release'] for m in mv]):.0f}" if mv else "-") + " |",
               f"| static runs >= 4 f (count, longest) | {ov['static_runs_ge4']}, {ov['longest_static']} |",
+              f"| untrackable frames (too little texture to measure) | {ov['pct_untrackable']:.1f} % |",
               f"| hard cuts (per 10 s) | {len(ov['hard_cuts'])} ({ov['cuts_per_10s']}) at {ov['hard_cuts'][:30]} |",
               f"| flashes | {ov['flashes'][:30]} |", ""]
     L += ["## Image (medians over frames)", "", "| metric | value |", "|---|---|"]
@@ -645,7 +669,7 @@ def write_report(outdir, ov, shots, motion):
         L.append(f"| {k} | {fmt(ov[k], k)} |")
     L += ["", f"Palette (k=6): {' '.join(ov['palette'])}", ""]
     if len(shots) > 1:
-        cols = ["shot", "t0", "t1"] + (["pct_moving_any", "pct_move", "speed_peak", "zoom_quiet_p50_pct", "jerk_rms"] if motion else []) + \
+        cols = ["shot", "t0", "t1"] + (["pct_moving_any", "pct_any_motion", "pct_move", "speed_peak", "zoom_quiet_p50_pct", "jerk_rms"] if motion else []) + \
                ["luma_p50", "contrast_rms", "pct_black", "sat_mean", "colorfulness", "ink_density", "bright_line_density", "texture_energy", "sharp_ratio", "vignette"]
         L += ["## Per shot", "", "| " + " | ".join(cols) + " | palette top 3 |", "|" + "---|" * (len(cols) + 1)]
         for s in shots:
@@ -654,6 +678,19 @@ def write_report(outdir, ov, shots, motion):
 
 
 # ----------------------------------------------------------------------------- self test
+def render_clip(clip, cams, canv, OW, OH):
+    enc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{OW}x{OH}", "-r", "30",
+                            "-i", "-", "-c:v", "libx264", "-crf", "18", "-preset", "fast", "-pix_fmt", "yuv420p", clip], stdin=subprocess.PIPE)
+    yy, xx = np.mgrid[0:OH, 0:OW].astype(np.float32)
+    xo, yo = xx - OW / 2, yy - OH / 2
+    for cv, cx, cy, sc, ro in cams:
+        c, s = math.cos(ro), math.sin(ro)
+        X = cx + sc * (c * xo - s * yo); Y = cy + sc * (s * xo + c * yo)
+        fr = np.stack([ndi.map_coordinates(canv[cv][..., ch], [Y, X], order=3, mode="reflect") for ch in range(3)], -1)
+        enc.stdin.write((np.clip(fr, 0, 1) * 255).astype(np.uint8).tobytes())
+    enc.stdin.close(); enc.wait()
+
+
 def selftest(outdir):
     """Synthetic clip with known camera motion -> run analysis -> accuracy table."""
     os.makedirs(outdir, exist_ok=True)
@@ -715,16 +752,8 @@ def selftest(outdir):
             truth.append(dict(kind=kind, cut=int(kind == "cut" and k == 0), tx720=-dx * 720 / OW if kind != "cut" else 0,
                               zoom_pct=dz * 100, roll_deg=math.degrees(dr)))
     clip = os.path.join(outdir, "synthetic.mp4")
-    enc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{OW}x{OH}", "-r", "30",
-                            "-i", "-", "-c:v", "libx264", "-crf", "18", "-preset", "fast", "-pix_fmt", "yuv420p", clip], stdin=subprocess.PIPE)
-    yy, xx = np.mgrid[0:OH, 0:OW].astype(np.float32)
-    xo, yo = xx - OW / 2, yy - OH / 2
-    for cv, cx, cy, sc, ro in cams:
-        c, s = math.cos(ro), math.sin(ro)
-        X = cx + sc * (c * xo - s * yo); Y = cy + sc * (s * xo + c * yo)
-        fr = np.stack([ndi.map_coordinates(canv[cv][..., ch], [Y, X], order=3, mode="reflect") for ch in range(3)], -1)
-        enc.stdin.write((np.clip(fr, 0, 1) * 255).astype(np.uint8).tobytes())
-    enc.stdin.close(); enc.wait()
+    if not os.path.exists(clip):
+        render_clip(clip, cams, canv, OW, OH)
     a = argparse.Namespace(input=clip, outdir=os.path.join(outdir, "metrics"), fps=30, label="selftest", bounds=None, stills=False,
                            width=270, mask_band=None, sheets=False, onesheet=20, thumb=108)
     analyse(a)
