@@ -184,11 +184,11 @@ film/
   worlds.js        # scene builders: shaft(st), cabin(st), hall(st), city(st)…
   shots.js         # SHOTS = [{t0,t1,f(t) -> {world, st, cam, light, fog, grade}}]
   render.py        # preview mode (contact sheets) + full mode (one mp4 per shot)
+  mix.sh, measure.sh
   shots/sNN.mp4    # rendered shots
   concat.txt, video_raw.mp4
 vo/
   vo.mp3, vo.wav, captions.py, captions.ass, audio.py, sfx.wav, music.wav
-mix.sh, measure.sh
 ```
 
 ---
