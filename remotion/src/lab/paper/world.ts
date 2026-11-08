@@ -22,6 +22,7 @@ export const LANDINGS = [-2.2, 1.1, 4.4, 7.7, 11.0, 14.3, 17.6];
 export const BREAK_Y = 3.4;
 const CAR = { w: 2.0, d: 1.7, h: 2.5 };
 const ROPE_X = [-0.12, -0.04, 0.04, 0.12];
+export const GUS = { x: -0.15, z: 0.36 };
 
 // ---------- prints ----------
 function brickTile(p: Painter, S: number) {
@@ -125,7 +126,7 @@ export class World {
     this.buildCar();
     this.scene.add(this.car);
     this.car.add(this.puppet.root);
-    this.puppet.root.position.set(-0.3, 0.025, 0.22);
+    this.puppet.root.position.set(GUS.x, 0.025, GUS.z);
     this.buildLights();
     this.buildRopes();
     this.buildFx();
@@ -219,7 +220,7 @@ export class World {
     // the dark top of the shaft: a navy card ceiling far above with a vent slit
     this.add(s, roundRect(-S.x, S.zb, 2 * S.x, S.zf - S.zb, 0), { stock: "board", thick: 0.05, seed: 900 }, [0, S.y1 - 0.5, 0], [Math.PI / 2, 0, 0]);
     // x-ray light table behind the back wall
-    this.backlight = new THREE.Mesh(new THREE.PlaneGeometry(9, 40), new THREE.MeshBasicMaterial({ color: untone("#9fdcff", 0.7), toneMapped: true }));
+    this.backlight = new THREE.Mesh(new THREE.PlaneGeometry(9, 40), new THREE.MeshBasicMaterial({ color: untone("#2f74a8", 0.16), toneMapped: true }));
     this.backlight.position.set(0, 7, S.zb - 0.35); this.backlight.visible = false; s.add(this.backlight);
   }
 
@@ -274,7 +275,7 @@ export class World {
     }
     // safety gear housings at the top of each stile, around the rail blade; green brake jaws inside
     for (const sd of [-1, 1]) {
-      const g = new THREE.Group(); g.position.set(sd * 1.14, 0.06, 0); g.scale.x = sd; c.add(g);
+      const g = new THREE.Group(); g.position.set(sd * 1.14, 0.06, 0); g.scale.set(sd * 1.35, 1.35, 1.35); c.add(g);
       // back cheek + front cheek with a die-cut inspection window
       const cheek = new THREE.Shape(); cheek.moveTo(-0.17, 0); cheek.lineTo(0.13, 0); cheek.lineTo(0.13, 0.42); cheek.lineTo(-0.17, 0.42); cheek.closePath();
       const win = new THREE.Path(); win.absellipse(-0.02, 0.21, 0.1, 0.13, 0, Math.PI * 2, false, 0); cheek.holes.push(win);
@@ -320,14 +321,14 @@ export class World {
     const coil2 = coil.clone(); coil2.scale.setScalar(0.85); coil2.position.y = 0.045; c.add(coil2);
     // work lamp: paper tube post + folded cone shade + bulb
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 1.3, 12), new THREE.MeshStandardMaterial({ color: "#3e4a3f", roughness: 0.7 }));
-    post.position.set(-0.86, 0.65, 0.66); post.castShadow = true; c.add(post);
+    post.position.set(-0.66, 0.65, 0.78); post.castShadow = true; c.add(post);
     const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.04, 20), new THREE.MeshStandardMaterial({ color: "#3e4a3f", roughness: 0.7 }));
-    foot.position.set(-0.86, 0.02, 0.66); foot.castShadow = foot.receiveShadow = true; c.add(foot);
+    foot.position.set(-0.66, 0.02, 0.78); foot.castShadow = foot.receiveShadow = true; c.add(foot);
     const shade = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.2, 24, 1, true), new THREE.MeshStandardMaterial({ color: "#46604c", roughness: 0.6, side: THREE.DoubleSide }));
     shade.name = "shade"; c.add(shade);
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), new THREE.MeshBasicMaterial({ color: untone("#ffe2b0", 3.0) }));
     bulb.name = "bulb"; c.add(bulb);
-    const lampPos = new THREE.Vector3(-0.86, 1.36, 0.66), lampAim = new THREE.Vector3(0.25, 0.75, -0.75);
+    const lampPos = new THREE.Vector3(-0.66, 1.36, 0.78), lampAim = new THREE.Vector3(0.15, 0.9, -0.6);
     const dir = lampAim.clone().sub(lampPos).normalize();
     shade.position.copy(lampPos).addScaledVector(dir, -0.06);
     shade.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
@@ -335,10 +336,10 @@ export class World {
     this.car.userData.lampPos = lampPos; this.car.userData.lampAim = lampAim;
     // contact shadow under Gus's boots (multiply blob)
     const cc = canvas(128, 64), g = cc.getContext("2d")!;
-    const gr = g.createRadialGradient(64, 32, 2, 64, 32, 62); gr.addColorStop(0, "rgba(0,0,0,0.75)"); gr.addColorStop(1, "rgba(0,0,0,0)");
-    g.setTransform(1, 0, 0, 0.5, 0, 16); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
-    this.contact = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.32), new THREE.MeshBasicMaterial({ map: tex(cc), transparent: true, depthWrite: false, blending: THREE.MultiplyBlending, premultipliedAlpha: true }));
-    this.contact.rotation.x = -Math.PI / 2; this.contact.position.set(-0.3, 0.004, 0.22); c.add(this.contact);
+    const gr = g.createRadialGradient(64, 32, 2, 64, 32, 62); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#000000");
+    g.fillStyle = "#000"; g.fillRect(0, 0, 128, 64); g.setTransform(1, 0, 0, 0.5, 0, 16); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    this.contact = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.32), new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: tex(cc, false), transparent: true, depthWrite: false, opacity: 0.8 }));
+    this.contact.rotation.x = -Math.PI / 2; this.contact.position.set(GUS.x, 0.006, GUS.z); c.add(this.contact);
     void fiberTex;
   }
 
@@ -415,8 +416,8 @@ export class World {
         print: (p, pp) => { p.halftone(pp, (x) => 0.2 + 0.2 * Math.sin(x * 120), "#d81f1f", 0.012, 1.1); },
       });
     };
-    const down = arrow(1.1, 0.16, 5001); down.mesh.rotation.z = Math.PI; down.mesh.position.set(0.0, -0.25, 1.0); this.car.add(down.mesh);
-    const up = arrow(0.9, 0.11, 5002); up.mesh.position.set(-0.45, 1.6, 0.12); this.car.add(up.mesh);
+    const down = arrow(1.1, 0.16, 5001); down.mesh.rotation.z = Math.PI; down.mesh.position.set(0.62, 1.25, 0.55); this.car.add(down.mesh);
+    const up = arrow(0.9, 0.11, 5002); up.mesh.position.set(0.3, 1.9, 0.1); this.car.add(up.mesh);
     const brk = arrow(0.6, 0.1, 5003); brk.mesh.rotation.z = -2.3; brk.mesh.position.set(0.55, BREAK_Y - 0.1, 0.15); this.scene.add(brk.mesh);
     this.arrows.add(down.mesh, up.mesh, brk.mesh);
     this.arrows.userData.list = [down.mesh, up.mesh, brk.mesh];
@@ -428,18 +429,18 @@ export class World {
     setLookAll(look);
     this.lookFns.forEach((f) => f(look));
     this.ropes.forEach((r) => { r.lower.material = this.ropeMats.get(look)!; r.upper.material = this.ropeMats.get(look)!; });
-    const fog = look === "solid" ? "#16233a" : look === "blueprint" ? BRAND.navy : "#0d2236";
+    const fog = look === "solid" ? "#1a2840" : look === "blueprint" ? BRAND.navy : "#0a1a2e";
     this.scene.fog = new THREE.FogExp2(fog, look === "xray" ? 0.035 : 0.05);
     this.scene.background = new THREE.Color(fog);
     this.backlight.visible = look === "xray";
-    this.leaks.forEach((m) => ((m.material as THREE.MeshBasicMaterial).color = look === "solid" ? untone("#ffd59a", 1.6) : look === "blueprint" ? untone(BRAND.cyan, 0.9) : untone("#e8fbff", 0.8)));
+    this.leaks.forEach((m) => ((m.material as THREE.MeshBasicMaterial).color = look === "solid" ? untone("#ffd59a", 1.6) : look === "blueprint" ? untone(BRAND.cyan, 0.9) : untone("#7fd8f5", 0.22)));
     const bulb = this.car.getObjectByName("bulb") as THREE.Mesh;
     (bulb.material as THREE.MeshBasicMaterial).color = look === "solid" ? untone("#ffe2b0", 3.0) : untone("#e8f8ff", 2.0);
     if (look === "solid") {
-      this.hemi.color.set("#7d97c9"); this.hemi.groundColor.set("#3a2c22"); this.hemi.intensity = 0.55;
-      this.key.color.set("#ffc68a"); this.key.intensity = 9;
-      this.fill.color.set("#9db8ff"); this.fill.intensity = 0.9;
-      this.landing.color.set("#ffcf8f"); this.landing.intensity = 1.4;
+      this.hemi.color.set("#8aa2d6"); this.hemi.groundColor.set("#6a4a32"); this.hemi.intensity = 1.25;
+      this.key.color.set("#ffc68a"); this.key.intensity = 4.2;
+      this.fill.color.set("#9db8ff"); this.fill.intensity = 1.5;
+      this.landing.color.set("#ffcf8f"); this.landing.intensity = 2.4;
       this.scene.environmentIntensity = 0.6;
     } else if (look === "blueprint") {
       this.hemi.color.set("#bfe6ff"); this.hemi.groundColor.set("#0b1a33"); this.hemi.intensity = 0.9;
@@ -448,10 +449,10 @@ export class World {
       this.landing.color.set(BRAND.cyan); this.landing.intensity = 0.8;
       this.scene.environmentIntensity = 0.3;
     } else {
-      this.hemi.color.set("#cfefff"); this.hemi.groundColor.set("#10243a"); this.hemi.intensity = 0.8;
-      this.key.color.set("#e6f6ff"); this.key.intensity = 4;
-      this.fill.color.set("#bfe6ff"); this.fill.intensity = 0.5;
-      this.landing.color.set("#cfefff"); this.landing.intensity = 0.6;
+      this.hemi.color.set("#9fd6ff"); this.hemi.groundColor.set("#0b1a33"); this.hemi.intensity = 0.55;
+      this.key.color.set("#e6f6ff"); this.key.intensity = 2.6;
+      this.fill.color.set("#bfe6ff"); this.fill.intensity = 0.35;
+      this.landing.color.set("#cfefff"); this.landing.intensity = 0.4;
       this.scene.environmentIntensity = 0.4;
     }
   }
@@ -463,17 +464,16 @@ export class World {
     const P = this.puppet;
     P.pose(st.pose); P.expr(st.expr);
     P.root.rotation.y = st.yaw;
-    this.contact.position.x = -0.3 + st.pose.x * Math.cos(st.yaw);
+    this.contact.position.x = GUS.x + st.pose.x * Math.cos(st.yaw);
     // headlamp follows the head
     this.scene.updateMatrixWorld(true);
-    const lp = new THREE.Vector3(); P.lampLens.mesh.getWorldPosition(lp);
+    const lp = P.lampLens.mesh.localToWorld(new THREE.Vector3(0, 0.37, 0.16));
     this.head.position.copy(lp);
     const hq = new THREE.Quaternion(); P.head.getWorldQuaternion(hq);
-    const aim = new THREE.Vector3(0.15, 0.55 + st.expr.py * 25, 1).applyQuaternion(hq).normalize();
-    // gaze goes up the shaft toward the ropes: bias the beam upward / back
-    aim.add(new THREE.Vector3(0.1, 0.9, -1.4)).normalize();
+    const aim = new THREE.Vector3(0.05, 0.75 + st.expr.py * 20, 1).applyQuaternion(hq).normalize();
     this.head.target.position.copy(lp).addScaledVector(aim, 3);
-    this.head.intensity = st.look === "solid" ? 3.5 : 1.2;
+    this.head.target.updateMatrixWorld(true);
+    this.head.intensity = st.look === "solid" ? 3.0 : 1.0;
     (P.lampLens.mesh.material as THREE.Material[]).forEach(() => {});
     // ropes (intact or snapped)
     const top = SHAFT.y1, hitchY = st.carY + 0.98;

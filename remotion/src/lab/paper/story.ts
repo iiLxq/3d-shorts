@@ -10,10 +10,10 @@ const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 export const glide = (u: number) => { const x = clamp01(u); return x * x * x * (x * (6 * x - 15) + 10); };
 const lerpV = (a: THREE.Vector3, b: THREE.Vector3, t: number) => a.clone().lerp(b, t);
 
-export const HEAD = V(-0.3, 1.52, 0.27);   // Gus's face (car at rest)
+export const HEAD = V(-0.15, 1.52, 0.4);   // Gus's face (car at rest)
 export interface Shot extends FrameState { focusAt: THREE.Vector3; flash: number }
 
-const HERO_CAM = (): Cam => ({ pos: V(1.0, 2.75, 4.7), target: V(-0.05, 1.12, -0.35), fov: 40, focus: 0, blur: 9 });
+const HERO_CAM = (): Cam => ({ pos: V(-0.6, 2.5, 4.4), target: V(0.35, 0.95, -0.5), fov: 42, focus: 0, blur: 9 });
 
 const POSES: Record<string, Pose> = {
   idle: POSE0,
@@ -22,7 +22,7 @@ const POSES: Record<string, Pose> = {
   relieved: { ...POSE0, lift: -0.012, lean: 0.03, neck: 0.1, headTilt: 0.1, sL: -0.06, eL: 0.05, sR: 0.5, eR: 2.1, wR: 0.25, hL: -0.05, kL: 0.03, hR: 0.06, kR: -0.03, tool: 0 },
 };
 
-function base(look: Look, cam: Cam, pose: Pose, expr: Expr, focusAt: THREE.Vector3, yaw = 0.18): Shot {
+function base(look: Look, cam: Cam, pose: Pose, expr: Expr, focusAt: THREE.Vector3, yaw = 0.06): Shot {
   return { look, t: 0, cam, pose, expr, yaw, carY: 0, snap: -1, clamp: 0, clampT: -1, alarm: 0, arrows: 0, focusAt, flash: 0 };
 }
 
@@ -36,8 +36,8 @@ export function boardShot(f: number): Shot {
     return s;
   }
   const which = ["calm", "alarmed", "relieved"][f - 3];
-  const cam: Cam = { pos: V(0.32, 1.72, 1.72), target: V(-0.3, 1.42, 0.25), fov: 32, focus: 0, blur: 14 };
-  const s = base("solid", cam, POSES[which === "calm" ? "idle" : which], EXPR[which], HEAD.clone(), 0.33);
+  const cam: Cam = { pos: V(-0.42, 1.74, 1.86), target: V(-0.13, 1.44, 0.4), fov: 32, focus: 0, blur: 14 };
+  const s = base("solid", cam, POSES[which === "calm" ? "idle" : which], EXPR[which], HEAD.clone(), -0.05);
   if (which === "alarmed") s.alarm = 0.8;
   if (which === "relieved") { s.clamp = 1; s.clampT = 3; }
   return s;
@@ -84,7 +84,7 @@ export function motionShot(f: number): Shot {
   }
   // camera: eased push-in along the view axis, follows the car with a 2-frame lag, kick on the clamp
   const c0 = HERO_CAM();
-  const end = { pos: V(0.62, 2.2, 3.15), target: V(0.05, 1.05, -0.2) };
+  const end = { pos: V(-0.25, 2.05, 3.0), target: V(0.4, 0.95, -0.35) };
   const k = glide(t / 3.0);
   const pos = lerpV(c0.pos, end.pos, k), target = lerpV(c0.target, end.target, k);
   const lagY = dropAt(Math.max(0, t - 2 / FPS)) * 0.92 + carY * 0.08;
@@ -94,7 +94,7 @@ export function motionShot(f: number): Shot {
     const u = f - CLAMP_F, kick = (u % 2 ? -1 : 1) * Math.pow(Math.max(0, 1 - u / 8), 1.5);
     target.y += 0.035 * kick; roll = 0.006 * kick;
   }
-  const s = base("solid", { pos, target, fov: 40, focus: 0, blur: 9, roll }, pose, expr, HEAD.clone().add(V(0, carY, 0)), 0.18 + 0.02 * k);
+  const s = base("solid", { pos, target, fov: 40, focus: 0, blur: 9, roll }, pose, expr, HEAD.clone().add(V(0, carY, 0)), 0.06 - 0.03 * k);
   s.t = t; s.carY = carY; s.snap = ts;
   s.clamp = f >= CLAMP_F - 1 ? clamp01((f - CLAMP_F + 2) / 2) : 0;
   s.clampT = f >= CLAMP_F ? (f - CLAMP_F) / FPS : -1;

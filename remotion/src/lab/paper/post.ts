@@ -2,7 +2,7 @@
 //   RenderPass -> LensBlur (thin-lens gather, own pass) -> Bloom + Neutral tone map + Grade (warm hi / cool lo, lifted vignette)
 import * as THREE from "three";
 import {
-  EffectComposer, RenderPass, EffectPass, Effect, EffectAttribute, BloomEffect, ToneMappingEffect, ToneMappingMode, BlendFunction,
+  EffectComposer, RenderPass, EffectPass, Effect, EffectAttribute, BloomEffect, ToneMappingEffect, ToneMappingMode, BlendFunction, KernelSize,
 } from "postprocessing";
 
 const lensFrag = /* glsl */ `
@@ -10,6 +10,8 @@ uniform float uFocus;   // focus distance (m, along view axis)
 uniform float uCInf;    // CoC at infinity in px at 1920 high
 uniform float uMax;     // max CoC px (buffer px)
 uniform float uScale;   // buffer height / 1920
+bool badf(float x) { return (floatBitsToUint(x) & 0x7fffffffu) >= 0x7f800000u; }
+vec3 safe3(vec3 c) { return (badf(c.r) || badf(c.g) || badf(c.b)) ? vec3(0.0) : clamp(c, vec3(0.0), vec3(64.0)); }
 float cocSigned(float d) {
   float z = max(-getViewZ(d), 1e-3);
   float c = uCInf * uScale * (1.0 - uFocus / z);
@@ -17,6 +19,7 @@ float cocSigned(float d) {
   return clamp(c, -uMax, uMax);
 }
 void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth, out vec4 outputColor) {
+  vec3 ic = safe3(inputColor.rgb);
   float c0s = cocSigned(depth);
   float c0 = abs(c0s);
   float z0 = -getViewZ(depth);
@@ -29,7 +32,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     float cs = cocSigned(readDepth(suv));
     if (cs < 0.0 && -cs > rr * 0.9) R = max(R, -cs);
   }
-  if (R < 0.6) { outputColor = inputColor; return; }
+  if (R < 0.6) { outputColor = vec4(ic, 1.0); return; }
   vec3 acc = vec3(0.0); float n = 0.0;
   for (int i = 0; i < TAPS; i++) {
     float fi = float(i) + 0.5;
@@ -42,10 +45,10 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     float reach = abs(cs);
     if (zs > z0) reach = min(reach, c0);            // background never spreads over nearer pixels
     float w = clamp(reach - r + 1.0, 0.0, 1.0);
-    acc += mix(inputColor.rgb, texture2D(inputBuffer, suv).rgb, w);
+    acc += mix(ic, safe3(texture2D(inputBuffer, suv).rgb), w);
     n += 1.0;
   }
-  outputColor = vec4(acc / n, inputColor.a);
+  outputColor = vec4(acc / n, 1.0);
 }`;
 
 export class LensBlurEffect extends Effect {
@@ -111,7 +114,7 @@ export class Post {
     this.composer.addPass(this.renderPass);
     this.lens = new LensBlurEffect(40);
     this.composer.addPass(new EffectPass(camera, this.lens));
-    this.bloom = new BloomEffect({ blendFunction: BlendFunction.ADD, intensity: 0.7, luminanceThreshold: 0.82, luminanceSmoothing: 0.25, mipmapBlur: true, radius: 0.62, levels: 6 });
+    this.bloom = new BloomEffect({ blendFunction: BlendFunction.ADD, intensity: 0.7, luminanceThreshold: 0.82, luminanceSmoothing: 0.25, mipmapBlur: false, kernelSize: KernelSize.LARGE, resolutionScale: 0.5 });
     const tm = new ToneMappingEffect({ mode: ToneMappingMode.NEUTRAL });
     this.grade = new GradeEffect();
     this.composer.addPass(new EffectPass(camera, this.bloom, tm, this.grade));

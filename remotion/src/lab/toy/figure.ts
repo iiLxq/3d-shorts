@@ -78,15 +78,15 @@ export type Figure = {
 export function buildFigure(): Figure {
   // ------------------------------------------------------------------ materials
   const M = {
-    jacket: vinyl(PAINT.jacket, { sss: "#ff7a10", sssK: 0.3, rough: 0.58 }),
-    reflect: vinyl(PAINT.reflective, { rough: 0.32, sheen: 0.6, edge: 0.15, clear: 0.4 }),
+    jacket: vinyl(PAINT.jacket, { sss: "#ff7a10", sssK: 0.05, rough: 0.7, sheen: 0.0, edge: 0.18 }),
+    reflect: Object.assign(vinyl(PAINT.reflective, { rough: 0.3, sheen: 0.3, edge: 0.15, clear: 0.5, sss: "#000000", sssK: 0 }), { emissive: new THREE.Color(0.32, 0.34, 0.36) }),
     pants: vinyl(PAINT.pants, { rough: 0.75, sheen: 0.5, sss: "#2a3550", sssK: 0.1 }),
     joint: vinyl(PAINT.joint, { rough: 0.38, clear: 0.5, edge: 0.1, sss: "#000000", sssK: 0 }),
     glove: vinyl(PAINT.glove, { rough: 0.7, sheen: 0.4, sss: "#000000", sssK: 0 }),
     boot: vinyl(PAINT.boot, { rough: 0.5, clear: 0.25, sss: "#5a2a10", sssK: 0.15 }),
     sole: vinyl(PAINT.sole, { rough: 0.8, sss: "#000000", sssK: 0 }),
     leather: vinyl(PAINT.leather, { rough: 0.55, clear: 0.2, sss: "#40200a", sssK: 0.1 }),
-    skin: vinyl(PAINT.skin, { sss: "#ff3a1a", sssK: 0.55, rough: 0.55, edge: 0.18 }),
+    skin: vinyl(PAINT.skin, { sss: "#ff3a1a", sssK: 0.3, rough: 0.55, edge: 0.18 }),
     hair: vinyl(PAINT.hair, { rough: 0.7, sheen: 0.4, sss: "#000000", sssK: 0 }),
     helmet: vinyl(PAINT.helmet, { rough: 0.3, clear: 0.6, sss: "#ffcf9a", sssK: 0.15, edge: 0.2 }),
     eye: new THREE.MeshPhysicalMaterial({ color: PAINT.eyeWhite, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.05 }),
@@ -122,7 +122,7 @@ export function buildFigure(): Figure {
 
   // ------------------------------------------------------------------ hips / pelvis / tool belt
   const hips = joint("hips", root, 0, 0.74, 0);
-  const pelvisO: SculptOpts = { r: [0.165, 0.085, 0.118], e1: 0.55, e2: 0.7, taperBot: 0.9, seg: [36, 20] };
+  const pelvisO: SculptOpts = { r: [0.175, 0.09, 0.122], e1: 0.55, e2: 0.7, taperBot: 0.9, seg: [36, 20] };
   add(hips, sculpt(pelvisO), M.pants, "fig", 0, 0, 0, [-0.03, 0.03]);
   const beltO: SculptOpts = { r: [0.172, 0.04, 0.124], e1: 0.25, e2: 0.7, seg: [40, 10] };
   const belt = add(hips, sculpt(beltO), M.leather, "fig", 0, 0.066, 0);
@@ -164,7 +164,7 @@ export function buildFigure(): Figure {
   badge.rotation.y = 0.28;
 
   // ------------------------------------------------------------------ neck / head
-  const neck = joint("neck", spine, 0, 0.395, -0.01);
+  const neck = joint("neck", spine, 0, 0.38, -0.01);
   ball(neck, 0.05).position.y = 0.012;
   const head = joint("head", neck, 0, 0.035, 0);
   const hc = new THREE.Group(); hc.position.set(0, 0.17, 0.008); head.add(hc);
@@ -286,12 +286,12 @@ export function buildFigure(): Figure {
     const s = side === "L" ? 1 : -1;
     const sh = joint(`shoulder${side}`, spine, s * 0.222, 0.335, -0.005);
     ball(sh, 0.062);
-    const upO: SculptOpts = { r: [0.058, 0.115, 0.062], e1: 0.7, e2: 0.85, taperBot: 0.86, seg: [28, 20] };
+    const upO: SculptOpts = { r: [0.066, 0.115, 0.07], e1: 0.7, e2: 0.85, taperBot: 0.86, seg: [28, 20] };
     add(sh, sculpt(upO), M.jacket, "fig", 0, -0.13, 0, [-0.05, 0.05]);
     add(sh, band(upO, -0.03, 0.005, 0.005, 32, 2), M.reflect, "fig", 0, -0.13, 0);
     const el = joint(`elbow${side}`, sh, 0, -0.25, 0);
     ball(el, 0.046);
-    const foO: SculptOpts = { r: [0.052, 0.1, 0.055], e1: 0.7, e2: 0.85, taperBot: 0.82, seg: [28, 20] };
+    const foO: SculptOpts = { r: [0.06, 0.1, 0.062], e1: 0.7, e2: 0.85, taperBot: 0.82, seg: [28, 20] };
     add(el, sculpt(foO), M.jacket, "fig", 0, -0.11, 0, [-0.04, 0.04]);
     add(el, band(foO, -0.1, -0.07, 0.006, 32, 2), M.black, "fig", 0, -0.11, 0); // ribbed cuff
     const wr = joint(`wrist${side}`, el, 0, -0.215, 0);
@@ -317,19 +317,21 @@ export function buildFigure(): Figure {
     const s = side === "L" ? 1 : -1;
     const hp = joint(`hip${side}`, hips, s * 0.088, -0.05, 0.0);
     ball(hp, 0.058);
-    const thO: SculptOpts = { r: [0.072, 0.13, 0.078], e1: 0.72, e2: 0.85, taperBot: 0.85, seg: [28, 20] };
+    const thO: SculptOpts = { r: [0.086, 0.135, 0.092], e1: 0.72, e2: 0.85, taperBot: 0.85, seg: [28, 20] };
     add(hp, sculpt(thO), M.pants, "fig", 0, -0.135, 0, [-0.06, 0.06]);
+    const pk = add(hp, rbox(0.03, 0.1, 0.09, 0.012), M.pants, "fig", s * 0.084, -0.15, 0.0); pk.rotation.z = s * 0.06;
+    add(hp, rbox(0.034, 0.025, 0.094, 0.008), M.pants, "fig", s * 0.086, -0.095, 0.0);
     const kn = joint(`knee${side}`, hp, 0, -0.275, 0);
     ball(kn, 0.05);
     add(kn, sculpt({ r: [0.05, 0.06, 0.03], e1: 0.6, e2: 0.7, seg: [20, 14], flatBack: 0.6 }), M.black, "fig", 0, -0.015, 0.045);
-    const shO: SculptOpts = { r: [0.062, 0.12, 0.066], e1: 0.72, e2: 0.85, taperBot: 0.84, seg: [28, 20] };
+    const shO: SculptOpts = { r: [0.074, 0.12, 0.078], e1: 0.72, e2: 0.85, taperBot: 0.84, seg: [28, 20] };
     add(kn, sculpt(shO), M.pants, "fig", 0, -0.135, 0, [-0.06, 0.04]);
     const an = joint(`ankle${side}`, kn, 0, -0.27, 0);
     ball(an, 0.034);
-    const bootO: SculptOpts = { r: [0.064, 0.068, 0.128], e1: 0.45, e2: 0.62, taperTop: 0.82, taperTopZ: 0.62, flatBack: 0.1, seg: [36, 24] };
+    const bootO: SculptOpts = { r: [0.074, 0.072, 0.14], e1: 0.45, e2: 0.62, taperTop: 0.82, taperTopZ: 0.62, flatBack: 0.1, seg: [36, 24] };
     add(an, sculpt(bootO), M.boot, "fig", 0, -0.072, 0.034, [-0.02]);
     add(an, band({ r: [0.058, 0.04, 0.062], e1: 0.5, e2: 0.7 }, -0.012, 0.012, 0.006, 32, 2), M.boot, "fig", 0, 0.0, 0.0); // cuff roll
-    const sole = add(an, sculpt({ r: [0.068, 0.02, 0.134], e1: 0.25, e2: 0.62, seg: [36, 10] }), M.sole, "fig", 0, -0.133, 0.036);
+    const sole = add(an, sculpt({ r: [0.079, 0.02, 0.146], e1: 0.25, e2: 0.62, seg: [36, 10] }), M.sole, "fig", 0, -0.133, 0.036);
     soles.push(sole);
     for (let k = 0; k < 4; k++) add(an, rbox(0.06, 0.006, 0.008, 0.002), M.black, "fig", 0, -0.04 + k * 0.006, 0.105 - k * 0.012); // laces
     rod(hp, new THREE.Vector3(), new THREE.Vector3(0, -0.275, 0));
@@ -407,12 +409,12 @@ export const POSES: Record<string, Pose> = {
   },
   // hero: weight on right leg, right hand on the rail, looking up at the ropes, left hand on hip
   work: {
-    sway: -0.02,
-    spine: [-0.02, 0.18, 0.03], neck: [-0.1, 0.1, 0], head: [-0.38, 0.28, 0.08],
-    shoulderL: [-0.25, 0, 0.62], elbowL: [-1.55, -0.6, 0], wristL: [0.0, 0, 0.2],
-    shoulderR: [-1.35, -0.25, -0.38], elbowR: [-0.35, 0, 0], wristR: [0.2, 0, -0.2],
-    hipL: [-0.12, 0.08, 0.14], hipR: [0.06, -0.1, -0.03], kneeL: [0.22, 0, 0], kneeR: [0.04, 0, 0],
-    ankleL: [-0.1, 0, -0.14], ankleR: [-0.08, 0.1, 0.03],
+    sway: -0.015,
+    spine: [-0.04, 0.12, 0.02], neck: [-0.08, 0.06, 0], head: [-0.3, 0.2, 0.06],
+    shoulderL: [-0.25, 0.3, 0.5], elbowL: [-1.75, 0.2, 0], wristL: [0.2, 0, 0.3],
+    shoulderR: [-0.35, 0.1, -0.95], elbowR: [-0.35, 0, 0], wristR: [0.15, 0, 0.35],
+    hipL: [-0.06, 0.12, 0.09], hipR: [0.03, -0.1, -0.05], kneeL: [0.14, 0, 0], kneeR: [0.03, 0, 0],
+    ankleL: [-0.08, 0, -0.09], ankleR: [-0.03, 0.08, 0.05],
   },
   face: {
     spine: [0.0, 0.0, 0], neck: [0.0, 0.0, 0], head: [-0.04, 0.0, 0.0],
@@ -431,7 +433,7 @@ export const POSES: Record<string, Pose> = {
     lift: -0.09,
     spine: [0.22, 0.05, 0], neck: [-0.15, 0, 0], head: [-0.52, 0.12, -0.05],
     shoulderL: [-0.9, 0.2, 1.05], elbowL: [-1.1, -0.3, 0], wristL: [-0.3, 0, 0.3],
-    shoulderR: [-1.5, -0.25, -0.45], elbowR: [-0.5, 0, 0], wristR: [0.2, 0, -0.2],
+    shoulderR: [-0.55, 0.1, -1.05], elbowR: [-0.45, 0, 0], wristR: [0.15, 0, 0.35],
     hipL: [-0.55, 0.12, 0.2], hipR: [-0.45, -0.12, -0.18], kneeL: [0.85, 0, 0], kneeR: [0.75, 0, 0],
     ankleL: [-0.3, 0, -0.2], ankleR: [-0.3, 0, 0.18],
   },
@@ -439,15 +441,15 @@ export const POSES: Record<string, Pose> = {
     lift: -0.16,
     spine: [0.38, 0.0, 0], neck: [-0.2, 0, 0], head: [-0.32, 0.0, 0],
     shoulderL: [-0.7, 0.3, 0.9], elbowL: [-0.9, -0.3, 0], wristL: [-0.3, 0, 0.3],
-    shoulderR: [-1.55, -0.25, -0.45], elbowR: [-0.7, 0, 0], wristR: [0.2, 0, -0.2],
+    shoulderR: [-0.5, 0.1, -0.85], elbowR: [-0.75, 0, 0], wristR: [0.15, 0, 0.35],
     hipL: [-0.95, 0.12, 0.25], hipR: [-0.85, -0.12, -0.22], kneeL: [1.45, 0, 0], kneeR: [1.35, 0, 0],
     ankleL: [-0.45, 0, -0.25], ankleR: [-0.45, 0, 0.22],
   },
   relief: {
     lift: -0.02,
     spine: [-0.08, 0.1, 0.0], neck: [-0.05, 0, 0], head: [-0.2, 0.15, 0.12],
-    shoulderL: [-0.8, 0.25, 0.3], elbowL: [-1.9, -0.35, 0], wristL: [0.3, 0, 0],
-    shoulderR: [-1.3, -0.25, -0.38], elbowR: [-0.35, 0, 0], wristR: [0.2, 0, -0.2],
+    shoulderL: [-0.75, 0.35, 0.22], elbowL: [-1.95, -0.2, 0], wristL: [0.3, 0, 0],
+    shoulderR: [-0.35, 0.1, -0.95], elbowR: [-0.35, 0, 0], wristR: [0.15, 0, 0.35],
     hipL: [-0.1, 0.06, 0.08], hipR: [-0.05, -0.08, -0.06], kneeL: [0.12, 0, 0], kneeR: [0.1, 0, 0],
     ankleL: [-0.02, 0, -0.08], ankleR: [-0.05, 0, 0.06],
   },

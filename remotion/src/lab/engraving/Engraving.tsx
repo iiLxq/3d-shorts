@@ -41,6 +41,7 @@ const Overlay: React.FC<{ fr: Frame; mode: Mode }> = ({ fr, mode }) => {
         const tx = l.x, ty = l.y;
         return (
           <g key={i} fontFamily={SERIF} fill={ink}>
+            <rect x={tx - 12} y={ty - 36} width={l.text.length * 25 + 24} height={96} fill={bp ? "#0B1A33" : "#F1E8D5"} opacity={0.88} />
             <text x={tx} y={ty} fontSize={34} letterSpacing={3} fontWeight={700}>{l.text}</text>
             <text x={tx} y={ty + 46} fontSize={40} fontStyle="italic">{l.num}</text>
             <path d={`M ${tx + 54} ${ty + 34} Q ${(tx + p.x) / 2 + 40} ${ty + 30} ${p.x} ${p.y}`} stroke={ink} strokeWidth={2.6} fill="none" />

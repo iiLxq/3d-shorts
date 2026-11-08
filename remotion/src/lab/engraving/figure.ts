@@ -128,7 +128,7 @@ const W = { out: 0.0075, mid: 0.0052, fine: 0.0038, hair: 0.003 };
 const ALB = { skin: 0.86, jacket: 0.82, tape: 1.0, glove: 0.42, trousers: 0.30, boot: 0.22, helmet: 0.95, belt: 0.28, steel: 0.55 };
 
 function drawTorso(p: Pen) {
-  const sil: V[] = [[-0.195, -0.02], [-0.212, 0.16], [-0.225, 0.34], [-0.236, 0.46], [-0.19, 0.525], [-0.075, 0.555], [0.075, 0.555], [0.19, 0.525], [0.236, 0.46], [0.225, 0.34], [0.212, 0.16], [0.195, -0.02], [0, -0.035]];
+  const sil: V[] = [[-0.2, -0.08], [-0.212, 0.16], [-0.225, 0.34], [-0.236, 0.46], [-0.19, 0.525], [-0.075, 0.555], [0.075, 0.555], [0.19, 0.525], [0.236, 0.46], [0.225, 0.34], [0.212, 0.16], [0.2, -0.08], [0, -0.09]];
   p.base(sil, ALB.jacket, 1);
   // reflective tape: two hoops + braces over the shoulders (paper white, no spot)
   const band = (y: number) => [[-0.215, y], [0, y - 0.006], [0.215, y], [0.217, y + 0.042], [0, y + 0.036], [-0.217, y + 0.042]] as V[];
@@ -155,32 +155,36 @@ function drawTorso(p: Pen) {
   p.ink([[0.17, 0.03], [0.11, 0.055]], W.fine, W.hair);
   p.ink([[0.05, 0.27], [0.11, 0.25], [0.15, 0.27]], W.hair, W.hair);
   p.ink(sil, W.out, W.out, { closed: true });
+  drawBelt(p, -0.03);
+}
+
+function drawBelt(p: Pen, dy: number) {
+  const Y = (y: number) => y + dy;
+  const belt: V[] = [[-0.215, Y(0.012)], [0, Y(0.0)], [0.215, Y(0.012)], [0.215, Y(0.062)], [0, Y(0.052)], [-0.215, Y(0.062)]];
+  p.base(belt, ALB.belt, 0, false);
+  p.ink(belt, W.mid, W.mid, { closed: true, taper: 0 });
+  p.ink([[-0.2, Y(0.024)], [0, Y(0.013)], [0.2, Y(0.024)]], W.hair, W.hair, { taper: 0, a: 0.6 });
+  const bk: V[] = [[-0.028, Y(0.004)], [0.028, Y(0.004)], [0.028, Y(0.058)], [-0.028, Y(0.058)]];
+  p.clear(bk, ALB.steel, 0, false); p.ink(bk, W.fine, W.fine, { closed: true, taper: 0 });
+  for (const s of [-1, 1]) {
+    const x = s * 0.165;
+    const po: V[] = [[x - 0.05, Y(0.05)], [x + 0.05, Y(0.05)], [x + 0.056, Y(-0.13)], [x, Y(-0.148)], [x - 0.056, Y(-0.13)]];
+    p.base(po, ALB.belt + 0.12, 0, false); p.ink(po, W.mid, W.mid, { closed: true, taper: 0 });
+    p.ink([[x - 0.05, Y(0.022)], [x, Y(0.0)], [x + 0.05, Y(0.022)]], W.fine);
+    p.ink([[x - 0.035, Y(-0.06)], [x + 0.035, Y(-0.065)]], W.hair, W.hair, { a: 0.7 });
+  }
+  const hm: V[] = [[0.225, Y(-0.0)], [0.245, Y(-0.0)], [0.255, Y(-0.2)], [0.235, Y(-0.2)]];
+  p.base(hm, 0.75, 0, false); p.ink(hm, W.fine, W.fine, { closed: true, taper: 0 });
+  const hh: V[] = [[0.205, Y(0.02)], [0.27, Y(0.02)], [0.27, Y(0.055)], [0.205, Y(0.055)]];
+  p.base(hh, ALB.steel, 0, false); p.ink(hh, W.fine, W.fine, { closed: true, taper: 0 });
 }
 
 function drawPelvis(p: Pen) {
-  const tr: V[] = [[-0.185, 0.05], [-0.19, -0.06], [-0.16, -0.12], [0, -0.13], [0.16, -0.12], [0.19, -0.06], [0.185, 0.05]];
+  const tr: V[] = [[-0.17, 0.05], [-0.175, -0.07], [-0.15, -0.13], [0, -0.15], [0.15, -0.13], [0.175, -0.07], [0.17, 0.05]];
   p.base(tr, ALB.trousers);
-  // belt
-  const belt: V[] = [[-0.2, 0.012], [0, 0.0], [0.2, 0.012], [0.2, 0.06], [0, 0.05], [-0.2, 0.06]];
-  p.base(belt, ALB.belt, 0, false);
-  p.ink(belt.slice(0, 3), W.mid); p.ink(belt.slice(3), W.mid);
-  p.ink([[-0.19, 0.022], [0, 0.011], [0.19, 0.022]], W.hair, W.hair, { taper: 0, a: 0.6 });
-  p.clear([[-0.026, 0.006], [0.026, 0.006], [0.026, 0.056], [-0.026, 0.056]], ALB.steel, 0, false);
-  p.ink([[-0.026, 0.006], [0.026, 0.006], [0.026, 0.056], [-0.026, 0.056]], W.fine, W.fine, { closed: true, taper: 0 });
-  // pouches
-  for (const s of [-1, 1]) {
-    const x = s * 0.15;
-    const po: V[] = [[x - 0.045, 0.045], [x + 0.045, 0.045], [x + 0.05, -0.12], [x, -0.135], [x - 0.05, -0.12]];
-    p.base(po, ALB.belt + 0.08, 0, false); p.ink(po, W.mid, W.mid, { closed: true, taper: 0 });
-    p.ink([[x - 0.045, 0.02], [x, 0.0], [x + 0.045, 0.02]], W.fine);
-    p.lines(po, 1.2, 0.012, W.hair, 0.55);
-  }
-  // hammer handle in the screen-right loop
-  p.base([[0.205, -0.02], [0.225, -0.02], [0.235, -0.2], [0.215, -0.2]], 0.7, 0, false);
-  p.ink([[0.205, -0.02], [0.225, -0.02], [0.235, -0.2], [0.215, -0.2]], W.fine, W.fine, { closed: true, taper: 0 });
+  p.ink([[0.0, -0.06], [0.0, -0.15]], W.fine);
   p.ink(tr, W.out, W.out, { closed: true });
 }
-
 function drawHead(p: Pen, ex: Expr) {
   const cx = -0.012;
   // neck
@@ -202,10 +206,10 @@ function drawHead(p: Pen, ex: Expr) {
   }
   // stubble: sparse stipple on jaw (screen-right = shadow side denser)
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 140; i++) {
     const x = -0.09 + rnd() * 0.19, y = 0.06 + rnd() * 0.06;
     const inJaw = Math.hypot((x - 0.0) / 0.11, (y - 0.115) / 0.07) < 1 && !(Math.abs(x - cx) < 0.04 && y > 0.08);
-    if (inJaw) p.dot([x, y], 0.0017 + (x > 0 ? 0.0006 : 0), 0.85);
+    if (inJaw) p.dot([x, y], 0.0011 + (x > 0 ? 0.0003 : 0), 0.6);
   }
   // cheek / jaw structure lines
   p.ink([[0.083, 0.16], [0.09, 0.12], [0.075, 0.09]], W.hair, W.hair);
@@ -343,7 +347,7 @@ function drawHand(p: Pen, wrench: boolean) {
   }
 }
 function drawThigh(p: Pen) {
-  const s: V[] = [[-0.08, 0.04], [0.08, 0.04], [0.07, -0.2], [0.062, -0.42], [-0.062, -0.42], [-0.072, -0.2]];
+  const s: V[] = [[-0.092, 0.04], [0.092, 0.04], [0.082, -0.2], [0.07, -0.42], [-0.07, -0.42], [-0.084, -0.2]];
   p.base(s, ALB.trousers);
   const pk: V[] = [[0.0, -0.14], [0.06, -0.14], [0.058, -0.26], [0.002, -0.26]];
   p.ink(pk, W.fine, W.fine, { closed: true, taper: 0 }); p.ink([[0.0, -0.165], [0.06, -0.165]], W.hair);
@@ -351,9 +355,9 @@ function drawThigh(p: Pen) {
   p.ink(s, W.out, W.out, { closed: true });
 }
 function drawShin(p: Pen) {
-  const s: V[] = [[-0.064, 0.03], [0.064, 0.03], [0.058, -0.2], [0.056, -0.37], [-0.056, -0.37], [-0.058, -0.2]];
+  const s: V[] = [[-0.072, 0.03], [0.072, 0.03], [0.066, -0.2], [0.062, -0.37], [-0.062, -0.37], [-0.066, -0.2]];
   p.base(s, ALB.trousers);
-  const kp: V[] = [[-0.062, 0.035], [0.062, 0.035], [0.058, -0.09], [-0.058, -0.09]];
+  const kp: V[] = [[-0.07, 0.035], [0.07, 0.035], [0.066, -0.09], [-0.066, -0.09]];
   p.base(kp, 0.5, 0); p.ink(kp, W.mid, W.mid, { closed: true });
   p.ink([[-0.05, -0.02], [0.05, -0.02]], W.hair, W.hair); p.ink([[-0.05, -0.055], [0.05, -0.055]], W.hair, W.hair);
   p.ink([[-0.054, -0.34], [0.054, -0.34]], W.fine);
@@ -374,14 +378,14 @@ function drawBoot(p: Pen) {
 type PartDef = { name: string; parent?: string; pivot: V; bb: [number, number, number, number]; z: number; ppm: number; R: number; ang: number; draw: (p: Pen, ex: Expr) => void; exprs?: boolean };
 
 const PARTS: PartDef[] = [
-  { name: "thighL", pivot: [-0.088, -0.02], bb: [-0.09, -0.43, 0.09, 0.05], z: 0.01, ppm: 700, R: 0.07, ang: 82, draw: drawThigh },
-  { name: "shinL", parent: "thighL", pivot: [0, -0.41], bb: [-0.07, -0.38, 0.07, 0.045], z: 0.005, ppm: 700, R: 0.055, ang: 84, draw: drawShin },
+  { name: "thighL", pivot: [-0.088, -0.02], bb: [-0.1, -0.43, 0.1, 0.05], z: 0.01, ppm: 700, R: 0.08, ang: 82, draw: drawThigh },
+  { name: "shinL", parent: "thighL", pivot: [0, -0.41], bb: [-0.08, -0.38, 0.08, 0.045], z: 0.005, ppm: 700, R: 0.06, ang: 84, draw: drawShin },
   { name: "bootL", parent: "shinL", pivot: [0, -0.36], bb: [-0.115, -0.1, 0.08, 0.03], z: 0.006, ppm: 800, R: 0.05, ang: 10, draw: drawBoot },
-  { name: "thighR", pivot: [0.088, -0.02], bb: [-0.09, -0.43, 0.09, 0.05], z: 0.012, ppm: 700, R: 0.07, ang: 98, draw: drawThigh },
-  { name: "shinR", parent: "thighR", pivot: [0, -0.41], bb: [-0.07, -0.38, 0.07, 0.045], z: 0.005, ppm: 700, R: 0.055, ang: 96, draw: drawShin },
+  { name: "thighR", pivot: [0.088, -0.02], bb: [-0.1, -0.43, 0.1, 0.05], z: 0.012, ppm: 700, R: 0.08, ang: 98, draw: drawThigh },
+  { name: "shinR", parent: "thighR", pivot: [0, -0.41], bb: [-0.08, -0.38, 0.08, 0.045], z: 0.005, ppm: 700, R: 0.06, ang: 96, draw: drawShin },
   { name: "bootR", parent: "shinR", pivot: [0, -0.36], bb: [-0.115, -0.1, 0.08, 0.03], z: 0.006, ppm: 800, R: 0.05, ang: 10, draw: drawBoot },
-  { name: "torso", pivot: [0, 0.02], bb: [-0.25, -0.05, 0.25, 0.61], z: 0.03, ppm: 700, R: 0.17, ang: 32, draw: drawTorso },
-  { name: "pelvis", pivot: [0, 0], bb: [-0.215, -0.21, 0.245, 0.07], z: 0.04, ppm: 700, R: 0.12, ang: 28, draw: drawPelvis },
+  { name: "torso", pivot: [0, 0.02], bb: [-0.25, -0.2, 0.28, 0.61], z: 0.03, ppm: 700, R: 0.17, ang: 32, draw: drawTorso },
+  { name: "pelvis", pivot: [0, 0], bb: [-0.19, -0.17, 0.19, 0.07], z: 0.02, ppm: 700, R: 0.12, ang: 28, draw: drawPelvis },
   { name: "head", parent: "torso", pivot: [0, 0.525], bb: [-0.15, -0.02, 0.15, 0.39], z: 0.02, ppm: 1500, R: 0.11, ang: 38, draw: drawHead, exprs: true },
   { name: "helmet", parent: "head", pivot: [0, 0], bb: [-0.17, 0.23, 0.17, 0.45], z: 0.012, ppm: 1300, R: 0.12, ang: 20, draw: drawHelmet },
   { name: "uArmL", parent: "torso", pivot: [-0.205, 0.465], bb: [-0.07, -0.31, 0.07, 0.045], z: 0.03, ppm: 700, R: 0.05, ang: 80, draw: drawUpperArm },
@@ -394,9 +398,9 @@ const PARTS: PartDef[] = [
 
 export type Pose = Record<string, number> & { rootY?: number; rootX?: number };
 export const POSES: Record<string, Pose> = {
-  idle: { torso: 0.025, head: -0.07, uArmL: 0.1, fArmL: 0.12, handL: 0.05, uArmR: -0.16, fArmR: -0.42, handR: -0.15, thighL: -0.05, shinL: 0.03, bootL: 0.02, thighR: 0.08, shinR: -0.05, bootR: -0.03, rootY: 0 },
-  alarm: { torso: -0.05, head: 0.14, uArmL: -1.25, fArmL: -0.55, handL: -0.3, uArmR: 1.15, fArmR: 0.6, handR: 0.25, thighL: -0.3, shinL: 0.58, bootL: -0.28, thighR: 0.3, shinR: -0.58, bootR: 0.28, rootY: -0.04 },
-  relieved: { torso: 0.05, head: -0.12, uArmL: 0.18, fArmL: 0.15, handL: 0.1, uArmR: 0.32, fArmR: -2.45, handR: -0.15, thighL: -0.08, shinL: 0.08, bootL: 0, thighR: 0.08, shinR: -0.08, bootR: 0, rootY: -0.01 },
+  idle: { torso: 0.025, head: -0.07, uArmL: -0.13, fArmL: -0.08, handL: -0.05, uArmR: 0.15, fArmR: 0.38, handR: 0.12, thighL: -0.05, shinL: 0.03, bootL: 0.02, thighR: 0.08, shinR: -0.05, bootR: -0.03, rootY: 0 },
+  alarm: { torso: -0.05, head: 0.14, uArmL: -1.25, fArmL: -0.55, handL: -0.3, uArmR: 1.15, fArmR: 0.6, handR: 0.25, thighL: -0.2, shinL: 0.36, bootL: -0.16, thighR: 0.2, shinR: -0.36, bootR: 0.16, rootY: -0.02 },
+  relieved: { torso: 0.05, head: -0.12, uArmL: -0.3, fArmL: 2.45, handL: 0.15, uArmR: 0.14, fArmR: 0.25, handR: 0.1, thighL: -0.08, shinL: 0.08, bootL: 0, thighR: 0.08, shinR: -0.08, bootR: 0, rootY: -0.01 },
 };
 
 export function blendPose(a: Pose, b: Pose, t: number): Pose {

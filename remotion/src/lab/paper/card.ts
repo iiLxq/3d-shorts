@@ -76,7 +76,7 @@ export class Card {
   constructor(shape: THREE.Shape, o: CardOpts = {}) {
     this.o = o;
     const thick = o.thick ?? 0.012;
-    this.geo = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: false, curveSegments: 10 });
+    this.geo = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: true, bevelThickness: 0, bevelSize: 0, bevelOffset: 0, bevelSegments: 1, curveSegments: 10 });
     this.geo.translate(0, 0, -thick);
     this.pts = shape.getPoints(10).map((v) => [v.x, v.y] as Pt);
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -151,16 +151,17 @@ export class Card {
     const map = this.paint(eff);
     if (eff === "solid") {
       const face = new THREE.MeshStandardMaterial({
-        map, bumpMap: bump, bumpScale: o.bump ?? 1.6, roughness: o.rough ?? 0.86, metalness: o.metal ?? 0, envMapIntensity: o.metal ? 1.0 : 0.35,
+        map, bumpMap: bump, bumpScale: o.bump ?? 0.004,
+         roughness: o.rough ?? 0.86, metalness: o.metal ?? 0, envMapIntensity: o.metal ? 1.0 : 0.35,
       });
       if (o.emissive) { face.emissiveMap = map; face.emissive = o.emissive.clone(); }
-      const side = new THREE.MeshStandardMaterial({ color: stock.core, roughness: 0.95, metalness: 0, bumpMap: bump, bumpScale: 0.6 });
+      const side = new THREE.MeshStandardMaterial({ color: stock.core, roughness: 0.95, metalness: 0, bumpMap: bump, bumpScale: 0.002 });
       if (o.metal) { side.metalness = 0.2; }
       return [face, side];
     }
     if (eff === "blueprint") {
       const face = new THREE.MeshStandardMaterial({
-        map, emissiveMap: map, emissive: new THREE.Color(0.30, 0.42, 0.62), roughness: 0.9, bumpMap: bump, bumpScale: 1.0, envMapIntensity: 0.2,
+        map, emissiveMap: map, emissive: new THREE.Color(0.30, 0.42, 0.62), roughness: 0.9, bumpMap: bump, bumpScale: 0.003, envMapIntensity: 0.2,
       });
       const ink = INK_FOR[role];
       const side = new THREE.MeshBasicMaterial({ color: untone(ink === BP_LINE ? BRAND.cyan : ink, 1.35), toneMapped: true });
@@ -169,10 +170,10 @@ export class Card {
     }
     // x-ray vellum shell
     const face = new THREE.MeshStandardMaterial({
-      map, transparent: true, opacity: 0.30, depthWrite: false, side: THREE.DoubleSide, roughness: 0.7,
-      emissive: new THREE.Color(0.10, 0.18, 0.24), emissiveMap: map, bumpMap: bump, bumpScale: 0.6,
+      map, color: new THREE.Color("#8fb6cc"), transparent: true, opacity: 0.2, depthWrite: false, side: THREE.DoubleSide, roughness: 0.7,
+      emissive: new THREE.Color(0.05, 0.11, 0.16), emissiveMap: map, bumpMap: bump, bumpScale: 0.002,
     });
-    const side = new THREE.MeshBasicMaterial({ color: untone("#bff3ff", 1.1), transparent: true, opacity: 0.85, depthWrite: false });
+    const side = new THREE.MeshBasicMaterial({ color: untone(BRAND.cyan, 1.15), transparent: true, opacity: 0.9, depthWrite: false });
     return [face, side];
   }
 }

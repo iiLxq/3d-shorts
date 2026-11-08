@@ -13,8 +13,8 @@ const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const sstep = (a: number, b: number, x: number) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 const smoother = (t: number) => { t = clamp(t); return t * t * t * (t * (t * 6 - 15) + 10); };
 
-export const HERO: Cam = { pos: V(1.85, 2.2, 5.0), look: V(-0.05, 0.55, -0.35), fov: 50, roll: 0 };
-const FACE: Cam = { pos: V(0.55, 1.66, 1.42), look: V(0.17, 1.5, 0.12), fov: 27, roll: 0 };
+export const HERO: Cam = { pos: V(1.05, 2.0, 3.9), look: V(-0.5, 0.6, -0.4), fov: 50, roll: 0 };
+const FACE: Cam = { pos: V(-0.72, 1.74, 1.62), look: V(0.18, 1.55, 0.12), fov: 27, roll: 0 };
 
 function baseWS(): WorldState {
   return { drop: 0, jaw: 0, jawGlow: 0.25, alarm: 0.55, snap: -1, xr: 0, arrows: 0, lampOn: 1, headAim: V(-1.25, 0.5, 0.0), ropeShiver: 0, t: 0 };
@@ -29,7 +29,7 @@ export function frameAt(mode: Mode, f: number): Frame {
   let meter = 0.35, meterGreen = false, labels = 0, fig = "", stamp = 0;
   if (mode === "hero") { fig = "FIG. 1"; }
   if (mode === "faces") {
-    cam = FACE; ws.alarm = 0.35;
+    cam = FACE; ws.alarm = 0.35; look.focus = [2.25, 3.4, 0.85];
     expr = (["calm", "alarmed", "relieved"] as Expr[])[Math.min(2, f)];
     pose = f === 1 ? POSES.alarm : f === 2 ? POSES.relieved : POSES.idle;
     if (f === 1) { ws.alarm = 1; ws.headAim = V(0.2, 6, -0.3); }
@@ -67,7 +67,7 @@ export function frameAt(mode: Mode, f: number): Frame {
     if (f >= CLAMP) { const tt = (f - CLAMP) / 30; ws.drop = dropAtClamp + 0.03 * Math.exp(-tt * 9) * Math.sin(tt * 30); }
     ws.jaw = f < CLAMP - 2 ? 0 : sstep(CLAMP - 2, CLAMP, f);
     ws.jawGlow = f < CLAMP ? 0.2 : 0.25 + 0.75 * Math.exp(-(f - CLAMP) / 14);
-    look.flash = f === CLAMP ? 0.85 : f === CLAMP + 1 ? 0.45 : f === CLAMP + 2 ? 0.15 : 0;
+    look.flash = f === CLAMP ? 0.6 : f === CLAMP + 1 ? 0.3 : f === CLAMP + 2 ? 0.1 : 0;
     look.flashGreen = 0.6;
     if (f >= SNAP && f < SNAP + 2) { look.flash = f === SNAP ? 0.35 : 0.12; look.flashGreen = 0; }
     // danger meter: rises with the creak, peaks in the fall, crashes green on the clamp frame
@@ -75,8 +75,8 @@ export function frameAt(mode: Mode, f: number): Frame {
     meterGreen = f >= CLAMP;
     // camera: one-axis eased push-in (whole clip), tracks 60 % of the drop, impact shake decays in 9 f
     const k = smoother(f / 89);
-    const P0 = HERO.pos, P1 = V(1.15, 1.75, 3.55);
-    const L0 = HERO.look, L1 = V(-0.15, 0.6, -0.3);
+    const P0 = HERO.pos, P1 = V(0.75, 1.65, 3.25);
+    const L0 = HERO.look, L1 = V(-0.55, 0.62, -0.35);
     const pos = P0.clone().lerp(P1, k), lk = L0.clone().lerp(L1, k);
     pos.y -= ws.drop * 0.6; lk.y -= ws.drop * 0.6;
     if (f >= CLAMP) { const s = Math.exp(-(f - CLAMP) / 4) * 0.025; pos.y += s * Math.sin((f - CLAMP) * 2.3); lk.y += s * 0.5 * Math.sin((f - CLAMP) * 2.3 + 1); }

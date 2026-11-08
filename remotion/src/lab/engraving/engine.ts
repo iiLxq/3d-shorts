@@ -11,6 +11,7 @@ export type PrintLook = {
   glowK: number;         // global glow multiplier
   vignette: number;      // corner darkening 0..1 (target corner/centre ~0.85)
   sepia?: number;
+  focus?: [number, number, number]; // [depth m where fading starts, depth of full fade, strength]
 };
 
 const FS_TRI = /* glsl */ `
@@ -55,7 +56,7 @@ void main(){
 const COMP = /* glsl */ `
 ${COMMON}
 uniform sampler2D tG1; uniform sampler2D tG2;
-uniform float uXr, uFlash, uFlashGreen, uGlowK, uVig, uSepia;
+uniform float uXr, uFlash, uFlashGreen, uGlowK, uVig, uSepia; uniform vec3 uFocus;
 uniform vec2 uOff[5];
 varying vec2 vUv;
 float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
@@ -64,12 +65,12 @@ float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
 vec4 nd(vec2 uv){ vec4 t = texture2D(tN, uv); if (t.a <= 0.0) t.a = 1e4; return t; }
 void main(){
   vec2 px = 1.0 / uRes;
-  vec2 fc = vUv * uRes / (uPx * 2.0);   // 1080-space pixel coords (paper is resolution independent)
+  vec2 fc = vUv * uRes / uPx;   // 1080-space pixel coords (paper is resolution independent)
   vec4 A = texture2D(tA, vUv);
   // ---- contour & crease lines from normal/depth (near side of a depth jump only) ----
   vec4 c0 = nd(vUv);
   float sil = 0.0, cre = 0.0;
-  float rS = 2.3 * uPx * 2.0, rC = 1.25 * uPx * 2.0;
+  float rS = 3.2 * uPx, rC = 1.6 * uPx;
   for (int i = 0; i < 8; i++) {
     float an = float(i) * 0.785398;
     vec2 dv = vec2(cos(an), sin(an));
@@ -93,21 +94,23 @@ void main(){
   vec3 navy = vec3(0.043, 0.102, 0.20);           // #0B1A33
   vec3 paperB = navy * (0.94 + 0.12 * mott) + fib * vec3(0.01, 0.03, 0.05);
   vec3 paper = mix(paperW, paperB, uBp);
+  // aerial perspective (engraver's convention): far planes print lighter, never blurrier
+  float far = smoothstep(uFocus.x, uFocus.y, c0.a) * uFocus.z;
   // ---- spot inks (each plate slightly misregistered), drawn opaque so brand hex lands exactly ----
   vec3 col = paper;
   for (int k = 1; k <= 4; k++) {
-    vec4 a = texture2D(tA, vUv + uOff[k] * px * uPx * 2.0);
+    vec4 a = texture2D(tA, vUv + uOff[k] * px * uPx);
     float id = floor(a.b * 8.0 + 0.5);
     float cov = (abs(id - float(k)) < 0.5) ? a.g : 0.0;
     // ink density varies a little with the paper (letterpress)
-    cov *= 0.93 + 0.07 * mott;
+    cov *= (0.93 + 0.07 * mott) * (1.0 - 0.55 * far);
     col = mix(col, spotCol(float(k)), clamp(cov, 0.0, 1.0));
   }
   // ---- key ink (navy on paper / cyan-white on blueprint) with a touch of spread ----
   float ink = max(A.r, edge);
   float inkN = (texture2D(tA, vUv + vec2(px.x, 0.0)).r + texture2D(tA, vUv - vec2(px.x, 0.0)).r + texture2D(tA, vUv + vec2(0.0, px.y)).r + texture2D(tA, vUv - vec2(0.0, px.y)).r) * 0.25;
   ink = max(ink, inkN * 0.18);
-  ink *= 0.92 + 0.08 * mott;
+  ink *= (0.92 + 0.08 * mott) * (1.0 - 0.72 * far);
   vec3 keyInk = mix(navy * 0.92, vec3(0.80, 0.97, 1.0), uBp);
   // over a spot colour the key ink reads as a dark overprint of that colour
   vec3 over = mix(keyInk, keyInk * 0.55 + col * 0.12, (1.0 - uBp) * step(0.01, distance(col, paper)));
@@ -154,7 +157,7 @@ export class Engine {
     this.mBlur = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: FS_TRI, fragmentShader: BLUR, depthTest: false, depthWrite: false });
     const off = [[0, 0], [1.3, -0.9], [-1.1, 1.0], [0.9, 1.2], [-1.2, -0.7]].map(([x, y]) => new THREE.Vector2(x, y));
     this.mComp = new THREE.ShaderMaterial({
-      uniforms: { ...common, tG1: { value: this.g1.texture }, tG2: { value: this.g2.texture }, uXr: { value: 0 }, uFlash: { value: 0 }, uFlashGreen: { value: 0 }, uGlowK: { value: 1 }, uVig: { value: 0.15 }, uSepia: { value: 0 }, uOff: { value: off } },
+      uniforms: { ...common, tG1: { value: this.g1.texture }, tG2: { value: this.g2.texture }, uXr: { value: 0 }, uFlash: { value: 0 }, uFlashGreen: { value: 0 }, uGlowK: { value: 1 }, uVig: { value: 0.15 }, uSepia: { value: 0 }, uFocus: { value: new THREE.Vector3(50, 60, 0) }, uOff: { value: off } },
       vertexShader: FS_TRI, fragmentShader: COMP, depthTest: false, depthWrite: false,
     });
     this.quad = new THREE.Mesh(geo, this.mDown);
@@ -187,6 +190,7 @@ export class Engine {
     this.blur(this.g2, this.g2b, 1.6);
     const c = this.mComp.uniforms;
     c.uXr.value = look.xr; c.uFlash.value = look.flash; c.uFlashGreen.value = look.flashGreen; c.uGlowK.value = look.glowK; c.uVig.value = look.vignette; c.uSepia.value = look.sepia ?? 0;
+    const fo = look.focus ?? [6.5, 14, 0.45]; c.uFocus.value.set(fo[0], fo[1], fo[2]);
     this.pass(this.mComp, null);
   }
 }

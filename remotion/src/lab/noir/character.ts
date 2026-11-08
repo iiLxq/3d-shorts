@@ -16,10 +16,10 @@ const PAD = "#23262E";
 const LEATHER = "#6C4733";
 const SKIN = "#B57655", SKIN_DK = "#87503F", SKIN_LT = "#D39A75";
 const BEARD = "#5E5752", BEARD_LT = "#A49A90";
-const HELMET = "#E3DBCB", HELMET_DK = "#A8A4A9";
+const HELMET = "#EDE6D8", HELMET_DK = "#A8A4A9";
 const BOOT = "#3D3130";
 const STEEL = "#8C98A2";
-const VIOLET_WASH = "rgba(70,40,90,0.30)";
+const VIOLET_WASH = "rgba(90,50,90,0.16)";
 
 type Draw = (P: Painter) => void;
 export type Expr = "calm" | "alarm" | "relief" | "blink";
@@ -34,6 +34,19 @@ const capsule = (a: Pt, b: Pt, r: number, n = 7): Pt[] => {
   return pts;
 };
 const off = (pts: Pt[], x: number, y: number): Pt[] => pts.map(([a, b]) => [a + x, b + y]);
+/** tapered limb outline through a polyline (one smooth shape, rounded tip) */
+const limb = (pts: Pt[], r0: number, r1: number): Pt[] => {
+  const L: Pt[] = [], R: Pt[] = [], n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+    let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const r = r0 + (r1 - r0) * (i / (n - 1));
+    L.push([pts[i][0] - dy * r, pts[i][1] + dx * r]); R.push([pts[i][0] + dy * r, pts[i][1] - dx * r]);
+  }
+  const e = pts[n - 1], p = pts[n - 2]; let dx = e[0] - p[0], dy = e[1] - p[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+  const tip: Pt = [e[0] + dx * r1 * 0.9, e[1] + dy * r1 * 0.9];
+  return [...L, tip, ...R.reverse()];
+};
 
 // ---------- HEAD ----------
 function drawHead(P: Painter, e: Expr) {
@@ -51,14 +64,14 @@ function drawHead(P: Painter, e: Expr) {
   P.wash([[-8, 162.6], [-3, 162.8], [0.2, 161], [-3.8, 159.8], [-7.6, 160.6]], "rgba(240,190,150,0.35)");
   P.fill([[-10.4, 165.6], [-11.3, 163.5], [-12.6, 161.2], [-11.4, 160.6], [-10.1, 161.8]], SKIN_DK, { edge: 0.3, scumble: 0.1, strokes: 4 });
   P.stroke([[-11.6, 160.9], [-10.8, 160.4], [-10.1, 160.9]], "#6A3A33", 0.35);
+  // beard (salt & pepper), sideburn to chin, moustache
+  const beard: Pt[] = [[4.6, 165.5], [5.0, 160.5], [4.6, 156], [1, 151.6], [-5, 151.2], [-9.3, 152.1], [-10.6, 153.7], [-11.2, 155.6], [-11.6, 157], [-11.5, 158.4],
+    [-11.7, 159.4], [-10.6, 160.0], [-8.4, 159.7], [-7, 158.9], [-6, 157.6], [-3.5, 158.2], [0.2, 160.6], [2.6, 165.5]];
+  P.fill(beard, BEARD, { edge: 0.5, scumble: 1.2, ang: 1.7, var: 0.1 });
+  for (let i = 0; i < 70; i++) { const x = -11 + P.r() * 16, y = 152 + P.r() * 9; P.stroke([[x, y], [x - 0.3, y - 0.9]], P.r() > 0.5 ? BEARD_LT : "#3C3635", 0.18, { alpha: 0.7 }); }
   // ear
   P.fill([[4.8, 165], [7.2, 165.5], [8.2, 162], [7.3, 158.6], [5.2, 158.3], [4.4, 161.8]], SKIN, { edge: 0.7, scumble: 0.1, strokes: 6 });
   P.stroke([[6.6, 164], [7.3, 161.8], [6.6, 159.6]], SKIN_DK, 0.5);
-  // beard (salt & pepper), sideburn to chin, moustache
-  const beard: Pt[] = [[5.2, 165], [6.6, 160], [5.6, 155.5], [1, 151.6], [-5, 151.2], [-9.3, 152.1], [-10.6, 153.7], [-11.2, 155.6], [-11.6, 157], [-11.5, 158.4],
-    [-11.7, 159.4], [-10.6, 160.0], [-8.4, 159.7], [-7, 158.9], [-6, 157.6], [-3.5, 158.2], [0.5, 160.6], [3.4, 165]];
-  P.fill(beard, BEARD, { edge: 0.5, scumble: 1.2, ang: 1.7, var: 0.1 });
-  for (let i = 0; i < 70; i++) { const x = -11 + P.r() * 16, y = 152 + P.r() * 9; P.stroke([[x, y], [x - 0.3, y - 0.9]], P.r() > 0.5 ? BEARD_LT : "#3C3635", 0.18, { alpha: 0.7 }); }
   // eyes / brows / mouth per expression
   const eyeWhite = "#E4DCCF", iris = "#3A2A22", lid = "#4A2B2A", brow = "#3A302D", mouthIn = "#4A1F2A", lip = "#91574B";
   const eye = (pts: Pt[], ix: number, iy: number, ir: number, lidPts: Pt[]) => {
@@ -102,7 +115,7 @@ function drawHead(P: Painter, e: Expr) {
   P.wash([[-10.6, 172.6], [8.6, 172.8], [8.6, 170.6], [-1, 169.8], [-10.3, 170.4]], "rgba(60,30,50,0.55)");
   P.fill([[-12.8, 172], [-12.4, 176.6], [-9.5, 180.9], [-4, 183.7], [2, 183.7], [7.2, 181.6], [10.4, 177.6], [11.2, 172.6]], HELMET,
     { hi: "rgba(255,250,236,0.7)", hiDir: [-0.7, 1], edge: 0.9, ang: 0.2, scumble: 0.6 });
-  P.wash([[3, 183], [7.2, 181.6], [10.4, 177.6], [11.2, 172.6], [5, 172.4], [6.5, 178]], "rgba(90,96,130,0.4)");
+  P.wash([[3, 183], [7.2, 181.6], [10.4, 177.6], [11.2, 172.6], [5, 172.4], [6.5, 178]], "rgba(110,116,150,0.25)");
   P.stroke([[-6.5, 182.5], [-1.5, 183.9], [4, 183.2]], "rgba(255,255,255,0.6)", 0.6);
   P.stroke([[-5, 183.4], [-4, 177], [-3.6, 172.4]], HELMET_DK, 0.7, { line: true }); // ridge
   P.fill([[-17.2, 171.4], [-12.5, 172.6], [0, 172.6], [11.7, 173.0], [11.8, 171.4], [0, 170.9], [-12, 170.5], [-16.8, 170.1]], "#CFC6B6", { edge: 0.8, scumble: 0.2, strokes: 6 });
@@ -175,7 +188,7 @@ function drawForearm(P: Painter, near: boolean) {
 function drawHand(P: Painter, wx: number, wy: number, pose: HandPose, far: boolean) {
   const sk = far ? "#A86A4C" : SKIN;
   const F = (pts: Pt[]) => off(pts, wx, wy);
-  const finger = (a: Pt, b: Pt, c: Pt, r: number) => { P.fill(F(capsule(a, b, r)), sk, { edge: 0.7, strokes: 2, scumble: 0.1, rough: 0.05 }); P.fill(F(capsule(b, c, r * 0.92)), sk, { edge: 0.7, strokes: 2, scumble: 0.1, rough: 0.05 }); };
+  const finger = (a: Pt, b: Pt, c: Pt, r: number) => { P.fill(F(limb([a, b, c], r * 1.05, r * 0.8)), sk, { edge: 0.45, strokes: 2, scumble: 0.05, rough: 0.03 }); };
   if (pose === "relax") {
     finger([-2.6, -3.4], [-4.4, -7.0], [-4.2, -9.2], 0.95);
     P.fill(F([[-2.1, 0.6], [2.1, 0.4], [3.0, -5], [2.2, -9.4], [-1.6, -9.6], [-2.9, -5.5]]), sk, { hi: "rgba(230,170,130,0.4)", edge: 0.8, strokes: 8, scumble: 0.2, rough: 0.08 });
@@ -201,8 +214,8 @@ function drawHand(P: Painter, wx: number, wy: number, pose: HandPose, far: boole
 
 // ---------- LEGS ----------
 function drawThigh(P: Painter, near: boolean) {
-  const pts: Pt[] = near ? [[2.5, 96], [15.5, 96], [15, 80], [13.8, 60], [13.2, 50.5], [3.6, 50], [3.4, 62], [2, 80]]
-    : [[-16, 96], [-2, 96], [-2.5, 80], [-3.8, 60], [-4, 50.5], [-13.6, 50.5], [-14, 62], [-15.5, 80]];
+  const pts: Pt[] = near ? [[0.8, 97], [16.8, 97], [16.6, 80], [15.0, 60], [14.2, 50.5], [2.6, 50], [2.0, 62], [0.6, 80]]
+    : [[-17.6, 97], [-0.6, 97], [-1.0, 80], [-2.6, 60], [-3.2, 50.5], [-14.6, 50.5], [-15.4, 62], [-17.2, 80]];
   P.fill(pts, near ? FAB : "#262E3E", { edge: 0.8, ang: 1.5, scumble: 0.5 });
   if (near) {
     P.fill([[9.2, 75], [14.6, 75.4], [14.2, 62.2], [9.4, 62]], "#283142", { edge: 0.8, strokes: 6 });
@@ -211,8 +224,8 @@ function drawThigh(P: Painter, near: boolean) {
   } else P.stroke([[-13, 72], [-10, 64], [-10.6, 56]], "#1A202C", 0.4, { alpha: 0.7 });
 }
 function drawShin(P: Painter, near: boolean) {
-  const leg: Pt[] = near ? [[3.4, 56], [13.4, 56], [13.2, 46], [12.4, 28], [12, 12], [5.6, 11.6], [4.6, 28], [3.6, 46]]
-    : [[-13.8, 56], [-3.8, 56], [-4, 46], [-4.8, 28], [-5.4, 12], [-11.8, 11.6], [-12.6, 28], [-13.6, 46]];
+  const leg: Pt[] = near ? [[2.6, 56], [14.2, 56], [14.6, 44], [14.0, 30], [12.6, 12], [5.0, 11.6], [3.4, 28], [2.6, 44]]
+    : [[-14.6, 56], [-3.0, 56], [-2.8, 44], [-3.6, 30], [-5.0, 12], [-12.4, 11.6], [-14.2, 28], [-14.6, 44]];
   P.fill(leg, near ? FAB : "#262E3E", { edge: 0.8, ang: 1.5, scumble: 0.5 });
   P.stroke(near ? [[5.4, 36], [8, 26], [7.4, 16]] : [[-11.4, 36], [-9, 26], [-9.6, 16]], "#1C2230", 0.4, { alpha: 0.6 });
   // knee pad
@@ -239,10 +252,10 @@ const DEFS: PartDef[] = [
   { name: "foreF", parent: "armF", bbox: [-23, 89, -12, 123], pivot: [-17.2, 117.5], z: -0.048, ppu: 6, draw: (P) => drawForearm(P, false) },
   { name: "handF", parent: "foreF", bbox: [-25, 60, -10, 94], pivot: [-17.6, 92], z: -0.046, ppu: 9, draw: (P) => drawHand(P, -17.6, 92, "relax", true),
     variants: { relax: (P) => drawHand(P, -17.6, 92, "relax", true), splay: (P) => drawHand(P, -17.6, 92, "splay", true), grip: (P) => drawHand(P, -17.6, 92, "grip", true) } },
-  { name: "thighF", parent: "root", bbox: [-17, 48, 0, 97], pivot: [-8.6, 90], z: -0.03, ppu: 5, draw: (P) => drawThigh(P, false) },
+  { name: "thighF", parent: "root", bbox: [-19, 48, 1, 98], pivot: [-8.6, 90], z: -0.03, ppu: 5, draw: (P) => drawThigh(P, false) },
   { name: "shinF", parent: "thighF", bbox: [-25, -1, -2, 58], pivot: [-8.8, 51], z: -0.026, ppu: 5, draw: (P) => drawShin(P, false) },
   { name: "bootF", parent: "shinF", bbox: [-25, -1, -3, 16], pivot: [-9, 9], z: -0.024, ppu: 6, draw: (P) => drawBoot(P, false) },
-  { name: "thighN", parent: "root", bbox: [1, 48, 17, 97], pivot: [8.4, 90], z: 0.006, ppu: 5, draw: (P) => drawThigh(P, true) },
+  { name: "thighN", parent: "root", bbox: [-1, 48, 18, 98], pivot: [8.4, 90], z: 0.006, ppu: 5, draw: (P) => drawThigh(P, true) },
   { name: "shinN", parent: "thighN", bbox: [-8, -1, 15, 58], pivot: [8.4, 51], z: 0.01, ppu: 5, draw: (P) => drawShin(P, true) },
   { name: "bootN", parent: "shinN", bbox: [-8, -1, 14, 16], pivot: [9, 9], z: 0.012, ppu: 6, draw: (P) => drawBoot(P, true) },
   { name: "head", parent: "torso", bbox: [-18, 144, 13, 185], pivot: [0.5, 150], z: 0.016, ppu: 14, draw: (P) => drawHead(P, "calm"),
@@ -264,7 +277,7 @@ function makeVariant(def: PartDef, draw: Draw, seed: number): Variant {
   const lc = canvas(W, H), Pl = new Painter(lc, "line", x0, y1, ppu, seed); draw(Pl);
   const nc = normalFromCanvas(c, Math.max(3, Math.round(ppu * 1.6)), 2.4, 0.5);
   const paint = toTex(c), line = toTex(lc), nrm = toTex(nc, { srgb: false });
-  const solid = gouache({ map: paint, normalMap: nrm, normalScale: 1, card: true, rim: 1.2, brush: 0.55, brushScale: 3, transparent: true, side: THREE.DoubleSide, xray: 0 });
+  const solid = gouache({ map: paint, normalMap: nrm, normalScale: 1, card: true, rim: 0.7, brush: 0.55, brushScale: 3, transparent: true, side: THREE.DoubleSide, xray: 0 });
   (solid as THREE.MeshLambertMaterial).alphaTest = 0.04;
   const depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: paint, alphaTest: 0.5 });
   return { paint, line, solid, bp: cardLineMaterial(paint, line), depth };
@@ -341,8 +354,8 @@ export type Pose = {
   breathe: number;              // torso scaleY offset
 };
 export const POSES: Record<string, Pose> = {
-  idle:   { rootY: 0,   rootX: 0,  torso: 2,  head: 7,   armF: 4,    foreF: -10, handF: 0,   armN: -6,  foreN: -30,  handN: 8,   breathe: 0 },
-  alarm:  { rootY: -4,  rootX: 3,  torso: -7, head: -17, armF: -128, foreF: -22, handF: -12, armN: -28, foreN: -108, handN: -14, breathe: 0 },
+  idle:   { rootY: -1,  rootX: -3, torso: 5,  head: 13,  armF: 6,    foreF: -14, handF: 2,   armN: -10, foreN: -42,  handN: 14,  breathe: 0 },
+  alarm:  { rootY: -2,  rootX: 2,  torso: -7, head: -17, armF: -78,  foreF: -48, handF: -22, armN: -28, foreN: -108, handN: -14, breathe: 0 },
   brace:  { rootY: -13, rootX: 1,  torso: 9,  head: -9,  armF: -78,  foreF: -32, handF: -10, armN: 52,  foreN: -34,  handN: 0,   breathe: 0 },
   relief: { rootY: -2,  rootX: 0,  torso: 5,  head: 9,   armF: 3,    foreF: -8,  handF: 2,   armN: -12, foreN: -40,  handN: 4,   breathe: 0 },
 };

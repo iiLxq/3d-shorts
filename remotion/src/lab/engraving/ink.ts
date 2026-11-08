@@ -15,8 +15,8 @@ export const XROLE = { env: 0, shell: 1, hero: 2, xonly: 3 } as const;
 // Shared uniforms (one object, referenced by every material).
 export const U = {
   uPx: { value: 0.5 },          // buffer height / 1920
-  uPeriod: { value: 10.5 },     // hatch period in 1080-wide px
-  uExposure: { value: 3.2 },
+  uPeriod: { value: 17.0 },     // hatch period in 1080-wide px
+  uExposure: { value: 2.6 },
   uBp: { value: 0 },            // blueprint mix
   uXr: { value: 0 },            // x-ray mix
   uFeet: { value: [new THREE.Vector3(0, -99, 0), new THREE.Vector3(0, -99, 0)] },
@@ -56,7 +56,7 @@ float aaLine(float d, float w){ float we = max(w, 1.0); return clamp(we*0.5 + 0.
 // one hatch direction. s = surface coordinate (m) across the lines, g = |grad s| in m/px (from caller,
 // computed in uniform control flow), cov = target ink coverage 0..1
 float hatchL(float s, float g, float cov){
-  float P = uPeriod * uPx * 2.0;       // px in the current buffer (uPx = buffer/1920, period given @1080 w)
+  float P = uPeriod * uPx;       // px in the current buffer (uPx = buffer/1920, period given @1080 w)
   float L = log2(P * g / 0.0005);
   float lv = floor(L); float f = L - lv;
   float per = 0.0005 * exp2(lv);
@@ -95,15 +95,15 @@ const FRAG_END = /* glsl */ `
     float bx = q.x / 0.225 + mod(row, 2.0) * 0.5; float col = floor(bx);
     float r = h21(vec2(row, col));
     extraD += (r - 0.5) * 0.22 + (fbm(q * 1.3) - 0.5) * 0.25;
-    float mort = max(seam(q.y, hb, gq, 1.4 * uPx * 2.0), seam(bx * 0.225, 0.225, gq, 1.2 * uPx * 2.0) * step(0.12, fract(q.y/hb)) * step(fract(q.y/hb), 0.88));
+    float mort = max(seam(q.y, hb, gq, 1.4 * uPx), seam(bx * 0.225, 0.225, gq, 1.2 * uPx) * step(0.12, fract(q.y/hb)) * step(fract(q.y/hb), 0.88));
     ink = max(ink, mort * (0.35 + 0.65 * smoothstep(0.15, 0.6, T)));
     if (r > 0.93) extraD += 0.18; // soot-dark bricks
   } else if (uKind == 2.0) { // board-formed concrete: panel seams + tie holes + stains
     extraD += (fbm(q * vec2(0.7, 0.35)) - 0.5) * 0.35 + (fbm(q * 4.0) - 0.5) * 0.12;
-    float sm = max(seam(q.y, 1.2, gq, 1.6 * uPx * 2.0), seam(q.x, 1.8, gq, 1.3 * uPx * 2.0));
+    float sm = max(seam(q.y, 1.2, gq, 1.6 * uPx), seam(q.x, 1.8, gq, 1.3 * uPx));
     vec2 th = abs(fract(q / vec2(0.6, 0.6) + 0.5) - 0.5) * 0.6; float tie = 1.0 - smoothstep(0.010, 0.016, length(th));
     // board grain: faint horizontal lines every 0.15 m
-    float grain = seam(q.y + 0.03 * sin(q.x * 3.0), 0.15, gq, 0.8 * uPx * 2.0) * 0.45;
+    float grain = seam(q.y + 0.03 * sin(q.x * 3.0), 0.15, gq, 0.8 * uPx) * 0.45;
     ink = max(ink, max(sm, tie) * (0.4 + 0.6 * T) + grain * T);
   } else if (uKind == 3.0) { // metal: rolled steel, slight mill streaks along length
     extraD += (vnoise(q * vec2(40.0, 2.0)) - 0.5) * 0.12;
@@ -115,7 +115,7 @@ const FRAG_END = /* glsl */ `
     ink = max(ink, boss * 0.75 * (0.35 + 0.65 * T));
     extraD += (fbm(q * 3.0) - 0.5) * 0.15;
   } else if (uKind == 5.0) { // wire rope: helical strands (uv: u around, v along)
-    float strand = seam(q.x * 0.9 + q.y * 0.55, 0.012, max(gq, 1e-6), 1.0 * uPx * 2.0);
+    float strand = seam(q.x * 0.9 + q.y * 0.55, 0.012, max(gq, 1e-6), 1.0 * uPx);
     ink = max(ink, strand * 0.85);
   } else if (uKind == 6.0) { // solid ink (hidden lines, lettering)
     ink = 1.0;
@@ -128,7 +128,7 @@ const FRAG_END = /* glsl */ `
     extraD += (1.0 - cTex.b) * 0.0;
   } else if (uKind == 8.0) { // painted steel panels: seams every uPanel m + rivets
     if (uPanel > 0.0) {
-      float sx = seam(q.x, uPanel, gq, 1.4 * uPx * 2.0);
+      float sx = seam(q.x, uPanel, gq, 1.4 * uPx);
       vec2 rv = abs(fract(vec2(q.x / uPanel + 0.5, q.y / 0.25)) - 0.5) * vec2(uPanel, 0.25);
       float riv = 1.0 - smoothstep(0.006, 0.011, length(vec2(abs(rv.x) - 0.03, rv.y)));
       ink = max(ink, max(sx, riv * 0.8));
@@ -139,7 +139,7 @@ const FRAG_END = /* glsl */ `
   float s45 = (q.x + q.y) * 0.7071;
   float gs = max(length(vec2(dFdx(s45), dFdy(s45))), 1e-6);
   if (uSection > 0.5 && Nq.z > 0.9) {
-    ink = max(ink, seam(s45, 0.06, gs, 1.6 * uPx * 2.0));
+    ink = max(ink, seam(s45, 0.06, gs, 1.6 * uPx));
     D = 0.2; extraD = 0.0;
   }
   // contact darkening under the feet
@@ -163,15 +163,15 @@ const FRAG_END = /* glsl */ `
   float g2 = max(length(vec2(dFdx(s2), dFdy(s2))), 1e-7);
   float g3 = max(length(vec2(dFdx(s3), dFdy(s3))), 1e-7);
   float bp = uBp;
-  float c1 = smoothstep(0.10, 0.58, D) * 0.55;
-  float c2 = smoothstep(0.45, 0.82, D) * 0.48 * (1.0 - bp);
-  float c3 = smoothstep(0.74, 0.99, D) * 0.62 * (1.0 - bp);
-  c1 *= mix(1.0, 0.45, bp);
+  float c1 = smoothstep(0.08, 0.70, D) * 0.42;
+  float c2 = smoothstep(0.50, 0.88, D) * 0.36 * (1.0 - bp);
+  float c3 = smoothstep(0.80, 1.00, D) * 0.50 * (1.0 - bp);
+  c1 *= mix(1.0, 0.22, bp) * mix(1.0, smoothstep(0.45, 0.9, D), bp);
   float h = 1.0 - (1.0 - hatchL(s1, g1, c1)) * (1.0 - hatchL(s2, g2, c2)) * (1.0 - hatchL(s3, g3, c3));
   ink = 1.0 - (1.0 - ink) * (1.0 - h);
   // blueprint: faint drafting grid anchored on the object (0.5 m)
   if (bp > 0.0 && !isUv) {
-    float gr = max(seam(q.x, 0.5, gq, 1.0 * uPx * 2.0), seam(q.y, 0.5, gq, 1.0 * uPx * 2.0));
+    float gr = max(seam(q.x, 0.5, gq, 1.0 * uPx), seam(q.y, 0.5, gq, 1.0 * uPx));
     ink = max(ink, gr * 0.35 * bp);
   }
   // x-ray: environment ghosts (lighter engraving), shells vanish (their dashed edges are separate meshes)
@@ -181,7 +181,7 @@ const FRAG_END = /* glsl */ `
   } else if (uXrole == 3.0) discard;
   // coloured light prints as spot ink: red alarm light -> red wash on un-inked surfaces
   float redness = max(0.0, Lout.r - max(Lout.g, Lout.b) * 1.15) * uExposure;
-  float redCov = smoothstep(0.04, 0.5, redness) * 0.8 * uRedK * (1.0 - bp);
+  float redCov = smoothstep(0.08, 0.6, redness) * 0.55 * uRedK * (1.0 - bp);
   if (redCov > spotCov * 0.8 && uSpot < 0.5) { spotCov = redCov; spotId = 2.0; }
   if (bp > 0.5) { spotCov *= (uSpot == 3.0 || uSpot == 2.0) ? 1.0 : 0.0; }
   gl_FragColor = vec4(clamp(ink, 0.0, 1.0), clamp(spotCov, 0.0, 1.0), spotId / 8.0, uGlow);
@@ -222,7 +222,7 @@ export function inkMat(o: InkOpts = {}): THREE.MeshPhongMaterial {
     fs = fs.replace("#include <map_fragment>", `
 #ifdef USE_MAP
   vec4 mTex = texture2D(map, vMapUv);
-  diffuseColor.rgb *= mix(0.18, 1.0, mTex.b);
+  diffuseColor.rgb *= 0.08 + 0.92 * mTex.b * mTex.b;
   diffuseColor.a *= mTex.a;
 #endif`);
     if (!fs.includes("gND = vec4")) throw new Error("engraving: phong chunk changed");

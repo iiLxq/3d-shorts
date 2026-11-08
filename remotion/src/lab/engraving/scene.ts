@@ -44,7 +44,8 @@ function dashedBox(w: number, h: number, d: number, c: THREE.Vector3, m: THREE.M
 function arrowMesh(len: number, wid: number, m: THREE.Material) {
   const s = new THREE.Shape(); const hw = wid / 2, hl = Math.min(len * 0.42, wid * 1.6);
   s.moveTo(-hw * 0.45, 0); s.lineTo(hw * 0.45, 0); s.lineTo(hw * 0.45, -(len - hl)); s.lineTo(hw, -(len - hl)); s.lineTo(0, -len); s.lineTo(-hw, -(len - hl)); s.lineTo(-hw * 0.45, -(len - hl)); s.closePath();
-  const g = new THREE.ExtrudeGeometry(s, { depth: 0.03, bevelEnabled: false }); g.translate(0, 0, -0.015);
+  const g = new THREE.ShapeGeometry(s);
+  m.side = THREE.DoubleSide;
   return new THREE.Mesh(g, m);
 }
 
@@ -130,6 +131,11 @@ export class World {
     const C = this.car;
     box(2.0, 2.55, 1.85, 0, -1.3, 0, carPaint, C);
     box(2.06, 0.05, 1.9, 0, 0.0, 0, plate, C);
+    const doorS = M({ kind: KIND.paint, albedo: 0.55, angle: 90, panel: 0.0, shininess: 20, spec: 0.1, xrole: XROLE.shell });
+    box(1.5, 0.28, 0.16, 0, -0.2, 1.0, doorS, C);                                      // door operator / header
+    cyl(0.07, 0.05, -0.45, -0.2, 1.1, doorS, C, 18, "z"); cyl(0.07, 0.05, 0.45, -0.2, 1.1, doorS, C, 18, "z");
+    box(1.0, 0.02, 0.05, 0, -0.08, 1.1, doorS, C);                                       // belt
+    box(0.56, 2.05, 0.04, -0.285, -1.4, 0.94, doorS, C); box(0.56, 2.05, 0.04, 0.285, -1.4, 0.94, doorS, C);
     // car top balustrade (back + left side)
     for (const x of [-0.97, -0.3, 0.4, 0.97]) cyl(0.017, 1.08, x, 0.55, -0.88, steel, C, 10);
     cyl(0.02, 1.94, 0, 1.08, -0.88, steel, C, 10, "x"); cyl(0.014, 1.94, 0, 0.62, -0.88, steel, C, 10, "x");
@@ -149,13 +155,14 @@ export class World {
       dashedBox(0.2, 0.46, 0.2, new THREE.Vector3(hx, 0.42, 0), hidden, this.xrayGroup, 0.012, 0.04, 0.028);
       for (const sz of [-1, 1]) {
         const jm = M({ kind: KIND.metal, albedo: 0.75, angle: 90, spot: SPOT.green, spotAmt: 1, glow: 0.0, shininess: 60, spec: 0.4, xrole: XROLE.hero });
-        const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(0.05, 0); sh.lineTo(0.03, 0.26); sh.lineTo(0, 0.26); sh.closePath();
-        const g = new THREE.ExtrudeGeometry(sh, { depth: 0.09, bevelEnabled: false });
-        g.translate(-0.0, -0.13, -0.045); // centre
+        // tapered wedge: thick (z) at the bottom, thin at the top; flat face toward the blade
+        const g = new THREE.BoxGeometry(0.12, 0.3, 0.07);
+        const pa = g.attributes.position;
+        for (let i = 0; i < pa.count; i++) if (pa.getY(i) > 0 && pa.getZ(i) > 0) pa.setZ(i, pa.getZ(i) - 0.035);
+        g.translate(0, 0, 0.035); g.computeVertexNormals();
         const j = new THREE.Mesh(g, jm);
-        // wedge sits beside the blade, tapered face toward the blade
-        j.rotation.y = sz > 0 ? -Math.PI / 2 : Math.PI / 2;
-        j.position.set(s * (BLADE_IN + 0.04), 0.4, sz * 0.012);
+        if (sz < 0) j.rotation.y = Math.PI;
+        j.position.set(s * (BLADE_IN + 0.045), 0.4, sz * 0.012);
         j.userData = { sz, s };
         j.castShadow = true; C.add(j); this.jaws.push(j); this.jawMats.push(jm);
       }
@@ -169,8 +176,8 @@ export class World {
     box(0.3, 0.22, 0.15, 0.62, 0.14, -0.7, door, C);
     cyl(0.03, 0.02, 0.56, 0.17, -0.62, this.beaconMat, C, 14, "z");
     box(0.5, 0.18, 0.22, -0.6, 0.11, -0.58, dark, C); box(0.38, 0.03, 0.03, -0.6, 0.26, -0.58, steel, C);
-    cyl(0.018, 1.2, -0.92, 0.6, 0.78, steel, C, 10);
-    const lampHead = new THREE.Group(); lampHead.position.set(-0.92, 1.25, 0.78); C.add(lampHead);
+    cyl(0.018, 1.2, -0.52, 0.6, 0.82, steel, C, 10);
+    const lampHead = new THREE.Group(); lampHead.position.set(-0.52, 1.25, 0.82); C.add(lampHead);
     const lh = cyl(0.075, 0.14, 0, 0, 0, dark, lampHead, 16, "z"); lh.rotation.set(Math.PI / 2 + 0.6, 0, -0.5);
     const lens = new THREE.Mesh(new THREE.CircleGeometry(0.064, 20), lampLens); lens.position.set(0.04, -0.045, -0.05); lens.lookAt(new THREE.Vector3(0.6, 0.0, -0.6).add(lampHead.position).setY(-1)); lampHead.add(lens);
     const bc = cyl(0.06, 0.06, 0.55, 0.59, -0.15, dark, C, 14);
@@ -182,7 +189,7 @@ export class World {
     // force arrows (x-ray / danger): gravity on the car (red), clamping force (green)
     const red = M({ kind: KIND.plain, albedo: 0.9, spot: SPOT.red, spotAmt: 1, glow: 0.25, hatchK: 0.3 });
     const grn = M({ kind: KIND.plain, albedo: 0.9, spot: SPOT.green, spotAmt: 1, glow: 0.25, hatchK: 0.3 });
-    const a1 = arrowMesh(1.1, 0.34, red); a1.position.set(0.0, -0.9, 1.0); this.arrows.add(a1);
+    const a1 = arrowMesh(0.95, 0.34, red); a1.position.set(0.12, -0.08, 0.75); this.arrows.add(a1);
     for (const s of [-1, 1]) { const a = arrowMesh(0.22, 0.12, grn); a.rotation.z = s * Math.PI / 2; a.position.set(s * 0.98, 0.42, 0.14); this.arrows.add(a); }
     const a2 = arrowMesh(0.6, 0.2, red); a2.rotation.z = Math.PI; a2.position.set(0.0, 1.35, 0.25); this.arrows.add(a2);
     C.add(this.arrows);
@@ -196,17 +203,18 @@ export class World {
     // figure
     C.add(this.fig.root); C.add(this.fig.shadow);
     // ---------------- lights
-    S.add(new THREE.AmbientLight(0x9aa6c4, 0.33));
-    const hemi = new THREE.HemisphereLight(0xb8c4e0, 0x302820, 0.25); S.add(hemi);
-    this.work = new THREE.SpotLight(0xfff0d8, 9.0, 12, 0.95, 0.55, 1.6);
+    S.add(new THREE.AmbientLight(0x9aa6c4, 0.75));
+    const hemi = new THREE.HemisphereLight(0xb8c4e0, 0x302820, 0.4); S.add(hemi);
+    const bounce = new THREE.DirectionalLight(0xd0dcf4, 0.9); bounce.position.set(2.5, 1.2, 2.0); S.add(bounce); // bounce off the lit right wall
+    this.work = new THREE.SpotLight(0xfff0d8, 14.0, 12, 0.95, 0.55, 1.6);
     this.work.castShadow = true; this.work.shadow.mapSize.set(1024, 1024); this.work.shadow.bias = -0.0008; this.work.shadow.normalBias = 0.02;
     this.work.shadow.camera.near = 0.2; this.work.shadow.camera.far = 10;
-    this.work.position.set(-0.86, 1.22, 0.74); C.add(this.work); C.add(this.work.target); this.work.target.position.set(0.55, 0.55, -1.25);
+    this.work.position.set(-0.48, 1.2, 0.78); C.add(this.work); C.add(this.work.target); this.work.target.position.set(0.55, 0.55, -1.25);
     this.landing = new THREE.SpotLight(0xdde6ff, 5.0, 8, 0.7, 0.8, 1.6);
     this.landing.position.set(0, 2.4, -1.15); this.landing.target.position.set(0.1, -0.5, 0.8); S.add(this.landing); S.add(this.landing.target);
     this.head = new THREE.SpotLight(0xfff6e6, 6.0, 7, 0.32, 0.5, 1.5);
     S.add(this.head); S.add(this.head.target);
-    this.beacon = new THREE.PointLight(0xff2a1a, 0, 4.5, 1.5); this.beacon.position.set(0.55, 0.75, -0.1); C.add(this.beacon);
+    this.beacon = new THREE.PointLight(0xff2a1a, 0, 2.6, 1.6); this.beacon.position.set(0.55, 0.75, -0.1); C.add(this.beacon);
   }
 
   private rope(m: THREE.Mesh, pts: THREE.Vector3[]) {
@@ -230,8 +238,8 @@ export class World {
     this.lever.rotation.z = -0.9 * ws.jaw;
     // beacon
     setU(this.beaconMat, "uGlow", 0.15 + 0.85 * ws.alarm);
-    this.beacon.intensity = 4.5 * ws.alarm;
-    this.work.intensity = 9.0 * ws.lampOn;
+    this.beacon.intensity = 2.2 * ws.alarm;
+    this.work.intensity = 14.0 * ws.lampOn;
     // ropes: 4 strands from the hitch up into the dark; after the snap the lower ends go slack
     const topY = 14, hitchY = 0.97 - ws.drop, breakY = 3.6;
     for (let i = 0; i < 4; i++) {

@@ -248,9 +248,9 @@ export class Puppet {
       this.brows.push({ g: bg, y0: 0.282 });
     }
     // nose
-    const nose = new THREE.Shape(); nose.moveTo(-0.022, 0.2); nose.quadraticCurveTo(-0.05, 0.13, -0.035, 0.125);
-    nose.quadraticCurveTo(0, 0.11, 0.038, 0.125); nose.quadraticCurveTo(0.05, 0.14, 0.024, 0.2); nose.closePath();
-    this.add(this.head, nose, { stock: { base: "#cc8a64", mottle: 0.03, core: "#f6dcc7" }, seed: 75, thick: TF, px: 2400, print: (p, pts) => p.halftone(pts, (x, y) => Math.max(0, (x + 0.01) / 0.05) * 0.5 + Math.max(0, (0.14 - y) / 0.03) * 0.3, "#9d5b40", 0.006) }, 0.04);
+    const nose = ellipseShape(0.004, 0.152, 0.036, 0.031, 28); // round bulb nose
+    this.add(this.head, nose, { stock: { base: "#dc9c74", mottle: 0.03, core: "#f6dcc7" }, seed: 75, thick: TF, px: 2400,
+      print: (p, pts) => { p.halftone(pts, (x, y) => Math.max(0, (x + 0.005) / 0.04) * 0.35 + Math.max(0, (0.14 - y) / 0.03) * 0.25, "#b06a4a", 0.006); p.ellipse(-0.012, 0.165, 0.009, 0.006, "#f7d3b8"); } }, 0.04);
     // mouths (behind the moustache)
     const mouthG = new THREE.Group(); mouthG.position.set(0, 0.075, 0.017); this.head.add(mouthG);
     const calm = new THREE.Shape(); calm.moveTo(-0.04, 0.008); calm.quadraticCurveTo(0, -0.022, 0.04, 0.008); calm.quadraticCurveTo(0, -0.008, -0.04, 0.008);

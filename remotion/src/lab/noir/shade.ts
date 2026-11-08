@@ -20,7 +20,7 @@ export const U = {
   uShadeHi: { value: lin("#2b2547") }, // violet, high in the shaft
   uFogCol: { value: lin("#1d3a4c") },
   uFogHi: { value: lin("#2a3555") },
-  uFogDen: { value: 0.075 },
+  uFogDen: { value: 0.06 },
   uRimCol: { value: lin("#9fe3f2") },
   uRimDir: { value: new THREE.Vector2(0.6, 0.5) },
   uNavy: { value: lin(BRAND.navy) },
@@ -53,7 +53,7 @@ float paintRamp(float x){
 
 export function gouache(o: GouacheOpts = {}) {
   const m = new THREE.MeshLambertMaterial({
-    map: o.map ?? null, color: o.color ?? "#ffffff", normalMap: o.normalMap ?? null,
+    map: o.map, color: o.color ?? "#ffffff", normalMap: o.normalMap,
     emissive: o.emissive ?? "#000000", emissiveIntensity: o.emissiveIntensity ?? 1,
     transparent: o.transparent ?? false, side: o.side ?? THREE.FrontSide,
   });
@@ -102,7 +102,7 @@ export function gouache(o: GouacheOpts = {}) {
           // coloured shadow: teal low in the shaft, violet up high; pigment density from the brush field
           float hk = smoothstep(-3.0, 4.0, vWP.y);
           vec3 shadeCol = mix(uShadeLo, uShadeHi, hk);
-          reflectedLight.indirectDiffuse = reflectedLight.indirectDiffuse + alb * shadeCol * (0.85 + 0.3 * bn);
+          reflectedLight.indirectDiffuse = reflectedLight.indirectDiffuse + alb * shadeCol * (0.6 + 0.3 * bn);
         }`)
       .replace("#include <opaque_fragment>", `#include <opaque_fragment>
         {
@@ -121,8 +121,8 @@ export function gouache(o: GouacheOpts = {}) {
           vec3 solid = mix(gl_FragColor.rgb, fogc, f);
           // X-RAY: the painting is glazed over (cool, dim) except things flagged uXray = 0
           float lum = dot(solid, vec3(0.2126, 0.7152, 0.0722));
-          vec3 glaze = mix(uNavy * 1.3, vec3(0.05, 0.16, 0.24), 0.4) + lum * vec3(0.25, 0.55, 0.65) * uXrayDim;
-          glaze += uCyan * fr * 0.18;
+          vec3 glaze = uNavy * 1.1 + lum * vec3(0.10, 0.30, 0.42) * uXrayDim;
+          glaze += uCyan * (pow(fr, 1.5) * 0.55 + 0.02) * (0.6 + 0.8 * bn);
           vec3 xr = mix(solid, glaze, uXray);
           // BLUEPRINT: cyanotype paper + grid; faint cyan face fill by fresnel so forms read
           vec3 bp = texture2D(uPaper, vWP.xy * 0.35 + vWP.z * 0.21).rgb;
@@ -172,11 +172,10 @@ export function beamMaterial(color: string, intensity: number, o: { noise?: THRE
       varying vec2 vUv; varying vec3 vN; varying vec3 vV;
       void main(){
         float face = abs(dot(normalize(vN), normalize(vV)));
-        float along = vUv.y;                  // 0 at the source, 1 far end
-        float across = abs(vUv.x - 0.5) * 2.0;
-        float a = (1.0 - smoothstep(0.55, 1.0, across)) * pow(1.0 - along, 1.6) * smoothstep(0.0, 0.06, along);
-        a *= smoothstep(0.05, 0.45, face);
-        float n = texture2D(uNoise, vec2(vUv.x * 1.3 + uT * 0.02, vUv.y * 0.8 - uT * 0.035)).r;
+        float along = 1.0 - vUv.y;            // cone: source at the top (uv.y = 1), 0 -> 1 along the beam
+        float a = pow(1.0 - along, 1.6) * smoothstep(0.0, 0.06, along);
+        a *= smoothstep(0.05, 0.6, face) * (0.4 + 0.6 * face);
+        float n = texture2D(uNoise, vec2(vUv.x * 3.0 + uT * 0.02, vUv.y * 0.8 - uT * 0.035)).r;
         float n2 = texture2D(uNoise, vec2(vUv.x * 0.7 - uT * 0.013, vUv.y * 1.6 + 0.3)).r;
         a *= 0.35 + 1.6 * n + 0.8 * n2;
         vec3 c = uState < 0.5 ? uCyan * 0.8 : uCol;
