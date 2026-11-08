@@ -4,1104 +4,1104 @@
    "text": "If",
    "type": "word",
    "start": 0.07,
-   "end": 0.225
+   "end": 0.29
   },
   {
    "text": "both",
    "type": "word",
-   "start": 0.265,
-   "end": 0.505
+   "start": 0.33,
+   "end": 0.57
   },
   {
    "text": "engines",
    "type": "word",
-   "start": 0.645,
-   "end": 1.005
+   "start": 0.71,
+   "end": 1.07
   },
   {
    "text": "on",
    "type": "word",
-   "start": 1.045,
-   "end": 1.125
+   "start": 1.11,
+   "end": 1.19
   },
   {
    "text": "your",
    "type": "word",
-   "start": 1.165,
-   "end": 1.225
+   "start": 1.23,
+   "end": 1.29
   },
   {
    "text": "plane",
    "type": "word",
-   "start": 1.365,
-   "end": 1.685
+   "start": 1.43,
+   "end": 1.75
   },
   {
    "text": "die,",
    "type": "word",
-   "start": 1.785,
-   "end": 2.085
+   "start": 1.85,
+   "end": 2.15
   },
   {
    "text": "a",
    "type": "word",
-   "start": 2.28,
-   "end": 2.365
+   "start": 2.41,
+   "end": 2.56
   },
   {
    "text": "tiny",
    "type": "word",
-   "start": 2.445,
-   "end": 2.865
+   "start": 2.64,
+   "end": 3.06
   },
   {
    "text": "windmill",
    "type": "word",
-   "start": 3.045,
-   "end": 3.505
+   "start": 3.24,
+   "end": 3.7
   },
   {
    "text": "is",
    "type": "word",
-   "start": 3.545,
-   "end": 3.665
+   "start": 3.74,
+   "end": 3.86
   },
   {
    "text": "what",
    "type": "word",
-   "start": 3.685,
-   "end": 3.825
+   "start": 3.88,
+   "end": 4.02
   },
   {
    "text": "keeps",
    "type": "word",
-   "start": 3.865,
-   "end": 4.065
+   "start": 4.06,
+   "end": 4.26
   },
   {
    "text": "you",
    "type": "word",
-   "start": 4.105,
-   "end": 4.205
+   "start": 4.3,
+   "end": 4.4
   },
   {
    "text": "flying.",
    "type": "word",
-   "start": 4.265,
-   "end": 4.692
+   "start": 4.46,
+   "end": 4.92
   },
   {
    "text": "A",
    "type": "word",
-   "start": 4.82,
-   "end": 4.9
+   "start": 5.12,
+   "end": 5.2
   },
   {
    "text": "jet",
    "type": "word",
-   "start": 4.98,
-   "end": 5.16
+   "start": 5.28,
+   "end": 5.46
   },
   {
    "text": "with",
    "type": "word",
-   "start": 5.2,
-   "end": 5.34
+   "start": 5.5,
+   "end": 5.64
   },
   {
    "text": "no",
    "type": "word",
-   "start": 5.4,
-   "end": 5.56
+   "start": 5.7,
+   "end": 5.86
   },
   {
    "text": "engines",
    "type": "word",
-   "start": 5.62,
-   "end": 6.1
+   "start": 5.92,
+   "end": 6.4
   },
   {
    "text": "doesn't",
    "type": "word",
-   "start": 6.14,
-   "end": 6.38
+   "start": 6.44,
+   "end": 6.68
   },
   {
    "text": "fall",
    "type": "word",
-   "start": 6.54,
-   "end": 6.76
+   "start": 6.84,
+   "end": 7.06
   },
   {
    "text": "like",
    "type": "word",
-   "start": 6.8,
-   "end": 6.94
+   "start": 7.1,
+   "end": 7.24
   },
   {
    "text": "a",
    "type": "word",
-   "start": 7.0,
-   "end": 7.06
+   "start": 7.3,
+   "end": 7.36
   },
   {
    "text": "rock.",
    "type": "word",
-   "start": 7.14,
-   "end": 7.46
+   "start": 7.44,
+   "end": 7.76
   },
   {
    "text": "It",
    "type": "word",
-   "start": 7.695,
-   "end": 7.815
+   "start": 8.1,
+   "end": 8.22
   },
   {
    "text": "glides",
    "type": "word",
-   "start": 7.875,
-   "end": 8.375
+   "start": 8.28,
+   "end": 8.78
   },
   {
    "text": "more",
    "type": "word",
-   "start": 8.53,
-   "end": 8.67
+   "start": 9.0,
+   "end": 9.14
   },
   {
    "text": "than",
    "type": "word",
-   "start": 8.69,
-   "end": 8.87
+   "start": 9.16,
+   "end": 9.34
   },
   {
    "text": "ten",
    "type": "word",
-   "start": 8.95,
-   "end": 9.15
+   "start": 9.42,
+   "end": 9.62
   },
   {
    "text": "feet",
    "type": "word",
-   "start": 9.29,
-   "end": 9.43
+   "start": 9.76,
+   "end": 9.9
   },
   {
    "text": "forward",
    "type": "word",
-   "start": 9.59,
-   "end": 9.99
+   "start": 10.06,
+   "end": 10.46
   },
   {
    "text": "for",
    "type": "word",
-   "start": 10.03,
-   "end": 10.195
+   "start": 10.5,
+   "end": 10.73
   },
   {
    "text": "every",
    "type": "word",
-   "start": 10.275,
-   "end": 10.515
+   "start": 10.81,
+   "end": 11.05
   },
   {
    "text": "foot",
    "type": "word",
-   "start": 10.635,
-   "end": 10.855
+   "start": 11.17,
+   "end": 11.39
   },
   {
    "text": "down.",
    "type": "word",
-   "start": 10.895,
-   "end": 11.235
+   "start": 11.43,
+   "end": 11.77
   },
   {
    "text": "But",
    "type": "word",
-   "start": 11.4,
-   "end": 11.58
+   "start": 12.04,
+   "end": 12.22
   },
   {
    "text": "no",
    "type": "word",
-   "start": 11.64,
-   "end": 11.84
+   "start": 12.28,
+   "end": 12.48
   },
   {
    "text": "engines",
    "type": "word",
-   "start": 11.9,
-   "end": 12.42
+   "start": 12.54,
+   "end": 13.06
   },
   {
    "text": "means",
    "type": "word",
-   "start": 12.68,
-   "end": 12.96
+   "start": 13.32,
+   "end": 13.6
   },
   {
    "text": "no",
    "type": "word",
-   "start": 13.02,
-   "end": 13.14
+   "start": 13.66,
+   "end": 13.78
   },
   {
    "text": "power.",
    "type": "word",
-   "start": 13.28,
-   "end": 13.68
+   "start": 13.92,
+   "end": 14.32
   },
   {
    "text": "The",
    "type": "word",
-   "start": 13.905,
-   "end": 14.005
+   "start": 14.65,
+   "end": 14.75
   },
   {
    "text": "screens",
    "type": "word",
-   "start": 14.085,
-   "end": 14.385
+   "start": 14.83,
+   "end": 15.13
   },
   {
    "text": "go",
    "type": "word",
-   "start": 14.425,
-   "end": 14.605
+   "start": 15.17,
+   "end": 15.35
   },
   {
    "text": "dark,",
    "type": "word",
-   "start": 14.645,
-   "end": 14.965
+   "start": 15.39,
+   "end": 15.71
   },
   {
    "text": "and",
    "type": "word",
-   "start": 15.17,
-   "end": 15.25
+   "start": 15.98,
+   "end": 16.06
   },
   {
    "text": "the",
    "type": "word",
-   "start": 15.27,
-   "end": 15.33
+   "start": 16.08,
+   "end": 16.14
   },
   {
    "text": "controls",
    "type": "word",
-   "start": 15.37,
-   "end": 15.89
+   "start": 16.18,
+   "end": 16.7
   },
   {
    "text": "steering",
    "type": "word",
-   "start": 15.99,
-   "end": 16.31
+   "start": 16.8,
+   "end": 17.12
   },
   {
    "text": "this",
    "type": "word",
-   "start": 16.35,
-   "end": 16.53
+   "start": 17.16,
+   "end": 17.34
   },
   {
    "text": "giant",
    "type": "word",
-   "start": 16.61,
-   "end": 16.89
+   "start": 17.42,
+   "end": 17.7
   },
   {
    "text": "glider",
    "type": "word",
-   "start": 16.97,
-   "end": 17.31
+   "start": 17.78,
+   "end": 18.12
   },
   {
    "text": "run",
    "type": "word",
-   "start": 17.43,
-   "end": 17.55
+   "start": 18.24,
+   "end": 18.36
   },
   {
    "text": "on",
    "type": "word",
-   "start": 17.59,
-   "end": 17.69
+   "start": 18.4,
+   "end": 18.5
   },
   {
    "text": "hydraulic",
    "type": "word",
-   "start": 17.73,
-   "end": 18.23
+   "start": 18.54,
+   "end": 19.04
   },
   {
    "text": "pressure.",
    "type": "word",
-   "start": 18.33,
-   "end": 18.73
+   "start": 19.14,
+   "end": 19.54
   },
   {
    "text": "That's",
    "type": "word",
-   "start": 18.945,
-   "end": 19.185
+   "start": 19.86,
+   "end": 20.1
   },
   {
    "text": "draining",
    "type": "word",
-   "start": 19.245,
-   "end": 19.565
+   "start": 20.16,
+   "end": 20.48
   },
   {
    "text": "away.",
    "type": "word",
-   "start": 19.645,
-   "end": 20.005
+   "start": 20.56,
+   "end": 20.92
   },
   {
    "text": "The",
    "type": "word",
-   "start": 20.18,
-   "end": 20.3
+   "start": 21.2,
+   "end": 21.32
   },
   {
    "text": "yoke",
    "type": "word",
-   "start": 20.34,
-   "end": 20.58
+   "start": 21.36,
+   "end": 21.6
   },
   {
    "text": "gets",
    "type": "word",
-   "start": 20.8,
-   "end": 21.02
+   "start": 21.82,
+   "end": 22.04
   },
   {
    "text": "heavier.",
    "type": "word",
-   "start": 21.08,
-   "end": 21.48
+   "start": 22.1,
+   "end": 22.5
   },
   {
    "text": "Here's",
    "type": "word",
-   "start": 21.865,
-   "end": 22.085
+   "start": 22.97,
+   "end": 23.19
   },
   {
    "text": "what",
    "type": "word",
-   "start": 22.125,
-   "end": 22.245
+   "start": 23.23,
+   "end": 23.35
   },
   {
    "text": "saves",
    "type": "word",
-   "start": 22.305,
-   "end": 22.565
+   "start": 23.41,
+   "end": 23.67
   },
   {
    "text": "you.",
    "type": "word",
-   "start": 22.625,
-   "end": 22.725
+   "start": 23.73,
+   "end": 23.83
   },
   {
    "text": "A",
    "type": "word",
-   "start": 22.89,
-   "end": 22.95
+   "start": 24.1,
+   "end": 24.16
   },
   {
    "text": "hatch",
    "type": "word",
-   "start": 23.03,
-   "end": 23.27
+   "start": 24.24,
+   "end": 24.48
   },
   {
    "text": "in",
    "type": "word",
-   "start": 23.31,
-   "end": 23.37
+   "start": 24.52,
+   "end": 24.58
   },
   {
    "text": "the",
    "type": "word",
-   "start": 23.41,
-   "end": 23.51
+   "start": 24.62,
+   "end": 24.72
   },
   {
    "text": "belly",
    "type": "word",
-   "start": 23.55,
-   "end": 23.77
+   "start": 24.76,
+   "end": 24.98
   },
   {
    "text": "pops",
    "type": "word",
-   "start": 23.95,
-   "end": 24.23
+   "start": 25.16,
+   "end": 25.44
   },
   {
    "text": "open,",
    "type": "word",
-   "start": 24.31,
-   "end": 24.57
+   "start": 25.52,
+   "end": 25.78
   },
   {
    "text": "and",
    "type": "word",
-   "start": 24.675,
-   "end": 24.755
+   "start": 25.95,
+   "end": 26.03
   },
   {
    "text": "a",
    "type": "word",
-   "start": 24.795,
-   "end": 24.835
+   "start": 26.07,
+   "end": 26.11
   },
   {
    "text": "little",
    "type": "word",
-   "start": 24.875,
-   "end": 25.115
+   "start": 26.15,
+   "end": 26.39
   },
   {
    "text": "propeller",
    "type": "word",
-   "start": 25.135,
-   "end": 25.655
+   "start": 26.41,
+   "end": 26.93
   },
   {
    "text": "drops",
    "type": "word",
-   "start": 25.795,
-   "end": 26.095
+   "start": 27.07,
+   "end": 27.37
   },
   {
    "text": "into",
    "type": "word",
-   "start": 26.135,
-   "end": 26.315
+   "start": 27.41,
+   "end": 27.59
   },
   {
    "text": "the",
    "type": "word",
-   "start": 26.355,
-   "end": 26.395
+   "start": 27.63,
+   "end": 27.67
   },
   {
    "text": "wind.",
    "type": "word",
-   "start": 26.475,
-   "end": 26.775
+   "start": 27.75,
+   "end": 28.05
   },
   {
    "text": "It",
    "type": "word",
-   "start": 27.14,
-   "end": 27.26
+   "start": 28.49,
+   "end": 28.61
   },
   {
    "text": "spins",
    "type": "word",
-   "start": 27.38,
-   "end": 27.64
+   "start": 28.73,
+   "end": 28.99
   },
   {
    "text": "up,",
    "type": "word",
-   "start": 27.72,
-   "end": 27.86
+   "start": 29.07,
+   "end": 29.21
   },
   {
    "text": "drives",
    "type": "word",
-   "start": 27.985,
-   "end": 28.264
+   "start": 29.4,
+   "end": 29.679
   },
   {
    "text": "a",
    "type": "word",
-   "start": 28.305,
-   "end": 28.385
+   "start": 29.72,
+   "end": 29.8
   },
   {
    "text": "pump,",
    "type": "word",
-   "start": 28.425,
-   "end": 28.665
+   "start": 29.84,
+   "end": 30.08
   },
   {
    "text": "and",
    "type": "word",
-   "start": 28.79,
-   "end": 28.87
+   "start": 30.27,
+   "end": 30.35
   },
   {
    "text": "pushes",
    "type": "word",
-   "start": 28.99,
-   "end": 29.35
+   "start": 30.47,
+   "end": 30.83
   },
   {
    "text": "pressure",
    "type": "word",
-   "start": 29.39,
-   "end": 29.69
+   "start": 30.87,
+   "end": 31.17
   },
   {
    "text": "back",
    "type": "word",
-   "start": 29.91,
-   "end": 30.13
+   "start": 31.39,
+   "end": 31.61
   },
   {
    "text": "into",
    "type": "word",
-   "start": 30.17,
-   "end": 30.35
+   "start": 31.65,
+   "end": 31.83
   },
   {
    "text": "the",
    "type": "word",
-   "start": 30.37,
-   "end": 30.43
+   "start": 31.85,
+   "end": 31.91
   },
   {
    "text": "controls.",
    "type": "word",
-   "start": 30.47,
-   "end": 31.03
+   "start": 31.95,
+   "end": 32.51
   },
   {
    "text": "Steering's",
    "type": "word",
-   "start": 31.71,
-   "end": 32.11
+   "start": 33.28,
+   "end": 33.68
   },
   {
    "text": "back.",
    "type": "word",
-   "start": 32.15,
-   "end": 32.45
+   "start": 33.72,
+   "end": 34.02
   },
   {
    "text": "A",
    "type": "word",
-   "start": 32.725,
-   "end": 32.825
+   "start": 34.4,
+   "end": 34.5
   },
   {
    "text": "pinwheel",
    "type": "word",
-   "start": 32.865,
-   "end": 33.325
+   "start": 34.54,
+   "end": 35.0
   },
   {
    "text": "out",
    "type": "word",
-   "start": 33.385,
-   "end": 33.465
+   "start": 35.06,
+   "end": 35.14
   },
   {
    "text": "a",
    "type": "word",
-   "start": 33.505,
-   "end": 33.565
+   "start": 35.18,
+   "end": 35.24
   },
   {
    "text": "car",
    "type": "word",
-   "start": 33.605,
-   "end": 33.765
+   "start": 35.28,
+   "end": 35.44
   },
   {
    "text": "window",
    "type": "word",
-   "start": 33.865,
-   "end": 34.205
+   "start": 35.54,
+   "end": 35.88
   },
   {
    "text": "powered",
    "type": "word",
-   "start": 34.35,
-   "end": 34.73
+   "start": 36.09,
+   "end": 36.47
   },
   {
    "text": "by",
    "type": "word",
-   "start": 34.75,
-   "end": 34.87
+   "start": 36.49,
+   "end": 36.61
   },
   {
    "text": "your",
    "type": "word",
-   "start": 34.91,
-   "end": 35.07
+   "start": 36.65,
+   "end": 36.81
   },
   {
    "text": "own",
    "type": "word",
-   "start": 35.15,
-   "end": 35.39
+   "start": 36.89,
+   "end": 37.13
   },
   {
    "text": "speed.",
    "type": "word",
-   "start": 35.49,
-   "end": 35.83
+   "start": 37.23,
+   "end": 37.57
   },
   {
    "text": "In",
    "type": "word",
-   "start": 36.255,
-   "end": 36.355
+   "start": 38.1,
+   "end": 38.2
   },
   {
    "text": "1983,",
    "type": "word",
-   "start": 36.375,
-   "end": 37.315
+   "start": 38.22,
+   "end": 39.16
   },
   {
    "text": "Air",
    "type": "word",
-   "start": 37.5,
-   "end": 37.62
+   "start": 39.41,
+   "end": 39.53
   },
   {
    "text": "Canada",
    "type": "word",
-   "start": 37.72,
-   "end": 38.1
+   "start": 39.63,
+   "end": 40.01
   },
   {
    "text": "143",
    "type": "word",
-   "start": 38.34,
-   "end": 39.0
+   "start": 40.25,
+   "end": 40.91
   },
   {
    "text": "ran",
    "type": "word",
-   "start": 39.14,
-   "end": 39.34
+   "start": 41.05,
+   "end": 41.25
   },
   {
    "text": "dry",
    "type": "word",
-   "start": 39.46,
-   "end": 39.78
+   "start": 41.37,
+   "end": 41.69
   },
   {
    "text": "at",
    "type": "word",
-   "start": 39.82,
-   "end": 39.92
+   "start": 41.73,
+   "end": 41.83
   },
   {
    "text": "forty-one",
    "type": "word",
-   "start": 40.08,
-   "end": 40.52
+   "start": 41.99,
+   "end": 42.43
   },
   {
    "text": "thousand",
    "type": "word",
-   "start": 40.62,
-   "end": 40.96
+   "start": 42.53,
+   "end": 42.87
   },
   {
    "text": "feet.",
    "type": "word",
-   "start": 41.1,
-   "end": 41.32
+   "start": 43.01,
+   "end": 43.23
   },
   {
    "text": "Someone",
    "type": "word",
-   "start": 41.535,
-   "end": 41.775
+   "start": 43.55,
+   "end": 43.79
   },
   {
    "text": "mixed",
    "type": "word",
-   "start": 41.815,
-   "end": 42.015
+   "start": 43.83,
+   "end": 44.03
   },
   {
    "text": "up",
    "type": "word",
-   "start": 42.055,
-   "end": 42.175
+   "start": 44.07,
+   "end": 44.19
   },
   {
    "text": "pounds",
    "type": "word",
-   "start": 42.235,
-   "end": 42.535
+   "start": 44.25,
+   "end": 44.55
   },
   {
    "text": "and",
    "type": "word",
-   "start": 42.555,
-   "end": 42.615
+   "start": 44.57,
+   "end": 44.63
   },
   {
    "text": "kilograms.",
    "type": "word",
-   "start": 42.715,
-   "end": 43.275
+   "start": 44.73,
+   "end": 45.29
   },
   {
    "text": "Luckily,",
    "type": "word",
-   "start": 43.52,
-   "end": 43.92
+   "start": 45.64,
+   "end": 46.04
   },
   {
    "text": "the",
    "type": "word",
-   "start": 44.085,
-   "end": 44.185
+   "start": 46.27,
+   "end": 46.37
   },
   {
    "text": "captain",
    "type": "word",
-   "start": 44.245,
-   "end": 44.625
+   "start": 46.43,
+   "end": 46.81
   },
   {
    "text": "was",
    "type": "word",
-   "start": 44.665,
-   "end": 44.745
+   "start": 46.85,
+   "end": 46.93
   },
   {
    "text": "a",
    "type": "word",
-   "start": 44.785,
-   "end": 44.845
+   "start": 46.97,
+   "end": 47.03
   },
   {
    "text": "glider",
    "type": "word",
-   "start": 44.885,
-   "end": 45.165
+   "start": 47.07,
+   "end": 47.35
   },
   {
    "text": "pilot.",
    "type": "word",
-   "start": 45.265,
-   "end": 45.605
+   "start": 47.45,
+   "end": 47.79
   },
   {
    "text": "Unluckily,",
    "type": "word",
-   "start": 45.8,
-   "end": 46.34
+   "start": 48.09,
+   "end": 48.63
   },
   {
    "text": "the",
    "type": "word",
-   "start": 46.625,
-   "end": 46.725
+   "start": 49.0,
+   "end": 49.1
   },
   {
    "text": "runway",
    "type": "word",
-   "start": 46.765,
-   "end": 47.085
+   "start": 49.14,
+   "end": 49.46
   },
   {
    "text": "they",
    "type": "word",
-   "start": 47.125,
-   "end": 47.285
+   "start": 49.5,
+   "end": 49.66
   },
   {
    "text": "picked",
    "type": "word",
-   "start": 47.325,
-   "end": 47.545
+   "start": 49.7,
+   "end": 49.92
   },
   {
    "text": "had",
    "type": "word",
-   "start": 47.585,
-   "end": 47.685
+   "start": 49.96,
+   "end": 50.06
   },
   {
    "text": "a",
    "type": "word",
-   "start": 47.725,
-   "end": 47.805
+   "start": 50.1,
+   "end": 50.18
   },
   {
    "text": "car",
    "type": "word",
-   "start": 47.885,
-   "end": 48.065
+   "start": 50.26,
+   "end": 50.44
   },
   {
    "text": "race",
    "type": "word",
-   "start": 48.165,
-   "end": 48.385
+   "start": 50.54,
+   "end": 50.76
   },
   {
    "text": "on",
    "type": "word",
-   "start": 48.465,
-   "end": 48.565
+   "start": 50.84,
+   "end": 50.94
   },
   {
    "text": "it.",
    "type": "word",
-   "start": 48.605,
-   "end": 48.705
+   "start": 50.98,
+   "end": 51.08
   },
   {
    "text": "He",
    "type": "word",
-   "start": 48.81,
-   "end": 48.93
+   "start": 51.29,
+   "end": 51.41
   },
   {
    "text": "landed",
    "type": "word",
-   "start": 48.97,
-   "end": 49.27
+   "start": 51.45,
+   "end": 51.75
   },
   {
    "text": "anyway.",
    "type": "word",
-   "start": 49.33,
-   "end": 49.69
+   "start": 51.81,
+   "end": 52.17
   },
   {
    "text": "No",
    "type": "word",
-   "start": 49.905,
-   "end": 50.005
+   "start": 52.49,
+   "end": 52.59
   },
   {
    "text": "serious",
    "type": "word",
-   "start": 50.125,
-   "end": 50.465
+   "start": 52.71,
+   "end": 53.05
   },
   {
    "text": "injuries,",
    "type": "word",
-   "start": 50.525,
-   "end": 50.945
+   "start": 53.11,
+   "end": 53.53
   },
   {
    "text": "and",
    "type": "word",
-   "start": 51.08,
-   "end": 51.16
+   "start": 53.73,
+   "end": 53.81
   },
   {
    "text": "the",
    "type": "word",
-   "start": 51.18,
-   "end": 51.26
+   "start": 53.83,
+   "end": 53.91
   },
   {
    "text": "plane,",
    "type": "word",
-   "start": 51.3,
-   "end": 51.6
+   "start": 53.95,
+   "end": 54.25
   },
   {
    "text": "it",
    "type": "word",
-   "start": 51.835,
-   "end": 51.915
+   "start": 54.56,
+   "end": 54.64
   },
   {
    "text": "kept",
    "type": "word",
-   "start": 51.955,
-   "end": 52.135
+   "start": 54.68,
+   "end": 54.86
   },
   {
    "text": "flying",
    "type": "word",
-   "start": 52.195,
-   "end": 52.535
+   "start": 54.92,
+   "end": 55.26
   },
   {
    "text": "for",
    "type": "word",
-   "start": 52.575,
-   "end": 52.675
+   "start": 55.3,
+   "end": 55.4
   },
   {
    "text": "almost",
    "type": "word",
-   "start": 52.735,
-   "end": 53.055
+   "start": 55.46,
+   "end": 55.78
   },
   {
    "text": "twenty-five",
    "type": "word",
-   "start": 53.115,
-   "end": 53.795
+   "start": 55.84,
+   "end": 56.52
   },
   {
    "text": "more",
    "type": "word",
-   "start": 53.875,
-   "end": 54.095
+   "start": 56.6,
+   "end": 56.82
   },
   {
    "text": "years",
    "type": "word",
-   "start": 54.155,
-   "end": 54.535
+   "start": 56.88,
+   "end": 57.26
   }
  ],
- "source": "take2_48k.wav",
+ "source": "/tmp/claude-0/-home-user-3d-shorts/a8e2ed45-e668-5f73-979d-cde8a05003ef/scratchpad/t2.wav",
  "cuts": [
   [
-   0.307,
-   0.353
+   0.34,
+   0.32
   ],
   [
-   2.328,
-   2.733
+   2.36,
+   2.7
   ],
   [
-   2.877,
-   2.933
+   2.91,
+   2.9
   ],
   [
-   5.288,
-   5.632
+   5.34,
+   5.58
   ],
   [
-   8.527,
-   8.732
+   8.58,
+   8.68
   ],
   [
-   9.607,
-   9.833
+   9.64,
+   9.8
   ],
   [
-   11.537,
-   11.573
+   11.57,
+   11.54
   ],
   [
-   12.708,
-   13.043
+   12.76,
+   12.99
   ],
   [
-   15.558,
-   15.932
+   15.61,
+   15.88
   ],
   [
-   17.238,
-   17.553
+   17.27,
+   17.52
   ],
   [
-   21.267,
-   21.473
+   21.32,
+   21.42
   ],
   [
-   22.697,
-   23.063
+   22.75,
+   23.01
   ],
   [
-   24.677,
-   24.913
+   24.72,
+   24.87
   ],
   [
-   25.988,
-   26.303
+   26.04,
+   26.25
   ],
   [
-   28.168,
-   28.303
+   28.2,
+   28.27
   ],
   [
-   30.623,
-   30.677
+   30.66,
+   30.64
   ],
   [
-   31.648,
-   31.803
+   31.68,
+   31.77
   ],
   [
-   32.617,
-   32.773
+   32.65,
+   32.74
   ],
   [
-   35.148,
-   35.462
+   35.17,
+   35.44
   ],
   [
-   35.858,
-   36.002
+   35.88,
+   35.98
   ],
   [
-   37.108,
-   37.413
+   37.16,
+   37.36
   ],
   [
-   39.068,
-   39.303
+   39.1,
+   39.27
   ],
   [
-   41.068,
-   41.742
+   41.12,
+   41.69
   ],
   [
-   43.138,
-   43.253
+   43.17,
+   43.22
   ],
   [
-   47.227,
-   47.473
+   47.28,
+   47.42
   ],
   [
-   49.468,
-   49.703
+   49.52,
+   49.65
   ],
   [
-   50.358,
-   50.433
+   50.39,
+   50.4
   ],
   [
-   52.068,
-   52.433
+   52.12,
+   52.38
   ],
   [
-   53.258,
-   53.392
+   53.3,
+   53.35
   ],
   [
-   55.617,
-   55.953
+   55.67,
+   55.9
   ],
   [
-   56.977,
-   57.163
+   57.03,
+   57.11
   ],
   [
-   58.447,
-   58.833
+   58.48,
+   58.8
   ],
   [
-   59.513,
-   59.817
+   59.55,
+   59.78
   ]
  ],
  "head_trim": 0.09,
- "duration": 54.775
+ "duration": 57.5
 }

@@ -3,14 +3,19 @@
 Usage: python3 vo/tighten.py in_48k.wav words.json out.wav out_words.json [targets.json]
 - Only silent runs (10 ms frames below -45 dBFS, >= 0.12 s) that sit between two words are shrunk.
 - Speech, breaths and intentional sounds (e.g. [exhales]) are never cut.
-- Cuts remove the middle of a run with a 15 ms equal-power crossfade.
+- Cuts remove the middle of a run with a 40 ms equal-power crossfade (smooth joins).
 - Word times are remapped through the edit (words.json from ElevenLabs Scribe).
 targets.json (optional): {"<word index of the word BEFORE the pause>": seconds} overrides.
 """
 import sys, json, numpy as np, scipy.io.wavfile as w
 
-SIL_DB, MIN_RUN, XF = -45.0, 0.12, 0.015
-T_COMMA, T_SENT = 0.08, 0.16
+import os
+SIL_DB, MIN_RUN = -45.0, 0.12
+# Smooth defaults (user asked for smoother transitions): longer equal-power crossfades,
+# natural breathing room between sentences. Override with env vars if needed.
+XF = float(os.environ.get('VO_XF', 0.04))
+T_COMMA = float(os.environ.get('VO_T_COMMA', 0.12))
+T_SENT = float(os.environ.get('VO_T_SENT', 0.24))
 
 def main(inp, wj, out, outj, tj=None):
     sr, x = w.read(inp); x = x.astype(np.float32)

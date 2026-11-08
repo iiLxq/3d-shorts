@@ -149,7 +149,7 @@ Only three line types per beat. **No on-screen-text/caption line.**
 - Voice: **Jarnathan** ("Confident and Versatile"). Look up the voice_id with the ElevenLabs connector's voice list every session — never hard-code or guess an id.
 - Model: **Eleven v4** (supports audio tags). Stability: **Natural** (switch to Creative only if a take sounds flat). Similarity: middle. Output: highest MP3 the plan allows (192 kbps) or WAV.
 - Default **2 takes**; let the user pick. The user's pick for the elevator video was "Test 1".
-- **No dead air (user rule):** after the user picks a take, transcribe it (Scribe → `words.json`) and run `python3 vo/tighten.py` to shrink every silent pause: ~0.08 s mid-sentence, ~0.16 s between sentences, longer only for planned beats (pivot line, safety-engage gap for the clunk, era change). Never cut speech or intentional breaths/exhales. Voice starts on frame 1–4. Target ≈ 3 words/s. Regenerate only if the delivery itself is wrong.
+- **No dead air (user rule):** after the user picks a take, transcribe it (Scribe → `words.json`) and run `python3 vo/tighten.py` to shrink every silent pause: ~0.12 s mid-sentence, ~0.24 s between sentences, 40 ms crossfades (smooth, user-approved), longer only for planned beats (pivot line, safety-engage gap for the clunk, era change). Never cut speech or intentional breaths/exhales. Voice starts on frame 1–4. Target ≈ 3 words/s. Regenerate only if the delivery itself is wrong.
 - **Channel pivot line (approved, use in every video, never change):** "Here's what saves you." It leads from the danger into the mechanism.
 
 ### 2.2 Writing the tagged VO script
