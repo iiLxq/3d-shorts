@@ -85,6 +85,8 @@ Use the same remap for any engagement moment. The camera stays on screen time, s
 | local flash: full-frame luma change ≤ 0.08 | **+0.079** at the clamp frame; replay bite +0.018 | ✅ (no margin) |
 | shimmer ≤ 15 % (camera-locked hold, `HyTestHold`, Δ > 4/255) | **6.2 %** mean outside Rafa (max 16.6 % while the headlamp beam swings during the look-up); 3.7 % at Δ > 8 | ✅ mean |
 | render ≤ 1.5 s/f at 540 | ~1.1 s/f | ✅ |
+| SSIM ≥ 0.90 at delivery bits (540 preview → 1.9 Mbps 2-pass check copy) | 0.947 (generous: 4× the 540 bpp target) | ✅ |
+| meter crashes green on the clamp frame | f209 amber-red, f210 green (pixel check) | ✅ |
 
 ## 5. Known issues and next steps
 - **p99 in SOLID spans is 0.84–0.87.** Only the practicals reach white. The look TD should add a stronger helmet/rail glint, or lift the top value step under the work lamp. The freeze clips 2.3 % (green glow cores bleaching).
