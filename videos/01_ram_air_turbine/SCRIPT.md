@@ -72,3 +72,26 @@ A hatch in the belly pops open, and a little propeller drops into the wind. It s
 In 1983, Air Canada 143 ran dry at forty-one thousand feet — someone mixed up pounds and kilograms. Luckily, the captain was a glider pilot. Unluckily, the runway they picked had a car race on it. He landed anyway. No serious injuries.
 
 And the plane? It kept flying for almost twenty-five more years.
+
+---
+
+## Tagged VO (sent to ElevenLabs: Jarnathan, eleven_v4, 2 takes)
+```
+[curious] If both engines on your plane die... a tiny windmill is what keeps you flying.
+
+[matter-of-fact] A jet with no engines doesn't fall like a rock. It glides — more than ten feet forward for every foot down.
+
+[slowly] But no engines means no power. The screens go dark... [tense] and the controls steering this giant glider run on hydraulic pressure — that's draining away.
+
+The yoke gets HEAVIER. [short pause] [confident] Here's what saves you.
+
+[intrigued] A hatch in the belly pops open, and a little propeller drops into the wind. [short pause] [excited] It spins up, drives a pump, and pushes pressure BACK into the controls. [exhales] Steering's back.
+
+[matter-of-fact] A pinwheel out a car window — powered by your own speed.
+
+[long pause] [warmly] In 1983, Air Canada 143 ran dry at 41,000 feet — someone mixed up pounds and kilograms. [matter-of-fact] Luckily, the captain was a glider pilot. Unluckily... the runway they picked had a car race on it.
+
+[confident] He landed anyway. No serious injuries.
+
+[softly] And the plane? It kept flying for almost twenty-five more years.
+```

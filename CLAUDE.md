@@ -149,6 +149,7 @@ Only three line types per beat. **No on-screen-text/caption line.**
 - Voice: **Jarnathan** ("Confident and Versatile"). Look up the voice_id with the ElevenLabs connector's voice list every session — never hard-code or guess an id.
 - Model: **Eleven v4** (supports audio tags). Stability: **Natural** (switch to Creative only if a take sounds flat). Similarity: middle. Output: highest MP3 the plan allows (192 kbps) or WAV.
 - Default **2 takes**; let the user pick. The user's pick for the elevator video was "Test 1".
+- **Channel pivot line (approved, use in every video, never change):** "Here's what saves you." It leads from the danger into the mechanism.
 
 ### 2.2 Writing the tagged VO script
 Audio tags go in square brackets **before** the words they affect and persist until the next tag. Use **1–2 tags per sentence max** — more sounds robotic.
