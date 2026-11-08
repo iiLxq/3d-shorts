@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elevator Cable Short</title>
+<style>
+  :root { --bg:#0b0d12; --card:#151922; --line:#262c38; --text:#eef1f6; --muted:#9aa3b2; --accent:#ffd400; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:460px; margin:0 auto; padding:18px 16px 40px; }
+  h1 { font-size:19px; margin:2px 0 4px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 14px; }
+  .player { position:relative; width:100%; aspect-ratio:9/16; max-height:72vh; margin:0 auto; background:#000; border-radius:14px; overflow:hidden; border:1px solid var(--line); }
+  video { width:100%; height:100%; display:block; object-fit:contain; background:#000; }
+  .btns { display:grid; gap:10px; margin-top:16px; }
+  button { appearance:none; border:0; border-radius:12px; padding:14px 16px; font:600 15px/1.2 inherit; cursor:pointer; display:flex; justify-content:space-between; align-items:center; width:100%; }
+  .primary { background:var(--accent); color:#111; }
+  .secondary { background:var(--card); color:var(--text); border:1px solid var(--line); }
+  button small { font-weight:500; opacity:.7; font-size:12.5px; }
+  button:disabled { opacity:.55; cursor:default; }
+  .status { margin-top:12px; font-size:13px; color:var(--muted); min-height:18px; }
+  .bar { height:6px; background:var(--card); border-radius:6px; overflow:hidden; margin-top:8px; display:none; }
+  .bar > i { display:block; height:100%; width:0; background:var(--accent); transition:width .2s; }
+  .seg { display:grid; grid-template-columns:1fr 1fr; gap:6px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px; margin-bottom:12px; }
+  .seg button { justify-content:center; gap:6px; padding:10px 8px; background:transparent; color:var(--muted); font-size:14px; border-radius:9px; }
+  .seg button.on { background:#2a3140; color:var(--text); }
+  .note { margin-top:18px; padding:12px 14px; background:var(--card); border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>What happens if an elevator cable snaps? 😨</h1>
+  <p class="sub">3D Short · 60 seconds · 1080 × 1920 · no captions (ready for CapCut)</p>
+
+  <div class="player">
+    <video id="v" src="nc_preview.mp4" controls playsinline preload="metadata"></video>
+  </div>
+
+  <div class="btns" id="btns">
+    <button class="primary" id="saveFull" disabled>Save full quality <small id="fullSize">220 MB</small></button>
+    <button class="secondary" id="saveSmall" disabled>Save smaller copy <small>18 MB</small></button>
+  </div>
+  <div class="bar" id="bar"><i id="fill"></i></div>
+  <div class="status" id="status">Getting save options ready…</div>
+
+  <div class="note">After you tap Save, confirm it and choose <b>Save Video</b> on the share sheet to put it in Photos.</div>
+</main>
+
+<script>
+const V = {
+  nc:  { parts: 12, prefix: "nc_part_",   preview: "nc_preview.mp4", size: "220 MB", name: "elevator_cable_short_no_captions" }
+};
+let cur = "nc";
+const PART_NAME = (k, i) => `${V[k].prefix}${String(i).padStart(2, "0")}.mp4`;
+const $ = id => document.getElementById(id);
+const status = t => { $("status").textContent = t; };
+const bar = p => { $("bar").style.display = p == null ? "none" : "block"; $("fill").style.width = ((p || 0) * 100) + "%"; };
+let downloads = null, busy = false;
+
+const SIZES = { "nc_preview.mp4": 18920965 };
+for (let i = 0; i < 12; i++) SIZES[`nc_part_${String(i).padStart(2, "0")}.mp4`] = i < 11 ? 19922944 : 1286016;
+const mb = n => (n / 1048576).toFixed(0);
+
+async function fetchOne(url, onBytes) {
+  const ctrl = new AbortController();
+  let last = Date.now();
+  const watchdog = setInterval(() => { if (Date.now() - last > 45000) ctrl.abort(); }, 2000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+    if (!r.ok) throw new Error(url + " returned " + r.status);
+    if (!r.body || !r.body.getReader) { const b = await r.blob(); onBytes(b.size); return b; }
+    const reader = r.body.getReader(); const chunks = [];
+    for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); last = Date.now(); onBytes(value.length); }
+    return new Blob(chunks);
+  } catch (e) {
+    if (e && e.name === "AbortError") throw new Error("the download stalled on " + url);
+    throw e;
+  } finally { clearInterval(watchdog); }
+}
+
+async function fetchBlob(urls) {
+  const total = urls.reduce((t, u) => t + (SIZES[u] || 0), 0); let got = 0;
+  const tick = n => { got += n; bar(got / total); status(`Preparing… ${mb(got)} / ${mb(total)} MB`); };
+  status(`Preparing… 0 / ${mb(total)} MB`);
+  const out = new Array(urls.length); let next = 0;
+  async function worker() { while (next < urls.length) { const i = next++; out[i] = await fetchOne(urls[i], tick); } }
+  await Promise.all([worker(), worker(), worker()]);
+  return new Blob(out, { type: "video/mp4" });
+}
+
+async function save(kind) {
+  if (busy || !downloads) return;
+  busy = true; $("saveFull").disabled = $("saveSmall").disabled = true;
+  try {
+    const k = cur;
+    const urls = kind === "full" ? Array.from({ length: V[k].parts }, (_, i) => PART_NAME(k, i)) : [V[k].preview];
+    bar(0);
+    const blob = await fetchBlob(urls);
+    status("Confirm the save…");
+    const name = V[k].name + (kind === "full" ? "_full.mp4" : "_small.mp4");
+    await downloads.save({ filename: name, data: blob });
+    status("Saved ✓");
+  } catch (e) {
+    const code = e && e.code;
+    if (code === "declined") status("Save cancelled.");
+    else if (code === "too_large") status("That file is too big for this app — try the smaller copy.");
+    else if (code === "rate_limited") status("A save is already open — try again in a moment.");
+    else status("Couldn't save: " + ((e && e.message) || code || "unknown error"));
+  } finally {
+    busy = false; bar(null);
+    $("saveFull").disabled = $("saveSmall").disabled = !downloads;
+  }
+}
+$("saveFull").addEventListener("click", () => save("full"));
+$("saveSmall").addEventListener("click", () => save("small"));
+
+(async () => {
+  try {
+    for (let i = 0; i < 50 && !(window.claude && window.claude.use); i++) await new Promise(r => setTimeout(r, 200));
+    if (!window.claude || !window.claude.use) throw 0;
+    downloads = await window.claude.use("downloads");
+  } catch (_) { downloads = null; }
+  if (downloads) { $("saveFull").disabled = $("saveSmall").disabled = false; status("Ready."); }
+  else { $("btns").style.display = "none"; status("Saving isn't available in this view — open this page in the Claude app or claude.ai to save."); }
+})();
+</script>
+</body>
+</html>
