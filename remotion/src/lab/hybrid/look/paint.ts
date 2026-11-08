@@ -1,4 +1,4 @@
-// Gouache painting kit: seeded RNG, colour helpers, a Canvas2D "painter" that fills shapes with opaque,
+// [hybrid/look, owned by the Look TD] Gouache painting kit (look v2: strokes are more opaque => crisper): seeded RNG, colour helpers, a Canvas2D "painter" that fills shapes with opaque,
 // slightly chalky gouache (flat field + brush strokes + dry-brush scumble + darker-hue edge), and the
 // code-painted textures of the shaft. Everything is deterministic (seeded) so every frame/worker matches.
 import * as THREE from "three";
@@ -219,7 +219,7 @@ export const brushTex = () => memo("brush", () => {
   g.lineCap = "round";
   for (let i = 0; i < 900; i++) {
     const x = r() * S, y = r() * S, len = 14 + r() * 46, a = 0.5 + (r() - 0.5) * 0.9, v = Math.round(60 + r() * 140);
-    g.strokeStyle = `rgba(${v},${v},${v},${0.25 + r() * 0.35})`; g.lineWidth = 4 + r() * 12;
+    g.strokeStyle = `rgba(${v},${v},${v},${0.5 + r() * 0.4})`; g.lineWidth = 4 + r() * 12; // opaque gouache strokes: crisp breakup edges
     for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) {
       g.beginPath(); g.moveTo(x + ox - Math.cos(a) * len, y + oy - Math.sin(a) * len);
       g.quadraticCurveTo(x + ox + (r() - 0.5) * 10, y + oy + (r() - 0.5) * 10, x + ox + Math.cos(a) * len, y + oy + Math.sin(a) * len); g.stroke();
@@ -275,7 +275,7 @@ function strokesField(g: CanvasRenderingContext2D, r: () => number, S: number, h
   g.lineCap = "round";
   for (let i = 0; i < n; i++) {
     const x = r() * S, y = r() * S, a = ang + (r() - 0.5) * 0.6, L = len * (0.5 + r());
-    g.strokeStyle = hsl(h + (r() - 0.5) * 14, s + (r() - 0.5) * 0.12, l + (r() - 0.5) * 2 * vl, 0.22 + r() * 0.3);
+    g.strokeStyle = hsl(h + (r() - 0.5) * 14, s + (r() - 0.5) * 0.12, l + (r() - 0.5) * 2 * vl, 0.42 + r() * 0.4); // opaque, crisp-edged strokes (look v2)
     g.lineWidth = wid * (0.5 + r());
     wrapDraw(S, (ox, oy) => { g.beginPath(); g.moveTo(x + ox - Math.cos(a) * L, y + oy - Math.sin(a) * L); g.quadraticCurveTo(x + ox + (r() - 0.5) * 8, y + oy + (r() - 0.5) * 8, x + ox + Math.cos(a) * L, y + oy + Math.sin(a) * L); g.stroke(); });
   }
