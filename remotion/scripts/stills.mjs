@@ -7,7 +7,8 @@ import fs from "node:fs";
 const [comp, outDir, frameList, scaleArg] = process.argv.slice(2);
 const scale = Number(scaleArg ?? 0.5);
 fs.mkdirSync(outDir, { recursive: true });
-const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
+// ENTRY env picks an isolated entry point (lab concepts each have their own), default = main project.
+const serveUrl = await bundle({ entryPoint: path.resolve(process.env.ENTRY ?? "src/index.ts") });
 const composition = await selectComposition({ serveUrl, id: comp, chromiumOptions: { gl: "swiftshader" } });
 const frames = frameList.split(",").map(Number);
 for (const f of frames) {
