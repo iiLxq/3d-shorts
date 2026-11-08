@@ -17,7 +17,7 @@ The person you work for runs the channel from an **iPhone only (no laptop or PC)
 5. **Render once.** Fix framing and timing on previews; a full render is the last step, not a test.
 6. **Facts are verified.** Any historical or technical claim in the script is checked against sources before VO is generated (e.g. dates, names, how a mechanism works).
 7. **Deliver in a way a phone can open.** Big files fail to preview on iPhone. See §13.
-8. **Spending credits:** ElevenLabs generations spend the user's subscription credits. Generate VO only from a final, approved script; default to 2 takes; never re-run a generation as a "retry".
+8. **Spending credits:** Generate VO only from a final, approved script; default to 2 takes; never re-run a VO generation as a "retry". **SFX and music have no credit limit and need no confirmation** (see "Sound rules" below), but never re-run an identical prompt.
 9. **Every video uses the "Fail-Safe Files" signature style below.** Where it conflicts with older guidance further down (colors, caption-safe zone, ending), the signature style wins.
 
 ---
@@ -63,13 +63,24 @@ The final frame returns to the **opening blueprint frame** (same camera, same li
 ### 7. Safe zones
 Labels, stamps and the meter stay out of the **caption zone (y 1050–1350)** and out of the **bottom 20%** of the frame (y > 1536). Labels also stay off the right edge.
 
-### 8. Sound logo
-Reuse the same brand sounds in every video, from `assets/brand/`:
-- Blueprint **"pen scratch"** intro (hook),
-- **Rising alarm** that follows the danger meter,
-- **"CLUNK + chime"** when the safety engages.
+### 8. Sound logo and sound rules
+**Brand sounds are FIXED.** Use these exact 3 files from `assets/brand/` in every video. Never replace, edit the files, or regenerate them.
 
-Never re-synthesize them per video; mix them like SFX (§12). If `assets/brand/` is empty or a sound is missing, **tell the user** before building the mix so they can be created together.
+| File | Length | Where it goes |
+|---|---|---|
+| `intro_blueprint.mp3` | 3.0 s | Opening blueprint (starts at frame 0 of the hook) |
+| `alarm_meter.mp3` | 8.0 s | While the danger meter rises. Trim it and/or fade it in the mix to match the meter's rise; it ends the instant the safety engages |
+| `safety_clunk.mp3` | 3.0 s | The instant the safety engages (same frame the meter crashes to green) |
+
+All 44.1 kHz stereo MP3: resample to 48 kHz when mixing. Trimming and fading happen in the mix only, never on the source files.
+
+**Everything else is made fresh for every video.** All other sound effects AND the music bed are generated with **ElevenLabs** to match the topic:
+- No credit limit, no confirmation step (the user has ~120k credits). Generate as many variations as needed to get the best result.
+- Don't waste credits: never re-run an identical prompt. Change the prompt (wording, length, intensity) when you want a different result.
+- Listen-by-numbers: measure each generated sound (duration, peak, RMS, spectrum) before using it, since you can't hear it.
+- **Fallback:** if ElevenLabs isn't available in a session, synthesize the sounds in code with the §11 recipes, like the first video.
+
+**The voice always stays on top.** Never put any sound effect (brand sounds included) on top of a spoken word. Place them in the gaps between words, and duck or fade the alarm under speech so VO stays ≥ +10 dB over the bed (§12). If a brand sound's moment collides with a word, shift it into the nearest gap.
 
 ### QC additions (§14)
 - [ ] Hook in BLUEPRINT, conflict in X-RAY, payoff in SOLID.
@@ -79,7 +90,8 @@ Never re-synthesize them per video; mix them like SFX (§12). If `assets/brand/`
 - [ ] History has sepia, grain and a date stamp.
 - [ ] Last frame matches the first frame (loop).
 - [ ] No label or meter in y 1050–1350 or the bottom 20%.
-- [ ] Brand sounds from `assets/brand/` used.
+- [ ] All 3 brand sounds from `assets/brand/` used, unchanged, at their moments.
+- [ ] Other SFX + music made fresh for this video; no sound effect on top of a spoken word.
 
 ---
 
@@ -236,6 +248,7 @@ You work in a Linux workspace. **Check what exists before planning** (`which`, P
 - **Audio synthesis & analysis:** numpy + scipy (`signal.butter/sosfilt`, `fftconvolve`).
 - **Images:** Pillow for contact sheets.
 - Fonts available for captions: Inter (ExtraBold/Black), Poppins Bold.
+- **Sound:** ElevenLabs connector for SFX + music (fresh per video), brand sounds from `assets/brand/`; numpy/scipy synthesis as fallback.
 - Network may be restricted: no pip installs, no downloads of stock footage/music. Everything is generated.
 
 ### 5.1 Project layout
@@ -251,7 +264,8 @@ film/
   concat.txt, video_raw.mp4
 vo/
   vo.mp3, vo.wav, captions.py, captions.ass, audio.py, sfx.wav, music.wav
-assets/brand/      # brand sound logo (pen scratch, alarm, clunk + chime), reused every video
+assets/brand/      # FIXED brand sounds, reused every video, never changed
+  intro_blueprint.mp3, alarm_meter.mp3, safety_clunk.mp3
 ```
 
 ---
@@ -360,7 +374,7 @@ assets/brand/      # brand sound logo (pen scratch, alarm, clunk + chime), reuse
 7. **Build/extend worlds** and shots. Reuse existing worlds (shaft, cabin, hall, city) as a library; add new ones per topic.
 8. **Preview loop:** render 6–8 frames per batch at the busiest moments into a 360×640 contact sheet, look at it, fix, repeat. Check: framing, readability of the mechanism, clutter, flashes, text-safe zone, continuity between shots.
 9. **Full render**, one mp4 per shot (§10), in the background; meanwhile build captions and audio.
-10. **Sound design + music** (§11), **mix** and **measure** (§12).
+10. **Sound design + music:** place the 3 fixed brand sounds; generate all other SFX and the music bed fresh with ElevenLabs (§11 fallback if unavailable); **mix** and **measure** (§12).
 11. **Assemble** (concat, mux audio; captions only if requested).
 12. **QC** (§14), then **deliver** (§13) with a one-line summary. Default delivery is **without burned-in captions** — the user adds captions in CapCut.
 
@@ -379,7 +393,9 @@ assets/brand/      # brand sound logo (pen scratch, alarm, clunk + chime), reuse
 
 ---
 
-## 11. Sound design and music (all synthesized, 48 kHz stereo)
+## 11. Sound design and music (48 kHz stereo)
+
+**Default source: ElevenLabs, fresh per video** (see "Sound rules" in the signature style). The recipes and music plan below are the **fallback** when ElevenLabs isn't available, and a reference for what each sound should do (use them as prompt ideas). Brand sounds always come from `assets/brand/`.
 
 ### 11.1 SFX recipe library (numpy/scipy)
 - **Elevator ding:** two bell partial stacks (1318.5 Hz then 1046.5 Hz, partials ×1, 2.76, 5.4) with exponential decay + short reverb.
