@@ -29,7 +29,7 @@ export const T = {
   REWIND: [227, 233],    // story rewinds 7 frames
   SLOW: [233, 250],      // slow-mo replay at 0.35x (replay bite on screen ~f247)
   RAMP: [250, 260],      // 0.35x -> 1x
-  BACK: [228, 294],      // glide back to Rafa (eases in under the slow-mo replay)
+  BACK: [220, 298],      // glide back to Rafa (eases in under the slow-mo replay)
 } as const;
 
 /** story time S(f) */
@@ -109,9 +109,8 @@ export function stateAt(f: number, cy: number): StateAt {
 export function meterAt(f: number): number {
   if (f >= T.BITE) {
     const d = f - T.BITE;
-    const crash = 0.95 * (1 - EASE.out(d / 4));            // 4-frame drop
-    const settle = 0.06 + 0.035 * Math.exp(-d / 6) * Math.sin(d * 0.9);
-    return Math.max(settle, crash);
+    // the crash IS the clamp frame: green from f = BITE on, a small decaying bounce at the bottom
+    return 0.07 + 0.04 * Math.exp(-d / 6) * Math.sin(d * 0.9 + 0.6);
   }
   let m = 0.1 + 0.012 * Math.sin(f * 0.21);
   m += 0.08 * smooth(T.CREAK, T.CREAK + 10, f);
@@ -133,12 +132,12 @@ export const CAM: CamKey[] = [
   { f: 74, pos: [0.22, 1.85, 5.3], look: [-0.10, 0.95, -0.6], fov: 40 },    // print sweep done: medium-wide, descending
   { f: 104, pos: [0.30, 1.24, 4.35], look: [-0.20, 1.30, -0.6], fov: 40 },  // low 3/4 from the right on Rafa, ropes above
   { f: 120, pos: [0.33, 1.13, 4.08], look: [-0.18, 1.24, -0.6], fov: 40 },  // creep through the snap + lurch, travel eases in
-  { f: 176, pos: [0.80, 0.42, 2.95], look: [0.94, -0.30, -0.88], fov: 36 }, // crane down/right (X-RAY): roof edge-on, gear through the gap
+  { f: 176, pos: [0.98, 0.40, 2.95], look: [0.95, -0.30, -0.88], fov: 36 }, // crane down/right (X-RAY): roof edge-on, gear through the gap
   { f: 206, pos: [0.965, -0.27, 0.5], look: [0.98, -0.43, -0.9], fov: 34 },  // dolly in: side-on insert, jaws above the caption band
-  { f: 228, pos: [0.967, -0.276, 0.43], look: [0.98, -0.43, -0.9], fov: 34 }, // slow push through bite + freeze
-  { f: 258, pos: [0.93, 0.02, 1.85], look: [0.86, -0.26, -0.78], fov: 37 },  // pull back along the lens axis under the slow-mo replay
-  { f: 294, pos: [0.45, 1.30, 3.6], look: [0.18, 0.62, -0.6], fov: 42 },    // crane up/back: relieved Rafa + the green gear in one frame
-  { f: 300, pos: [0.445, 1.30, 3.53], look: [0.18, 0.62, -0.6], fov: 42 },  // settle creep
+  { f: 220, pos: [0.967, -0.275, 0.445], look: [0.98, -0.43, -0.9], fov: 34 }, // slow push through bite + freeze
+  { f: 256, pos: [0.86, 0.32, 2.25], look: [0.72, -0.08, -0.70], fov: 38 },  // pull back along the lens axis under the slow-mo replay
+  { f: 298, pos: [0.36, 1.20, 3.55], look: [-0.10, 1.00, -0.5], fov: 42 },    // crane up/back: relieved Rafa, full figure
+  { f: 300, pos: [0.357, 1.20, 3.49], look: [-0.10, 1.00, -0.5], fov: 42 },  // settle creep
 ];
 /** monotone cubic (Fritsch-Carlson weighted harmonic tangents): C1, never overshoots a key, a channel that reverses
  *  direction stops at that key; a creep next to a fast move makes the move ease in/out by itself. */

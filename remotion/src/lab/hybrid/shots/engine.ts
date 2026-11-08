@@ -2,7 +2,7 @@
 // Set (buildShaft) + cast (Rafa) + look post. Integration rig owned here: Rafa's headlamp (spot + beam cone),
 // a cool rim on Rafa, his hand IK on the balustrade, contact shadows (cast), key-light shadow on the roof (set key).
 import * as THREE from "three";
-import { initShared, setLookState, setSweep, beamMaterial, lin, BRAND, createPost, outputDpr, U } from "../look/api";
+import { initShared, setLookState, setSweep, beamMaterial, lin, BRAND, createPost, outputDpr, U, brandOut } from "../look/api";
 import type { Post } from "../look/api";
 import { hazeTex } from "../look/paint";
 import { buildShaft } from "../set/shaft";
@@ -22,6 +22,7 @@ export class ShotEngine {
   renderer: THREE.WebGLRenderer; scene = new THREE.Scene(); camera: THREE.PerspectiveCamera; post: Post;
   shaft: Shaft; rafa: Character; head!: THREE.SpotLight; headTgt = new THREE.Object3D(); beam!: THREE.Mesh; rim!: THREE.SpotLight;
   bpLines: { o: THREE.Object3D; m: THREE.Material & { opacity: number }; op: number }[] = [];
+  arrow!: THREE.Mesh; arrowMat!: THREE.MeshBasicMaterial;
   key: THREE.Light; keyBase: number; fogBase = U.uFogCol.value.clone();
   constructor(public cvs: HTMLCanvasElement, public W: number, public H: number) {
     initShared();
@@ -61,6 +62,13 @@ export class ShotEngine {
     rim.position.set(0.55, 3.0, -1.1); const rt = new THREE.Object3D(); rt.position.set(RAFA_SPOT.x, 1.25, RAFA_SPOT.z);
     this.shaft.car.add(rim, rt); rim.target = rt; this.rim = rim;
 
+    // ---- hero force arrow (X-RAY): the car's weight acting down beside the gear, painted danger red, unlit
+    {
+      const sh = new THREE.Shape([[-0.028, 0.5], [0.028, 0.5], [0.028, 0.16], [0.075, 0.16], [0, 0], [-0.075, 0.16], [-0.028, 0.16]].map(([x, y]) => new THREE.Vector2(x, y)));
+      this.arrowMat = new THREE.MeshBasicMaterial({ color: brandOut(BRAND.red), transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
+      const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), this.arrowMat); m.position.set(0.74, -0.24, -0.72); m.renderOrder = 85; m.frustumCulled = false;
+      this.shaft.car.add(m); this.arrow = m;
+    }
     this.post = createPost(r, this.scene, this.camera, { focus: 4, focusRange: 1.4, dofMaxPx: 6, grainSeed: 7 });
   }
 
@@ -77,7 +85,9 @@ export class ShotEngine {
     sh.setSparks(sparksAt(S));
     sh.setRopeSnap(snapAt(S));
     sh.setAlarm(alarmAt(S));
-    sh.setForce(forceAt(f));
+    sh.setForce(0); // the set's arrows sit below the frame here; the shots-owned hero arrow carries the force
+    this.arrowMat.opacity = forceAt(f); this.arrow.visible = forceAt(f) > 0.01;
+    this.arrow.position.y = -0.24 - 0.05 * Math.sin(f * 0.35) * forceAt(f); // pushing
     if (st.sweep) setSweep(st.sweep.from, st.sweep.to, { offset: st.sweep.offset, normal: new THREE.Vector3(0, st.sweep.dir, 0), soft: 0.08, glow: 0.35 });
     else setLookState(st.shaft);
     // blueprint line art fades out with the first print sweep instead of popping
