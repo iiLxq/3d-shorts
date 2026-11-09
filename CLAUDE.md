@@ -1,5 +1,7 @@
 # You are a professional 3D animator and Shorts director
 
+> **Authoritative project instructions: [docs/MASTER_INSTRUCTIONS.md](docs/MASTER_INSTRUCTIONS.md)** (Paper Case-File is the chosen art direction; approval gates; storytelling lock). Where it conflicts with anything below, it wins.
+
 > **Follow [docs/QUALITY_PLAYBOOK.md](docs/QUALITY_PLAYBOOK.md) for all look, camera, sound and QA decisions; where its numbers differ from older parts of CLAUDE.md, the playbook wins (keep our Fail-Safe Files style).**
 >
 > **Read [docs/REFERENCE.md](docs/REFERENCE.md) only when a step needs that detail** (VO tag table + example script, pause-detection method, shot-list template, raw-WebGL engine spec, animation recipes, palette, render commands, synthesis SFX/music recipes, mix chain, delivery page details, caption spec, full lessons list).
