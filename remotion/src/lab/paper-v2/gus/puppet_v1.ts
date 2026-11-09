@@ -3,8 +3,8 @@
 // Every piece is printed cardstock with real thickness, layered in z so the pieces cast shadows on each other,
 // joined by brass split pins. Expressions = swapped / rotated cut-outs (brows, lids, pupils, mouths).
 import * as THREE from "three";
-import { Card, CardOpts, roundRect, shapeFromPts, ellipseShape } from "../card";
-import { Painter, Pt, BRAND } from "../paint";
+import { Card, CardOpts, roundRect, shapeFromPts, ellipseShape } from "./card";
+import { Painter, Pt, BRAND } from "./paint";
 
 export interface Pose {
   x: number; lift: number; lean: number; neck: number; headTilt: number;

@@ -1,0 +1,12 @@
+{
+ "a tiny windmill": "safe",
+ "no power": "danger",
+ "dark": "danger",
+ "heavier": "danger",
+ "saves you": "safe",
+ "pops open": "safe",
+ "Steering's back": "safe",
+ "dry": "danger",
+ "the captain": "person",
+ "landed anyway": "safe"
+}
