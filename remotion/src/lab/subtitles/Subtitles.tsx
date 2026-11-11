@@ -50,12 +50,12 @@ export function placePose(f: number, restRot: number): Pose {
   const ring = f > 3 ? 1.3 * Math.exp(-(f - 3) / 3.2) * Math.sin((f - 3) * 1.7) : 0;
   return {
     x: -10 * (1 - p), y: -30 * (1 - p), scale: 1 + 0.09 * (1 - p),
-    rot: restRot + 2.1 * (1 - p) + ring, opacity: clamp01(f / 2.2), lift: 1 - p,
+    rot: restRot + 2.1 * (1 - p) + ring, opacity: clamp01((f + 1) / 2.6), lift: 1 - p,
   };
 }
 /** 'stamp': press down from large, tiny overshoot, 2-3 frame shake. */
 export function stampPose(f: number, restRot: number): Pose {
-  const keys: [number, number][] = [[0, 1.5], [2, 0.93], [4, 1.045], [6.5, 0.995], [9, 1]];
+  const keys: [number, number][] = [[0, 1.2], [2, 0.93], [4, 1.045], [6.5, 0.995], [9, 1]];
   let s = 1;
   for (let i = 0; i < keys.length - 1; i++) {
     const [f0, v0] = keys[i], [f1, v1] = keys[i + 1];
@@ -63,7 +63,7 @@ export function stampPose(f: number, restRot: number): Pose {
   }
   if (f > 9) s = 1;
   const shake = f >= 2 && f < 8 ? Math.sin((f - 2) * 3.4) * 5 * Math.exp(-(f - 2) / 2.2) : 0;
-  return { x: shake, y: f < 2 ? -6 : 0, scale: s, rot: restRot + (f < 4 ? -1.2 * (1 - f / 4) : 0), opacity: clamp01(f / 1.5), lift: f < 2 ? 1 - f / 2 : 0 };
+  return { x: shake, y: f < 2 ? -6 : 0, scale: s, rot: restRot + (f < 4 ? -1.2 * (1 - f / 4) : 0), opacity: clamp01((f + 1) / 2), lift: f < 2 ? 1 - f / 2 : 0 };
 }
 const FADE_FRAMES = 6;
 export function fadeOutFactor(f: number, dur: number, fadeOut: boolean) {
@@ -87,7 +87,7 @@ const Card: React.FC<CardProps> = ({ lines, size, width, family, weight, fill, l
   const ux = lx / n, uy = ly / n;
   const cap = size * 0.72;
   const base = (i: number) => pad + cap + i * lh + (lh - cap) * 0.0;
-  const common = { fontFamily: family, fontWeight: weight, fontSize: size, textAnchor: "middle" as const, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
+  const common = { letterSpacing: style === "diecut" ? size * 0.018 : 0, fontFamily: family, fontWeight: weight, fontSize: size, textAnchor: "middle" as const, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
   const T = (props: React.SVGProps<SVGTextElement> & { dx?: number; dy?: number }) =>
     lines.map((ln, i) => {
       const { dx = 0, dy = 0, ...rest } = props;
@@ -119,6 +119,11 @@ const Card: React.FC<CardProps> = ({ lines, size, width, family, weight, fill, l
     }
     el.push(<g key="card">{T({ fill: PAPER, stroke: PAPER, strokeWidth: 2 * B, paintOrder: "stroke" })}</g>);
     el.push(<g key="face">{T({ fill })}</g>);
+    // paper-print halftone on the face (same dot language as the scene's cards), subtle
+    el.push(<pattern id="ht" key="pt" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3.5" cy="3.5" r="1.1" fill="#000" opacity="0.13" /></pattern>);
+    el.push(<g key="faceht">{T({ fill: "url(#ht)" })}</g>);
+    // key-light sheen: lit edge on the upper-left of the face
+    el.push(<g key="sheen" opacity="0.55">{T({ dx: -1.2, dy: -1.4, fill: "none", stroke: "#FFFFFF", strokeWidth: 1.4 })}</g>);
   }
   return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible", display: "block" }}>{el}</svg>;
 };

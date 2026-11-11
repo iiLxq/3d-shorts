@@ -59,42 +59,38 @@ export function tex(c: HTMLCanvasElement, srgb = true, repeat = false) {
   return t;
 }
 
-// Paper fibre / tooth bump tile (grey, seamless). Used as bumpMap on every card.
+// Paper relief tile (grey heightmap, seamless): sheet formation clouds + a few long soft fibres.
+// v2: low-frequency on purpose. High-frequency tooth turned into noise at 1.9 Mbps (REVIEW_TECH), so the paper
+// reads through raking light on big soft undulations, cut edges and layer shadows instead of speckle.
 let _fiber: HTMLCanvasElement | null = null;
 export function fiberCanvas() {
   if (_fiber) return _fiber;
   const N = 512, c = canvas(N, N), g = c.getContext("2d")!, r = rng(7);
   g.fillStyle = "#808080"; g.fillRect(0, 0, N, N);
-  // soft cloud (formation of the sheet)
-  for (let i = 0; i < 160; i++) {
-    const x = r() * N, y = r() * N, rad = 10 + r() * 50, v = r() < 0.5 ? 0 : 255;
+  for (let i = 0; i < 90; i++) {
+    const x = r() * N, y = r() * N, rad = 30 + r() * 90, v = r() < 0.5 ? 0 : 255;
     for (const dx of [-N, 0, N]) for (const dy of [-N, 0, N]) {
       const gr = g.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, rad);
-      gr.addColorStop(0, `rgba(${v},${v},${v},0.06)`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`);
+      gr.addColorStop(0, `rgba(${v},${v},${v},0.10)`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`);
       g.fillStyle = gr; g.fillRect(x + dx - rad, y + dy - rad, rad * 2, rad * 2);
     }
   }
-  // fibres
   g.lineCap = "round";
-  for (let i = 0; i < 2600; i++) {
-    const x = r() * N, y = r() * N, a = r() * Math.PI * 2, l = 4 + r() * 22, v = r() < 0.55 ? 255 : 0;
-    g.strokeStyle = `rgba(${v},${v},${v},${0.05 + r() * 0.12})`; g.lineWidth = 0.6 + r() * 1.1;
+  for (let i = 0; i < 220; i++) {
+    const x = r() * N, y = r() * N, a = r() * Math.PI * 2, l = 30 + r() * 70, v = r() < 0.6 ? 255 : 0;
+    g.strokeStyle = `rgba(${v},${v},${v},${0.05 + r() * 0.07})`; g.lineWidth = 2 + r() * 3;
     for (const dx of [-N, 0, N]) for (const dy of [-N, 0, N]) {
       g.beginPath(); g.moveTo(x + dx, y + dy);
-      g.quadraticCurveTo(x + dx + Math.cos(a + 0.6) * l * 0.5, y + dy + Math.sin(a + 0.6) * l * 0.5, x + dx + Math.cos(a) * l, y + dy + Math.sin(a) * l);
+      g.quadraticCurveTo(x + dx + Math.cos(a + 0.5) * l * 0.5, y + dy + Math.sin(a + 0.5) * l * 0.5, x + dx + Math.cos(a) * l, y + dy + Math.sin(a) * l);
       g.stroke();
     }
   }
-  // tooth speckle
-  const id = g.getImageData(0, 0, N, N), d = id.data;
-  for (let i = 0; i < d.length; i += 4) { const n = (r() - 0.5) * 26; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
-  g.putImageData(id, 0, 0);
   _fiber = c;
   return c;
 }
 const _fiberTex = new Map<string, THREE.Texture>();
-/** Fibre bump texture repeating every `period` metres over a piece of size w x h (uv 0..1). */
-export function fiberTex(w: number, h: number, period = 0.28) {
+/** Relief texture repeating every `period` metres over a piece of size w x h (uv 0..1). */
+export function fiberTex(w: number, h: number, period = 0.6) {
   const rx = Math.max(1, Math.round((w / period) * 4) / 4), ry = Math.max(1, Math.round((h / period) * 4) / 4);
   const key = `${rx}x${ry}`;
   let t = _fiberTex.get(key);
@@ -104,18 +100,30 @@ export function fiberTex(w: number, h: number, period = 0.28) {
 
 // ---------- Painter: one drawing, three looks ----------
 export type Pt = [number, number];
-export interface PaperStock { base: string; mottle: number; flecks?: string[]; core: string }
+export type StockKind = "paper" | "kraft" | "foil" | "coated" | "board";
+export interface PaperStock { base: string; mottle: number; flecks?: string[]; core: string; kind?: StockKind }
 export const STOCK: Record<string, PaperStock> = {
-  white: { base: "#ece4d3", mottle: 0.05, core: "#f7f2e7" },
-  kraft: { base: "#a97f55", mottle: 0.09, flecks: ["#6d4a2c", "#c9a77d"], core: "#d9be98" },
-  grey: { base: "#7f7b74", mottle: 0.08, flecks: ["#5d5953", "#a19c93", "#8a6f55"], core: "#c4beb2" },
-  board: { base: "#5f5c58", mottle: 0.09, flecks: ["#47443f", "#86827a"], core: "#b1aa9d" },
-  steel: { base: "#56677a", mottle: 0.05, core: "#d5dbe0" },
-  amber: { base: BRAND.amber, mottle: 0.04, core: "#fff1cf" },
-  slate: { base: "#36435a", mottle: 0.05, core: "#cfd3da" },
-  skin: { base: "#d39a74", mottle: 0.04, core: "#f6dcc7" },
-  brown: { base: "#5a3d2a", mottle: 0.05, core: "#d8bea1" },
-  green: { base: "#3fbf78", mottle: 0.03, core: "#e6fff0" },
+  white: { base: "#ece4d3", mottle: 0.05, core: "#f7f2e7", kind: "coated" },
+  kraft: { base: "#9a7149", mottle: 0.10, flecks: ["#6d4a2c", "#c9a77d"], core: "#d9be98", kind: "kraft" },
+  grey: { base: "#7f7b74", mottle: 0.08, core: "#c4beb2", kind: "board" },
+  board: { base: "#4a4e57", mottle: 0.07, core: "#b1aa9d", kind: "board" },
+  // v2 roles
+  rag: { base: "#59657a", mottle: 0.06, core: "#e9e4d8", kind: "paper" },        // cotton rag board: shaft walls (cool, so warm key + navy fill split cleanly)
+  ragDeep: { base: "#3f4a5f", mottle: 0.05, core: "#ded8ca", kind: "paper" },
+  ragWarm: { base: "#8d877c", mottle: 0.06, core: "#efe9dc", kind: "paper" },    // landing slabs
+  foil: { base: "#aeb8c4", mottle: 0.03, core: "#8a8f96", kind: "foil" },        // steel = foil laminated on grey board (grey core shows at cuts)
+  foilDark: { base: "#7d8896", mottle: 0.03, core: "#7d8188", kind: "foil" },
+  brass: { base: "#c8a04a", mottle: 0.03, core: "#8a8f96", kind: "foil" },
+  manila: { base: "#d6b77c", mottle: 0.06, flecks: ["#b8955a", "#e6cfa0"], core: "#efe0bd", kind: "paper" },
+  manilaIn: { base: "#ccad73", mottle: 0.05, core: "#efe0bd", kind: "paper" },
+  steel: { base: "#56677a", mottle: 0.05, core: "#d5dbe0", kind: "coated" },
+  amber: { base: BRAND.amber, mottle: 0.03, core: "#fff1cf", kind: "coated" },
+  slate: { base: "#36435a", mottle: 0.05, core: "#cfd3da", kind: "coated" },
+  skin: { base: "#d39a74", mottle: 0.04, core: "#f6dcc7", kind: "coated" },
+  brown: { base: "#5a3d2a", mottle: 0.05, core: "#d8bea1", kind: "coated" },
+  green: { base: BRAND.green, mottle: 0.02, core: "#e6fff0", kind: "coated" },
+  red: { base: BRAND.red, mottle: 0.0, core: "#ffd2cf", kind: "coated" },
+  tag: { base: "#e8dcc0", mottle: 0.05, core: "#f6efdd", kind: "paper" },
 };
 
 export class Painter {

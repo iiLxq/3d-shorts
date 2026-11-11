@@ -1,7 +1,7 @@
 // Card pieces: a THREE.Shape extruded to real card thickness. Front face carries a printed canvas
 // (Painter), cut edges show the lighter paper core. Every card holds a material set per look.
 import * as THREE from "three";
-import { Look, Painter, PaperStock, Pt, STOCK, BP_LINE, BRAND, canvas, tex, paperBase, fiberTex, untone } from "./paint";
+import { Look, Painter, PaperStock, Pt, STOCK, BP_LINE, BRAND, canvas, tex, paperBase, fiberTex, fiberCanvas as fiberTexCanvas, untone } from "./paint";
 
 export type Role = "shell" | "structure" | "mech" | "person" | "fx" | "light";
 export interface CardOpts {
@@ -20,13 +20,20 @@ export interface CardOpts {
   shadow?: boolean;
   /** tiled print (big walls): uv = local xy / size, seamless tile painted once per look */
   tile?: { size: number; key: string; paint: (p: Painter, size: number) => void };
+  /** embossed relief: draw grey heights (#808080 = flat, lighter = raised) in metre space; becomes the bump map */
+  relief?: (h: Painter, pts: Pt[], b: Bounds) => void;
+  reliefPx?: number;
+  /** this card ignores the global look (case-file folder, cutting mat, props outside the diorama) */
+  lock?: Look;
+  /** edge (cut core) brightness multiplier: cores catch the raking key */
+  edge?: number;
 }
 const _tiles = new Map<string, THREE.Texture>();
 export interface Bounds { x0: number; y0: number; x1: number; y1: number; w: number; h: number }
 
 const REG: Card[] = [];
 export function allCards() { return REG; }
-export function setLookAll(look: Look) { REG.forEach((c) => c.setLook(look)); }
+export function setLookAll(look: Look) { REG.forEach((c) => c.setLook(c.o.lock ?? look)); }
 
 export function shapeFromPts(pts: Pt[]) {
   const s = new THREE.Shape();
@@ -73,6 +80,7 @@ export class Card {
   mats = new Map<Look, THREE.Material[]>();
   look: Look | null = null;
   glow = 0; // extra emissive (fail-safe flash, lamps)
+  _relief?: THREE.Texture | null;
   constructor(shape: THREE.Shape, o: CardOpts = {}) {
     this.o = o;
     const thick = o.thick ?? 0.012;
@@ -143,9 +151,23 @@ export class Card {
     const role = this.o.role ?? "shell";
     this.mesh.castShadow = (this.o.shadow ?? true) && !(look === "xray" && role === "shell");
   }
+  private reliefTex(): THREE.Texture | null {
+    const o = this.o, b = this.b;
+    if (!o.relief) return null;
+    const k = Math.min(o.reliefPx ?? 500, 1024 / Math.max(b.w, b.h));
+    const W = Math.ceil(b.w * k) + 2, H = Math.ceil(b.h * k) + 2;
+    const c = canvas(W, H), g = c.getContext("2d")!;
+    // base = the shared paper formation tile, so embossing sits on believable stock
+    const ft = fiberTexCanvas(); const pat = g.createPattern(ft, "repeat")!;
+    g.fillStyle = pat; g.globalAlpha = 1; g.save(); g.scale(Math.max(0.25, k * 0.6 / 512), Math.max(0.25, k * 0.6 / 512)); g.fillRect(0, 0, W * 8, H * 8); g.restore();
+    g.setTransform(k, 0, 0, -k, -b.x0 * k + 1, b.y1 * k + 1);
+    o.relief(new Painter(g, "solid", k, (o.seed ?? 1) + 77), this.pts, b);
+    return tex(c, false);
+  }
   private makeMats(look: Look): THREE.Material[] {
     const o = this.o, stock = stockOf(o.stock), role = o.role ?? "shell";
-    const bump = o.tile ? fiberTex(o.tile.size, o.tile.size) : fiberTex(this.b.w, this.b.h);
+    if (this._relief === undefined) this._relief = this.reliefTex();
+    const bump = this._relief ?? (o.tile ? fiberTex(o.tile.size, o.tile.size) : fiberTex(this.b.w, this.b.h));
     // structure/person/mech keep their print in x-ray; shells turn into vellum
     const eff: Look = look === "xray" && role !== "shell" ? (role === "structure" ? "blueprint" : "solid") : look;
     const map = this.paint(eff);
@@ -157,13 +179,16 @@ export class Card {
       return [face, side];
     }
     if (eff === "solid") {
+      const kind = stock.kind ?? "paper";
+      const foil = kind === "foil" || (o.metal ?? 0) > 0.5;
       const face = new THREE.MeshStandardMaterial({
-        map, bumpMap: bump, bumpScale: o.bump ?? 0.004,
-         roughness: o.rough ?? 0.86, metalness: o.metal ?? 0, envMapIntensity: o.metal ? 1.0 : 0.35,
+        map, bumpMap: bump, bumpScale: o.bump ?? (foil ? 1.2 : kind === "coated" ? 0.8 : 2.0),
+        roughness: o.rough ?? (foil ? 0.34 : kind === "coated" ? 0.62 : kind === "kraft" ? 0.9 : 0.94),
+        metalness: o.metal ?? (foil ? 0.88 : 0), envMapIntensity: foil ? 1.0 : 0.25,
       });
       if (o.emissive) { face.emissiveMap = map; face.emissive = o.emissive.clone(); }
-      const side = new THREE.MeshStandardMaterial({ color: stock.core, roughness: 0.95, metalness: 0, bumpMap: bump, bumpScale: 0.002 });
-      if (o.metal) { side.metalness = 0.2; }
+      const e = o.edge ?? 1;
+      const side = new THREE.MeshStandardMaterial({ color: new THREE.Color(stock.core).multiplyScalar(e), roughness: 0.97, metalness: 0, envMapIntensity: 0.1 });
       return [face, side];
     }
     if (eff === "blueprint") {
