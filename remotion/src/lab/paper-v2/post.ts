@@ -109,7 +109,7 @@ export class GradeEffect extends Effect {
       blendFunction: BlendFunction.SET,
       uniforms: new Map<string, THREE.Uniform>([
         ["uWarm", new THREE.Uniform(1)], ["uVig", new THREE.Uniform(0.2)], ["uLift", new THREE.Uniform(new THREE.Color(0.028, 0.045, 0.09))], ["uVigCol", new THREE.Uniform(new THREE.Color(0.05, 0.08, 0.16))],
-        ["uContrast", new THREE.Uniform(0.4)], ["uExpo", new THREE.Uniform(1)],
+        ["uContrast", new THREE.Uniform(0.5)], ["uExpo", new THREE.Uniform(1.12)],
         ["uFlashUV", new THREE.Uniform(new THREE.Vector2(0.5, 0.5))], ["uFlashR", new THREE.Uniform(0.1)], ["uFlashAmt", new THREE.Uniform(0)], ["uFlashCol", new THREE.Uniform(untone(BRAND.green))],
       ]),
     });
@@ -188,7 +188,7 @@ void main() {
       vec2 q2 = (P + uD * (u2 - u)) / asp;
       if (inside(q2)) {
         vec3 a = texture2D(tA, vec2(q2.x, q2.y)).rgb;
-        float lit = 0.55 + 0.45 * cos(ph2 - 1.2);
+        float lit = 0.5 + 0.55 * cos(ph2 - 0.9);
         vec3 back = mix(uBack, uBack * 0.8 + a * 0.2, 0.25) * lit;
         gl_FragColor = vec4(back, 1.0); return;
       }
@@ -244,7 +244,7 @@ export class SheetComposite {
       uniforms: {
         tA: { value: null }, uRes: { value: new THREE.Vector2(1080, 1920) }, uMode: { value: 0 }, uL: { value: 0 }, uR: { value: 0.08 },
         uEdge0: { value: 0 }, uEdge1: { value: 1 }, uTilt: { value: 0.06 }, uO: { value: new THREE.Vector2(1, 0) }, uD: { value: new THREE.Vector2(-0.6, 0.8) },
-        uBack: { value: new THREE.Color(0.86, 0.85, 0.8) },
+        uBack: { value: new THREE.Color(0.93, 0.9, 0.82) },
       },
     });
     const q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.mat); q.frustumCulled = false; this.scene.add(q);

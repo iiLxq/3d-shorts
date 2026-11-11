@@ -98,6 +98,6 @@ export class Meter {
     this.root.visible = show > 0.001;
     if (look === "solid") { this.key.color.set("#ffc890"); this.key.intensity = 2.4; this.amb.color.set("#33476e"); this.amb.intensity = 1.2; }
     else { this.key.color.set("#cfeaff"); this.key.intensity = 1.8; this.amb.color.set("#2b4d80"); this.amb.intensity = 1.3; }
-    this.alarm.intensity = 3.0e5 * alarm;
+    this.alarm.intensity = 2.5e4 * alarm;
   }
 }

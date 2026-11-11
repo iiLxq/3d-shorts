@@ -137,6 +137,7 @@ export const ST: Record<string, PaperStock> = {
   skin: { base: "#cf9876", mottle: 0.025, core: "#fbeee4" },
   lid: { base: "#c48b6b", mottle: 0.02, core: "#fbeee4" },
   hair: { base: "#4b3d33", mottle: 0.05, core: "#f2e9df" },
+  grey: { base: "#a49d94", mottle: 0.05, core: "#ffffff" },
   stache: { base: "#3e3029", mottle: 0.05, core: "#f2e9df" },
   boot: { base: "#7b5536", mottle: 0.05, core: "#f4e7d6" },
   sole: { base: "#2b2724", mottle: 0.04, core: "#e8e2da" },

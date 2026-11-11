@@ -28,7 +28,7 @@ export const VARIANTS: Record<"A" | "B", Variant> = {
 };
 
 /** Linear multiplier on the amber print so the LIT jacket lands on #FFB020 through stage light + grade (calibrated, see NOTES). */
-export const AMBER_TINT = new THREE.Color(1, 1, 1);
+export const AMBER_TINT = new THREE.Color(1.07, 1.1, 0.72);
 
 const TB = 0.012;  // body card
 const TF = 0.004;  // face card
@@ -190,7 +190,7 @@ export class Figure {
       this.card(knee, rectPts(-0.058, -0.105, 0.058, 0.035, 0.022), ST.pad, {
         seed: 107 + s, tint, thick: 0.007, print: (p, pts, b) => { navyPrint(p, pts); stitch(p, transform(rectPts(b.x0 + 0.008, b.y0 + 0.008, b.x1 - 0.008, b.y1 - 0.008, 0.016), 1, 1), "rgba(160,170,190,0.45)", 0.0012, 0.005); },
       }, 0, 0, 0.007);
-      this.pin(knee, 0, -0.03, 0.007, 0.014);
+      this.pin(knee, 0, -0.03, 0.007, 0.012);
       const ankle = new THREE.Group(); ankle.position.set(0, -v.shin, 0.01); knee.add(ankle);
       this.buildBoot(ankle, s, prof ? 1 : tq ? 0.62 : 0, tint);
       this.j["hip" + s] = hip; this.j["knee" + s] = knee; this.j["ankle" + s] = ankle;
@@ -205,10 +205,10 @@ export class Figure {
       } else stitch(p, [[0.05, -0.07], [-0.13, -0.075]], "rgba(240,220,190,0.5)", 0.0016, 0.006);
     };
     if (side === 0) {
-      this.card(ankle, smooth([[-0.062, 0.065], [0.062, 0.065], [0.064, -0.035], [0.071, -a + 0.035], [0.069, -a + 0.02], [-0.069, -a + 0.02], [-0.071, -a + 0.035], [-0.064, -0.035]], 3), ST.boot, { seed: 121 + s, print: bootPrint, tint }, 0, 0, 0);
-      this.card(ankle, smooth([[-0.068, -a + 0.065], [0.068, -a + 0.065], [0.071, -a + 0.025], [-0.071, -a + 0.025]], 3), ST.leather, { seed: 123 + s, thick: 0.006, tint }, 0, 0, 0.006);
-      this.card(ankle, rectPts(-0.076, -a, 0.076, -a + 0.026, 0.007), ST.sole, { seed: 125 + s, thick: 0.01, tint }, 0, 0, 0.012);
-      this.card(ankle, rectPts(-0.064, 0.048, 0.064, 0.07, 0.008), ST.leather, { seed: 127 + s, thick: 0.005, tint }, 0, 0, 0.005);
+      this.card(ankle, smooth([[-0.066, 0.068], [0.066, 0.068], [0.07, -0.03], [0.082, -a + 0.04], [0.08, -a + 0.02], [-0.08, -a + 0.02], [-0.082, -a + 0.04], [-0.07, -0.03]], 3), ST.boot, { seed: 121 + s, print: bootPrint, tint }, 0, 0, 0);
+      this.card(ankle, smooth([[-0.074, -a + 0.068], [0.074, -a + 0.068], [0.082, -a + 0.025], [-0.082, -a + 0.025]], 3), ST.leather, { seed: 123 + s, thick: 0.006, tint }, 0, 0, 0.006);
+      this.card(ankle, rectPts(-0.088, -a, 0.088, -a + 0.03, 0.008), ST.sole, { seed: 125 + s, thick: 0.01, tint }, 0, 0, 0.012);
+      this.card(ankle, rectPts(-0.068, 0.05, 0.068, 0.074, 0.008), ST.leather, { seed: 127 + s, thick: 0.005, tint }, 0, 0, 0.005);
     } else {
       // side boot facing -x (toe forward); three-quarter = same drawing narrowed
       const sx = side;
@@ -246,9 +246,10 @@ export class Figure {
       stitch(p, [[-v.hemW, v.hemY + 0.016], [v.hemW, v.hemY + 0.016]], "rgba(140,70,0,0.45)");
     } }, 0);
     // navy yoke over the shoulders
-    const yoke = clipHalf(clipHalf(full, (p) => p[1] - (v.shY - 0.12)), (p) => Math.abs(p[0]) - 0.03);
-    // clipHalf on |x| keeps both sides; split assigns per half
-    this.torsoPiece(transform(yoke, 0.985, 1, 0, -0.002), ST.navy, { seed: 207, print: (p, pts, b) => { navyPrint(p, pts); stitch(p, [[b.x0, v.shY - 0.112], [b.x1, v.shY - 0.112]], "rgba(170,180,200,0.5)", 0.0012, 0.006); } }, 0.005);
+    for (const s of [1, -1]) {
+      const yoke = clipHalf(clipHalf(full, (p) => p[1] - (v.shY - 0.12)), (p) => s * p[0] - 0.03);
+      this.torsoPiece(transform(yoke, 0.985, 1, 0, -0.002), ST.navy, { seed: 207 + s, print: (p, pts, b) => { navyPrint(p, pts); stitch(p, [[b.x0, v.shY - 0.112], [b.x1, v.shY - 0.112]], "rgba(170,180,200,0.5)", 0.0012, 0.006); } }, 0.005);
+    }
     // reflective tape: waist + chest hoops (cut at the zip), braces over the shoulders
     for (const [y0, y1] of [[v.hemY + 0.03, v.hemY + 0.074], [v.shY - 0.272, v.shY - 0.228]]) {
       for (const s of [1, -1]) {
@@ -270,14 +271,14 @@ export class Figure {
       this.pin(this.halves[s], s * 0.13, v.hipY + 0.155 - v.hipY, 0.0135, 0.008);
     }
     // name tag (right chest) and radio (left chest)
-    this.torsoPiece(rectPts(-0.205, v.shY - 0.212, -0.112, v.shY - 0.17, 0.004), ST.white, { seed: 231, thick: 0.004, print: (p) => {
-      p.text("GUS", -0.1585, v.shY - 0.2035, 0.028, "#1f2a42", { align: "center", font: "'JetBrains Mono', monospace", weight: 800 });
+    this.torsoPiece(rectPts(-0.13, v.shY - 0.322, -0.064, v.shY - 0.284, 0.004), ST.white, { seed: 231, thick: 0.004, print: (p) => {
+      p.text("GUS", -0.097, v.shY - 0.3135, 0.025, "#1f2a42", { align: "center", font: "'JetBrains Mono', monospace", weight: 800 });
     } }, 0.008);
-    this.torsoPiece(rectPts(0.118, v.shY - 0.218, 0.172, v.shY - 0.134, 0.008), ST.black, { seed: 233, thick: 0.01, print: (p) => {
-      for (let i = 0; i < 4; i++) p.stroke([[0.128, v.shY - 0.2 + i * 0.012], [0.162, v.shY - 0.2 + i * 0.012]], "#55585e", 0.003);
-      p.rect(0.13, v.shY - 0.152, 0.03, 0.01, "#9fa6ad");
+    this.torsoPiece(rectPts(0.108, v.shY - 0.218, 0.158, v.shY - 0.134, 0.008), ST.black, { seed: 233, thick: 0.01, print: (p) => {
+      for (let i = 0; i < 4; i++) p.stroke([[0.116, v.shY - 0.2 + i * 0.012], [0.15, v.shY - 0.2 + i * 0.012]], "#55585e", 0.003);
+      p.rect(0.118, v.shY - 0.152, 0.03, 0.01, "#9fa6ad");
     } }, 0.018);
-    this.torsoPiece(rectPts(0.155, v.shY - 0.14, 0.165, v.shY - 0.07, 0.004), ST.black, { seed: 235, thick: 0.005 }, 0.016);
+    this.torsoPiece(rectPts(0.142, v.shY - 0.14, 0.151, v.shY - 0.07, 0.004), ST.black, { seed: 235, thick: 0.005 }, 0.016);
     // collar (navy, stand-up) + zip placket
     for (const s of [1, -1]) this.torsoPiece(smooth([[s * 0.022, v.shY - 0.07], [s * 0.074, v.shY + 0.004], [s * 0.092, v.shY + 0.05], [s * 0.064, v.shY + 0.055], [s * 0.02, v.shY - 0.01]], 2), ST.navy, { seed: 241 + s, thick: 0.008, print: navyPrint }, 0.012);
     this.torsoPiece(rectPts(-0.017, v.hemY + 0.004, 0.017, v.shY - 0.07, 0.004), ST.amberD, { seed: 245, thick: 0.006, print: (p) => {
@@ -347,18 +348,18 @@ export class Figure {
       let x = 0, z = 0.03;
       if (prof) { x = s > 0 ? 0.0 : 0.02; z = s > 0 ? 0.045 : -0.06; }
       else if (tq) { x = this.mapX(s * v.armX)[0] + (s > 0 ? -0.01 : 0.02); z = s > 0 ? 0.045 : -0.06; }
-      else { const [mx, mz] = this.mapX(s * v.armX); x = mx; z = mz + 0.03; }
+      else { const [mx, mz] = this.mapX(s * (v.armX - 0.012)); x = mx; z = mz + 0.03; }
       sh.position.set(x, v.armY - v.hipY, z); this.torso.add(sh);
-      const up = smooth([[-0.064, 0.035], [0.064, 0.035], [0.066, -0.03], [0.058, -v.armU - 0.02], [-0.056, -v.armU - 0.02], [-0.064, -0.03]], 3);
+      const up = smooth([[-0.06, 0.035], [0.06, 0.035], [0.06, -0.03], [0.05, -v.armU - 0.02], [-0.048, -v.armU - 0.02], [-0.058, -0.03]], 3);
       this.card(sh, up, ST.amber, { seed: 401 + s, tint, print: (p, pts) => { wash(p, pts, [-0.07, 0], [0.07, 0], [[0, "rgba(120,48,0,0.2)"], [0.35, "rgba(0,0,0,0)"], [1, "rgba(120,48,0,0.12)"]]); } }, 0, 0, 0);
-      this.card(sh, smooth([[-0.066, -0.055], [0.066, -0.055], [0.068, 0.012], [0.04, 0.05], [-0.04, 0.05], [-0.068, 0.012]], 3), ST.navy, { seed: 403 + s, tint, thick: 0.007, print: navyPrint }, 0, 0, 0.007);
-      this.pin(sh, 0, 0, 0.014, 0.017);
+      this.card(sh, smooth([[-0.058, -0.012], [0.058, -0.012], [0.06, 0.016], [0.034, 0.042], [-0.034, 0.042], [-0.06, 0.016]], 3), ST.navy, { seed: 403 + s, tint, thick: 0.006, print: navyPrint }, 0, 0, 0.007);
+      this.pin(sh, 0, 0.006, 0.013, 0.012);
       const el = new THREE.Group(); el.position.set(0, -v.armU, 0.016); sh.add(el);
-      const fa = smooth([[-0.056, 0.03], [0.056, 0.03], [0.054, -v.armF * 0.5], [0.05, -v.armF - 0.01], [-0.048, -v.armF - 0.01], [-0.054, -v.armF * 0.5]], 3);
+      const fa = smooth([[-0.05, 0.03], [0.05, 0.03], [0.048, -v.armF * 0.5], [0.044, -v.armF - 0.01], [-0.042, -v.armF - 0.01], [-0.048, -v.armF * 0.5]], 3);
       this.card(el, fa, ST.amber, { seed: 405 + s, tint, print: (p, pts) => wash(p, pts, [-0.06, 0], [0.06, 0], [[0, "rgba(120,48,0,0.2)"], [0.35, "rgba(0,0,0,0)"], [1, "rgba(120,48,0,0.12)"]]) }, 0, 0, 0);
-      this.card(el, rectPts(-0.055, -v.armF * 0.52, 0.055, -v.armF * 0.52 + 0.04, 0.003), ST.tape, { seed: 407 + s, tint, thick: 0.004, rough: 0.55, print: (p, pts, b) => tapePrint(p, pts, b) }, 0, 0, 0.006);
-      this.card(el, rectPts(-0.054, -v.armF - 0.016, 0.054, -v.armF + 0.024, 0.008), ST.navy, { seed: 409 + s, tint, thick: 0.007, print: navyPrint }, 0, 0, 0.007);
-      this.pin(el, 0, 0, 0.0075, 0.014);
+      this.card(el, rectPts(-0.048, -v.armF * 0.52, 0.048, -v.armF * 0.52 + 0.036, 0.003), ST.tape, { seed: 407 + s, tint, thick: 0.004, rough: 0.55, print: (p, pts, b) => tapePrint(p, pts, b) }, 0, 0, 0.006);
+      this.card(el, rectPts(-0.047, -v.armF - 0.016, 0.047, -v.armF + 0.022, 0.008), ST.navy, { seed: 409 + s, tint, thick: 0.007, print: navyPrint }, 0, 0, 0.007);
+      this.pin(el, 0, 0, 0.0075, 0.011);
       const wr = new THREE.Group(); wr.position.set(0, -v.armF, 0.004); el.add(wr);
       const din = prof || tq ? -1 : -s; // the side the thumb / palm faces
       this.hands[s] = this.buildHand(wr, din, s, tint);
@@ -416,7 +417,7 @@ export class Figure {
     }
     return this.card(this.face, pts, stock, { ...o, holes: holesFor ? [...holesFor(1), ...holesFor(-1)] : [] }, 0, 0, z);
   }
-  eyeWin(s: number, rx = 0.025, ryU = 0.0145, ryL = 0.0112): Pt[] {
+  eyeWin(s: number, rx = 0.027, ryU = 0.0158, ryL = 0.0118): Pt[] {
     const out: Pt[] = [], n = 14;
     for (let i = 0; i <= n; i++) { const t = -1 + (2 * i) / n; out.push([t * rx, ryU * Math.pow(1 - t * t, 0.62) + 0.0035 * t * s]); }
     for (let i = n - 1; i > 0; i--) { const t = -1 + (2 * i) / n; out.push([t * rx, -ryL * Math.pow(1 - t * t, 0.75) + 0.0035 * t * s]); }
@@ -440,7 +441,7 @@ export class Figure {
     const lidPts: Pt[] = [[x0 - 0.012, up[0][1]], ...up, [x1 + 0.012, up[up.length - 1][1]], [x1 + 0.012, 0.05], [x0 - 0.012, 0.05]];
     const lidU = new THREE.Group(); g.add(lidU);
     this.card(lidU, lidPts, ST.lid, { seed: 507 + s, thick: 0.002, px: PXF, inset: false, print: (p) => {
-      p.stroke(up.map(([x, y]) => [x, y + 0.0012] as Pt), "#24150f", 0.0034);
+      p.stroke(up.map(([x, y]) => [x, y + 0.0010] as Pt), "#24150f", 0.0026);
       p.stroke(up.map(([x, y]) => [x * 0.9, y + 0.0075] as Pt), "rgba(90,45,30,0.55)", 0.0012);
     } }, 0, 0, -0.0065);
     const lo = win.filter((_, i) => i >= 14).concat([win[0]]);
@@ -458,19 +459,19 @@ export class Figure {
     const E = (s: number) => { const [x, sx] = this.hp(s * 0.044); return { x, sx }; };
     const winAt = (s: number) => { const e = E(s); return transform(this.eyeWin(s), e.sx, 1, e.x, 0.148); };
     // back hair, ears, neck behind the head card
-    this.headPiece(rectPts(-0.114, 0.165, 0.114, 0.24, 0.02), ST.hair, { seed: 521, thick: TF, px: PXF, print: (p, pts) => speckle(p, pts, 260, 0.0016, "rgba(225,220,210,0.55)", 3) }, -0.008);
+    this.headPiece(rectPts(-0.114, 0.165, 0.114, 0.24, 0.02), ST.hair, { seed: 521, thick: TF, px: PXF }, -0.012);
+    this.headPiece(rectPts(-0.112, 0.168, 0.112, 0.2, 0.012), ST.grey, { seed: 522, thick: 0.002, px: PXF }, -0.008);
     for (const s of [1, -1]) {
       if (tq && s < 0) continue;
       const ex = tq ? 0.072 : s * 0.103;
       this.card(this.hpar(s), ellipsePts(ex, 0.142, tq ? 0.016 : 0.019, 0.031, 24), ST.skin, { seed: 523 + s, thick: TF, px: PXF, print: (p) => p.ellipse(ex + s * 0.002, 0.14, 0.008, 0.017, "#b07a5c") }, 0, 0, -0.005);
     }
-    this.card(this.face, rectPts(-0.044, -0.07, 0.044, 0.03, 0.01), ST.skin, { seed: 525, thick: 0.006, print: (p, pts) => wash(p, pts, [0, 0.03], [0, -0.03], [[0, "rgba(80,30,20,0.35)"], [1, "rgba(0,0,0,0)"]]) }, 0, 0, -0.02);
+    this.card(this.face, rectPts(-0.054, -0.07, 0.054, 0.03, 0.012), ST.skin, { seed: 525, thick: 0.006, print: (p, pts) => wash(p, pts, [0, 0.03], [0, -0.03], [[0, "rgba(80,30,20,0.35)"], [1, "rgba(0,0,0,0)"]]) }, 0, 0, -0.02);
     // head card with die-cut eye windows
     this.headPiece(jitter(outline, 0.0012, 5), ST.skin, { seed: 527, thick: 0.006, px: PXF, print: (p, pts) => {
       skinPrint(p, pts);
       spot(p, pts, 0, 0.03, 0.09, "rgba(90,85,95,0.22)", "rgba(90,85,95,0)", 0.7);            // stubble shadow
-      speckle(p, pts, 900, 0.0009, "rgba(70,55,55,0.35)", 11, (x, y) => (y < 0.08 && Math.abs(x) < 0.09 ? 1 : 0));
-      for (const s of [1, -1]) {
+            for (const s of [1, -1]) {
         const e = E(s);
         spot(p, pts, e.x + s * 0.03 * e.sx, 0.1, 0.03, "rgba(200,90,70,0.16)", "rgba(200,90,70,0)");   // cheek warmth
         spot(p, pts, e.x, 0.17, 0.032, "rgba(90,40,30,0.22)", "rgba(90,40,30,0)", 0.5);                // brow shade
@@ -485,13 +486,14 @@ export class Figure {
       // sideburns (greying)
       if (!(tq && s < 0)) {
         const sbx = tq && s > 0 ? 0.068 : s * 0.094;
-        this.card(par, rectPts(sbx - 0.009, 0.158, sbx + 0.009, 0.232, 0.006), ST.hair, { seed: 531 + s, thick: 0.002, px: PXF, print: (p, pts) => speckle(p, pts, 70, 0.0013, "rgba(225,220,210,0.6)", 5 + s) }, 0, 0, 0.002);
+        this.card(par, rectPts(sbx - 0.009, 0.158, sbx + 0.009, 0.232, 0.006), ST.hair, { seed: 531 + s, thick: 0.002, px: PXF }, 0, 0, 0.002);
+        this.card(par, rectPts(sbx - 0.0075, 0.16, sbx + 0.0075, 0.19, 0.005), ST.grey, { seed: 533 + s, thick: 0.0015, px: PXF }, 0, 0, 0.0036);
       }
       // brows: thick inner end, pivot at centre
       const bg = new THREE.Group(); const [bx, bsx] = this.hp(s * 0.047);
       bg.position.set(bx, 0.188, 0.004); bg.scale.x = bsx; par.add(bg);
       const bp: Pt[] = smooth([[-s * 0.028, -0.006], [-s * 0.026, 0.006], [0, 0.0085], [s * 0.028, 0.004], [s * 0.029, -0.002], [0, -0.0025]], 3);
-      this.card(bg, bp, ST.stache, { seed: 535 + s, thick: TF, px: PXF, print: (p, pts) => speckle(p, pts, 60, 0.0012, "rgba(220,215,205,0.5)", 7 + s) }, 0, 0, 0);
+      this.card(bg, bp, ST.stache, { seed: 535 + s, thick: TF, px: PXF, print: (p, pts) => wash(p, pts, [0, 0.01], [0, -0.006], [[0, "rgba(255,255,255,0.08)"], [1, "rgba(0,0,0,0.2)"]]) }, 0, 0, 0);
       this.brows.push({ g: bg, s, y0: 0.188 });
     }
     // nose: V-fold = a folded tent; front = bridge + tip; three-quarter = side wedge
@@ -513,11 +515,11 @@ export class Figure {
     const mg = new THREE.Group(); mg.position.set(mx, 0, tq ? 0.004 : 0.005); mg.scale.x = Math.max(0.82, msx); this.face.add(mg);
     for (const id of MOUTHS) this.mouths[id] = this.mouthCard(mg, id);
     // moustache: trimmed chevron, salt and pepper, two wings (V-fold: one per half)
-    const st: Pt[] = smooth([[-0.054, 0.058], [-0.05, 0.07], [-0.03, 0.084], [-0.012, 0.088], [0, 0.084], [0.012, 0.088], [0.03, 0.084], [0.05, 0.07], [0.054, 0.058],
-      [0.044, 0.062], [0.034, 0.064], [0.024, 0.0625], [0.012, 0.066], [0, 0.064], [-0.012, 0.066], [-0.024, 0.0625], [-0.034, 0.064], [-0.044, 0.062]], 2);
+    const st: Pt[] = smooth([[-0.062, 0.05], [-0.058, 0.066], [-0.036, 0.086], [-0.014, 0.092], [0, 0.087], [0.014, 0.092], [0.036, 0.086], [0.058, 0.066], [0.062, 0.05],
+      [0.05, 0.057], [0.038, 0.06], [0.026, 0.058], [0.013, 0.062], [0, 0.06], [-0.013, 0.062], [-0.026, 0.058], [-0.038, 0.06], [-0.05, 0.057]], 2);
     this.stache.position.z = 0.009;
     if (vf) for (const s of [1, -1]) { const h = new THREE.Group(); this.headHalves[s].add(h); h.userData.stache = true; }
-    const stPrint = (p: Painter, pts: Pt[]) => { wash(p, pts, [0, 0.09], [0, 0.058], [[0, "rgba(255,255,255,0.08)"], [1, "rgba(0,0,0,0.25)"]]); speckle(p, pts, 160, 0.0011, "rgba(225,220,210,0.55)", 13); for (let x = -0.044; x <= 0.045; x += 0.011) p.stroke([[x, 0.065], [x * 0.92, 0.079]], "rgba(20,12,8,0.35)", 0.001); };
+    const stPrint = (p: Painter, pts: Pt[]) => { wash(p, pts, [0, 0.09], [0, 0.058], [[0, "rgba(255,255,255,0.08)"], [1, "rgba(0,0,0,0.25)"]]); for (let x = -0.05; x <= 0.051; x += 0.0125) p.stroke([[x, 0.06], [x * 0.9, 0.08]], "rgba(150,140,130,0.45)", 0.0014); };
     if (tq) {
       for (const s of [1, -1]) {
         const hpp = clipHalf(st, (p) => s * p[0]);
@@ -611,7 +613,8 @@ export class Figure {
       [-0.08, 0.255], [-0.04, 0.282], [0, 0.29], [0.05, 0.282], [0.095, 0.25], [0.115, 0.2], [0.118, 0.15], [0.105, 0.1], [0.08, 0.07], [0.06, 0.04], [0.03, 0.03], [-0.02, 0.01]], 3), 0.001, 21);
     const win = transform(this.eyeWin(-1, 0.0125, 0.0125, 0.0095), 1, 1, 0, 0).map(([x, y]) => [x - (y > 0 ? 0 : 0) , y] as Pt);
     const winP: Pt[] = win.map(([x, y]) => [x * (x < 0 ? 1 : 0.85), y] as Pt);
-    this.card(f, rectPts(-0.005, 0.165, 0.122, 0.24, 0.02), ST.hair, { seed: 601, thick: TF, px: PXF, print: (p, pts) => speckle(p, pts, 200, 0.0016, "rgba(225,220,210,0.55)", 3) }, 0, 0, -0.008);
+    this.card(f, smooth([[-0.005, 0.16], [0.07, 0.12], [0.122, 0.17], [0.128, 0.24], [-0.005, 0.24]], 2), ST.hair, { seed: 601, thick: TF, px: PXF }, 0, 0, 0.001);
+    this.card(f, rectPts(-0.004, 0.172, 0.032, 0.2, 0.008), ST.grey, { seed: 602, thick: 0.0015, px: PXF }, 0, 0, 0.0026);
     this.card(f, rectPts(-0.05, -0.07, 0.044, 0.035, 0.01), ST.skin, { seed: 603, thick: 0.006, print: (p, pts) => wash(p, pts, [0, 0.03], [0, -0.03], [[0, "rgba(80,30,20,0.35)"], [1, "rgba(0,0,0,0)"]]) }, 0.02, 0, -0.02);
     this.card(f, outline, ST.skin, { seed: 605, thick: 0.006, px: PXF, holes: [transform(winP, 1, 1, -0.07, 0.148)], print: (p, pts) => {
       wash(p, pts, [-0.11, 0], [0.12, 0], [[0, "rgba(0,0,0,0)"], [0.6, "rgba(0,0,0,0)"], [1, "rgba(110,45,30,0.16)"]]);
@@ -620,7 +623,7 @@ export class Figure {
       p.stroke([[-0.05, 0.154], [-0.042, 0.158]], "rgba(110,55,40,0.35)", 0.0011);
     } }, 0, 0, 0);
     this.card(f, ellipsePts(0.025, 0.142, 0.019, 0.031, 24), ST.skin, { seed: 607, thick: TF, px: PXF, print: (p) => { p.ellipse(0.027, 0.14, 0.009, 0.018, "#b07a5c"); } }, 0, 0, 0.003);
-    this.card(f, rectPts(-0.012, 0.158, 0.008, 0.232, 0.006), ST.hair, { seed: 609, thick: 0.002, px: PXF, print: (p, pts) => speckle(p, pts, 70, 0.0013, "rgba(225,220,210,0.6)", 5) }, 0, 0, 0.002);
+    this.card(f, rectPts(-0.012, 0.158, 0.008, 0.232, 0.006), ST.hair, { seed: 609, thick: 0.002, px: PXF }, 0, 0, 0.003);
     this.buildEye(f, -0.07, 0.148, 1, -1, winP, true);
     const bg = new THREE.Group(); bg.position.set(-0.075, 0.188, 0.004); f.add(bg);
     this.card(bg, smooth([[-0.022, -0.004], [-0.02, 0.007], [0.0, 0.0085], [0.02, 0.004], [0.02, -0.002], [0, -0.003]], 3), ST.stache, { seed: 611, thick: TF, px: PXF }, 0, 0, 0);
@@ -646,7 +649,7 @@ export class Figure {
     const map: Record<MouthId, string> = { neutral: "closed", firm: "closed", pursed: "o", exhale: "o", open: "open", grin: "open", scream: "wide", clench: "wide", smile: "smile" };
     for (const id of MOUTHS) this.mouths[id] = pm[map[id]];
     this.stache.position.z = 0.009; f.add(this.stache);
-    this.card(this.stache, smooth([[-0.1, 0.087], [-0.08, 0.088], [-0.05, 0.08], [-0.038, 0.064], [-0.055, 0.061], [-0.075, 0.06], [-0.098, 0.066]], 3), ST.stache, { seed: 631, thick: TF, px: PXF, print: (p, pts) => speckle(p, pts, 80, 0.0011, "rgba(225,220,210,0.55)", 13) }, 0, 0, 0);
+    this.card(this.stache, smooth([[-0.1, 0.087], [-0.08, 0.088], [-0.05, 0.08], [-0.038, 0.064], [-0.055, 0.061], [-0.075, 0.06], [-0.098, 0.066]], 3), ST.stache, { seed: 631, thick: TF, px: PXF }, 0, 0, 0);
     this.buildHelmet(true);
   }
 }

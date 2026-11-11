@@ -195,7 +195,7 @@ export class Card {
     }
     if (eff === "blueprint") {
       const face = new THREE.MeshStandardMaterial({
-        map, emissiveMap: map, emissive: new THREE.Color(0.30, 0.42, 0.62), roughness: 0.9, bumpMap: bump, bumpScale: 0.003, envMapIntensity: 0.2,
+        map, emissiveMap: map, emissive: new THREE.Color(0.36, 0.52, 0.78), roughness: 0.9, bumpMap: bump, bumpScale: 0.003, envMapIntensity: 0.2,
       });
       const ink = INK_FOR[role];
       const side = new THREE.MeshBasicMaterial({ color: untone(ink === BP_LINE ? BRAND.cyan : ink, 1.35), toneMapped: true });

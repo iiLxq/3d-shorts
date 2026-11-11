@@ -41,7 +41,7 @@ export function ropeState(spec: RopeSpec, ts: number, carYAt: (t: number) => num
   const dt = 1 / 30 / SUB;
   // released stretch: each point's initial velocity grows toward the free end (recoil), plus a lateral whip
   const kick = (c: Chain, dir: number, speed: number, lat: number) => {
-    const wx = (r() - 0.5) * 2 * lat, wz = (r() - 0.3) * 2 * lat;
+    const wx = (dir < 0 ? -(0.4 + r() * 0.6) : r() - 0.5) * 2 * lat, wz = (r() - 0.3) * 2 * lat;   // lower ends whip toward -x (away from the gear)
     for (let i = 1; i < c.n; i++) {
       const u = i / (c.n - 1), j = i * 3;
       const s = speed * u * u;

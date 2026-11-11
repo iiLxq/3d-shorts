@@ -14,7 +14,7 @@ export const SH = { x: 1.3, zb: -1.15, zf: 1.25 };
 export const LANDINGS = [-2.2, 1.1, 4.4];
 export const BREAK_Y = 2.62;
 export const CAR = { w: 2.0, d: 1.7, h: 2.5 };
-export const GUS = { x: -0.44, z: 0.3 };
+export const GUS = { x: -0.36, z: 0.24 };
 const ROPE_X = [-0.11, -0.037, 0.037, 0.11];
 const ROPE_Z = -0.02;
 const HITCH_Y = 0.98;
@@ -33,6 +33,7 @@ export interface Frame {
   callouts: number;                                         // blueprint callout print 0..1
   opening: number;                                          // desk-lamp phase 0..1
   gearLamp: number;                                         // insert practical 0..1
+  tagMask: number;                                          // 1 = hero tag, 2 = gear tags
 }
 
 // ------------------------------------------------------------------------------------------------ prints
@@ -65,18 +66,19 @@ function ragWallRelief(h: Painter, _pts: Pt[], b: { x0: number; y0: number; x1: 
   g.restore();
 }
 /** BLUEPRINT callouts printed on the cyanotype back wall (positions solved for the hero camera, see timeline) */
-export const CALLOUTS: { text: string; at: [number, number]; to: [number, number]; size: number }[] = [];
+export const CALLOUTS: { text: string; at: [number, number]; to: [number, number]; size: number; right?: boolean }[] = [];
 function blueprintCallouts(p: Painter) {
   for (const c of CALLOUTS) {
     p.stroke([c.at, c.to], "", 0.012);
     p.g.beginPath(); p.g.arc(c.to[0], c.to[1], 0.035, 0, Math.PI * 2); p.g.strokeStyle = BRAND.cyan; p.g.lineWidth = 0.012; p.g.stroke();
-    const left = c.at[0] < c.to[0];
+    const left = c.at[0] < c.to[0] || c.right;
     p.text(c.text, c.at[0] + (left ? -0.04 : 0.04), c.at[1] - c.size * 0.35, c.size, "", { align: left ? "right" : "left", font: MONO, weight: 800 });
+    p.stroke([[c.at[0] - (left ? c.size * c.text.length * 0.62 + 0.04 : -0.04), c.at[1] - c.size * 0.55], [c.at[0], c.at[1] - c.size * 0.55]], "", 0.006);
   }
   // dimension line: car width
   p.stroke([[-1.0, -2.75], [1.0, -2.75]], "", 0.01); p.stroke([[-1.0, -2.65], [-1.0, -2.85]], "", 0.01); p.stroke([[1.0, -2.65], [1.0, -2.85]], "", 0.01);
   p.text("2.00 m", 0, -2.68, 0.13, "", { align: "center", font: MONO });
-  p.text("FIG. 1  CAR 2 · SAFETY GEAR", -1.2, 5.1, 0.17, "", { font: MONO, weight: 800 });
+  p.text("FIG. 1 · CAR 2", -0.98, 3.32, 0.1, "", { font: MONO, weight: 800 });
 }
 function stencil(text: string, size: number, color = "#e9e3d4") {
   return (p: Painter, _pts: Pt[], b: { x0: number; y0: number; w: number; h: number }) => {
@@ -150,6 +152,7 @@ export class World {
   look: Look | null = null;
   ropeSpecs: RopeSpec[] = [];
   stampCard: Card | null = null;
+  buffers: THREE.Group[] = [];
   gearLamp!: THREE.SpotLight;
   ropeKey = "";
 
@@ -219,8 +222,7 @@ export class World {
     for (const x of [-0.5, 0.5]) {
       const bf = cardBox(0.3, 0.55, 0.3, { lock: undefined, stock: "kraft", thick: 0.02, seed: 9010 + x * 10, role: "structure",
         printFront: (p, _pts, b) => { for (let y = b.y0 + 0.06; y < b.y1; y += 0.08) p.stroke([[b.x0 + 0.03, y], [b.x1 - 0.03, y + 0.03]], "#5d4126", 0.018); } });
-      bf.position.set(x, BASE, 0.0); s.add(bf);
-      this.lookFns.push(() => void 0);
+      bf.position.set(x, BASE, 0.0); s.add(bf); this.buffers.push(bf);
     }
     // cover: hinged on the left spine, lies over everything when closed
     this.coverPivot.position.set(FOLDER.x0, BASE + 0.34, 0); s.add(this.coverPivot);
@@ -254,7 +256,7 @@ export class World {
     stampC.setLook("solid");
     const sm = stampC.mesh; const sms = sm.material as THREE.MeshStandardMaterial[];
     sms[0].transparent = true; sms[0].depthWrite = false; sms[0].bumpMap = null; sms[0].roughness = 0.75; sms[1].visible = false;
-    sm.position.set(2.5, 0.027, 5.9); sm.rotation.set(-Math.PI / 2, 0, 0.09); sm.castShadow = false; this.coverPivot.add(sm);
+    sm.position.set(2.5, 0.027, 4.9); sm.rotation.set(-Math.PI / 2, 0, 0.09); sm.scale.setScalar(0.24); sm.castShadow = false; this.coverPivot.add(sm);
     this.stampCard = stampC;
     // folder tab
     this.card(this.coverPivot, roundRect(fw - 0.02, -6.5, 0.45, 2.4, 0.15), { lock: "solid", stock: "manila", thick: 0.05, seed: 9004, inset: false,
@@ -350,7 +352,7 @@ export class World {
   private buildSides() {
     for (const sd of [-1, 1]) {
       const piv = new THREE.Group();
-      piv.position.set(sd * SH.x, 0, SH.zb + (sd < 0 ? 0.07 : 0.14));
+      piv.position.set(sd * SH.x, 0, SH.zb + (sd < 0 ? 0.004 : 0.008));
       this.wallInner.add(piv); this.sidePivots.push(piv);
       // diagonal cut-away profile: tall at the back, lower at the front (sectional model)
       const prof: Pt[] = [[0, BASE], [SH.zf - SH.zb, BASE], [SH.zf - SH.zb, 0.2], [0.9, TOPY - 0.6], [0, TOPY]];
@@ -453,7 +455,7 @@ export class World {
     bulb.position.copy(lampPos).addScaledVector(dir, 0.02);
     this.car.userData.lampPos = lampPos; this.car.userData.lampAim = lampAim;
     // hero tag: printed kraft tag tied to the hitch
-    this.tags.push(this.tag(c, "HOIST ROPES ×4", [0.14, 1.06, ROPE_Z + 0.12], 0.06, 0.07, 7001));
+    this.tags.push(this.tag(c, "HOIST ROPES ×4", [-0.02, 1.08, ROPE_Z + 0.13], 0.04, 0.052, 7001));
   }
 
   /** a pinned paper tag: coated tag card with a reinforced punch hole, string, brass pin; faces +z by default */
@@ -532,7 +534,7 @@ export class World {
     const s = this.scene;
     this.hemi = new THREE.HemisphereLight("#2b4270", "#2a1d14", 0.6); s.add(this.hemi);
     // KEY: car-top work lamp, warm tungsten, raking from camera-left across Gus and the back wall
-    this.key = new THREE.SpotLight("#ffb46e", 9, 10, 0.78, 0.5, 1.3);
+    this.key = new THREE.SpotLight("#ffb46e", 9, 10, 0.74, 0.55, 0.7);
     this.key.castShadow = true; this.key.shadow.mapSize.set(2048, 2048);
     this.key.shadow.camera.near = 0.1; this.key.shadow.camera.far = 10;
     this.key.shadow.bias = -0.0003; this.key.shadow.normalBias = 0.008; this.key.shadow.radius = 3;
@@ -549,9 +551,9 @@ export class World {
     this.vent.position.set(0.35, TOPY + 3.2, 0.2); this.vent.target.position.set(-0.1, 0, -0.4);
     this.wallInner.add(this.vent, this.vent.target);
     // DESK: the case-file reading lamp (opening only), raking across the manila cover
-    this.desk = new THREE.SpotLight("#ffcb8a", 0, 40, 0.55, 0.6, 1.0);
+    this.desk = new THREE.SpotLight("#ffcb8a", 0, 40, 0.7, 0.7, 1.0);
     this.desk.castShadow = false; this.desk.shadow.mapSize.set(2048, 2048); this.desk.shadow.bias = -0.0004; this.desk.shadow.normalBias = 0.02;
-    this.desk.position.set(7, BASE + 5.5, 7); this.desk.target.position.set(0, BASE, 3.5);
+    this.desk.position.set(5.5, BASE + 1.5, 6.2); this.desk.target.position.set(-0.5, BASE, 4.2);
     s.add(this.desk, this.desk.target);
     // BOUNCE: warm card bounce from camera-right (low), keeps faces from going dead
     this.bounce = new THREE.PointLight("#ffd9b0", 0.6, 7, 1.5); this.bounce.position.set(1.4, 1.3, 2.6); this.car.add(this.bounce);
@@ -576,7 +578,7 @@ export class World {
       this.ropeSpecs.push({ x: ROPE_X[i], z: ROPE_Z, top: TOPY - 0.3, hitch: HITCH_Y, breakY: BREAK_Y + (i - 1.5) * 0.03, seed: 31 + i * 17 });
     }
   }
-  private tube(m: THREE.Mesh, pts: THREE.Vector3[], r = 0.022, seg = 4) {
+  private tube(m: THREE.Mesh, pts: THREE.Vector3[], r = 0.017, seg = 4) {
     m.geometry.dispose();
     const curve = new THREE.CatmullRomCurve3(pts, false, "centripetal");
     const len = curve.getLength();
@@ -605,8 +607,8 @@ export class World {
       c.mesh.castShadow = true;
       return c.mesh;
     };
-    const down = arrow(0.62, 0.13, 5001);
-    const dg = new THREE.Group(); dg.position.set(GEAR.x - 0.12, GEAR.y + 0.98, 0.3); dg.rotation.set(0, -Math.PI / 2 + 0.35, 0); this.car.add(dg);
+    const down = arrow(0.42, 0.1, 5001);
+    const dg = new THREE.Group(); dg.position.set(GEAR.x - 0.1, GEAR.y + 0.66, 0.34); dg.rotation.set(0, -Math.PI / 2 + 0.5, 0); this.car.add(dg);
     down.rotation.z = Math.PI; dg.add(down);
     this.arrows = [down];
   }
@@ -630,8 +632,8 @@ export class World {
     const sol = look === "solid";
     if (sol) {
       this.hemi.color.set("#2b4270"); this.hemi.groundColor.set("#2a1d14"); this.hemi.intensity = 0.55;
-      this.key.color.set("#ffb46e"); this.key.intensity = 24;
-      this.corr.color.set("#ffc27a"); this.corr.intensity = 45;
+      this.key.color.set("#ffb46e"); this.key.intensity = 9;
+      this.corr.color.set("#ffc27a"); this.corr.intensity = 60;
       this.vent.color.set("#86a8ff"); this.vent.intensity = 70;
       this.bounce.intensity = 1.0; this.scene.environmentIntensity = 0.9;
     } else if (look === "blueprint") {
@@ -648,7 +650,7 @@ export class World {
       this.bounce.intensity = 0.2; this.scene.environmentIntensity = 0.4;
     }
     // opening: the desk lamp carries the shot, diorama practicals wake up as it pops
-    this.desk.intensity = 2.2 * opening;
+    this.desk.intensity = 16 * opening;
     const on = 1 - opening;
     this.key.intensity *= on; this.corr.intensity *= on; this.vent.intensity *= on;
     this.hemi.intensity = this.hemi.intensity * on + 0.5 * opening;
@@ -666,7 +668,10 @@ export class World {
     this.wallPivot.rotation.x = (Math.PI / 2) * (1 - st.wall);
     this.sidePivots[0].rotation.y = (Math.PI / 2) * (1 - st.side);
     this.sidePivots[1].rotation.y = -(Math.PI / 2) * (1 - st.side);
+    // folded flat: rails and card thickness collapse into the page (no rail poking through the closed cover)
+    for (const pv of this.sidePivots) pv.scale.x = Math.max(0.02, Math.min(1, st.side * 1.25));
     this.carFold.scale.z = Math.max(0.015, st.pop);
+    this.buffers.forEach((b) => { b.scale.y = Math.max(0.02, Math.min(1, (st.pop - 0.2) / 0.6)); });
     this.corridor.visible = st.wall > 0.7;
     this.corridor.scale.z = THREE.MathUtils.clamp((st.wall - 0.7) / 0.3, 0.02, 1);
     this.car.position.y = st.carY;
@@ -691,6 +696,7 @@ export class World {
         { kind: "box", a: [-0.98, 0.62 + cy, -0.29], b: [0.98, 0.78 + cy, -0.11] },
         { kind: "box", a: [-0.21, 0.78 + cy, ROPE_Z - 0.1], b: [0.21, 0.84 + cy, ROPE_Z + 0.1] },
         { kind: "capsule", a: [GUS.x, cy, GUS.z - 0.03], b: [0, 1.9 + cy, 0], r: 0.2 },
+        { kind: "box", a: [GEAR.x - 0.3, cy - 0.1, -0.3], b: [GEAR.x + 0.25, cy + 0.95, 0.35] },
       ];
     };
     let carYFn = (_t: number) => st.carY;
@@ -725,10 +731,10 @@ export class World {
       j.g.position.set(0, 0.05 * t, -j.face * 0.0 + (j.face > 0 ? 1 : -1) * (BT + 0.03 - 0.03 * t));
       for (const m of j.green.mesh.material as THREE.MeshStandardMaterial[]) {
         if (!m.emissive || st.look === "blueprint") continue;
-        m.emissive = untone(BRAND.green); m.emissiveMap = null; m.emissiveIntensity = 0.04 + 0.7 * st.glow; m.needsUpdate = true;
+        m.emissive = untone(BRAND.green); m.emissiveMap = null; m.emissiveIntensity = 0.04 + 0.32 * st.glow; m.needsUpdate = true;
       }
     }
-    this.clampL.intensity = st.look === "blueprint" ? 0 : 0.9 * st.glow;
+    this.clampL.intensity = st.look === "blueprint" ? 0 : 0.2 * st.glow;
     // sparks (cut paper): fly from the bite toward the camera side (-x)
     this.sparks.forEach((sp, i) => {
       const t = st.clampT - (i % 4) * 0.012;
@@ -744,8 +750,7 @@ export class World {
     if (this.gearLamp.castShadow !== st.gearLamp > 0.01) this.gearLamp.castShadow = st.gearLamp > 0.01;
     (this.alarmDome.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.1 + 1.4 * st.alarm;
     this.arrows.forEach((m) => { m.visible = st.arrows > 0.01; m.scale.set(1, Math.max(0.001, st.arrows), 1); });
-    this.tags.forEach((t) => (t.visible = st.tags > 0.01));
-    this.tags.forEach((t) => (t.scale.setScalar(Math.max(0.001, st.tags))));
+    this.tags.forEach((t, i) => { const on = st.tags > 0.01 && (st.tagMask & (i === 0 ? 1 : 2)) !== 0; t.visible = on; t.scale.setScalar(Math.max(0.001, st.tags)); });
     // camera
     const c = st.cam, cam = this.camera;
     cam.position.copy(c.pos); cam.fov = c.fov; cam.up.set(0, 1, 0); cam.lookAt(c.target);

@@ -21,7 +21,7 @@ export const T = {
   METER_IN: [66, 78],
   PEEL: [98, 122],
   CREAK: 128, SNAP: 140, LURCH: 146,
-  CUT1: 150,
+  CUT1: 150, CUT1B: 176,
   XRAY_IN: [160, 176], XRAY_OUT: [190, 204],
   TRIP: 198, BITE: 212,
   FREEZE: [214, 229], REWIND: [229, 235], SLOW: [235, 254], RAMP: [254, 262],
@@ -102,28 +102,30 @@ function mono(keys: K[], f: number, get: (k: K) => number) {
 }
 const B_POS: [number, number, number] = [0.42, 1.7, 5.7], B_LOOK: [number, number, number] = [-0.12, 1.2, -0.3];
 const SHOT_A: K[] = [
-  { f: 0, pos: [0.35, -3.55, 8.3], look: [0.0, -5.16, 5.95], fov: 34, blur: 14, focus: [0.0, -5.16, 5.9] },        // macro: FAIL-SAFE FILES stamp
-  { f: 14, pos: [0.33, -3.45, 8.4], look: [0.0, -5.16, 5.92], fov: 34, blur: 13, focus: [0.0, -5.16, 5.9] },
-  { f: 42, pos: [0.4, 3.6, 14.2], look: [0.0, -3.0, 2.2], fov: 40, blur: 6, focus: [0.0, -4.5, 3.0] },                // the whole case file
-  { f: 66, pos: [0.6, 2.6, 9.6], look: [-0.05, 0.6, -0.4], fov: 40, blur: 6, focus: [-0.1, 1.2, 0.3] },             // pop-up stands
-  { f: 98, pos: B_POS, look: B_LOOK, fov: 40, blur: 8, focus: [-0.44, 1.4, 0.3] },                                   // BLUEPRINT hold
-  { f: 122, pos: [0.38, 1.5, 4.85], look: [-0.12, 1.3, -0.3], fov: 40, blur: 9, focus: [-0.44, 1.45, 0.3] },        // peel done (same axis)
-  { f: 149, pos: [0.36, 1.38, 4.4], look: [-0.12, 1.45, -0.3], fov: 40, blur: 9, focus: [-0.44, 1.5, 0.3] },        // creep, ropes above Gus
+  { f: 0, pos: [0.12, -3.75, 7.9], look: [-0.16, -5.16, 4.85], fov: 36, blur: 13, focus: [0.0, -5.16, 4.9] },         // macro: FAIL-SAFE FILES stamp (raking desk lamp)
+  { f: 14, pos: [0.1, -3.65, 8.05], look: [-0.16, -5.16, 4.85], fov: 36, blur: 12, focus: [0.0, -5.16, 4.9] },
+  { f: 44, pos: [0.4, -0.6, 12.2], look: [0.0, -3.4, 1.4], fov: 40, blur: 6, focus: [0.0, -3.5, 1.5] },              // pull out low over the folder: the pop-up rises toward us
+  { f: 70, pos: [0.5, 1.1, 8.6], look: [-0.06, 0.3, -0.4], fov: 40, blur: 6, focus: [-0.2, 0.9, 0.3] },             // pop-up stands
+  { f: 98, pos: B_POS, look: B_LOOK, fov: 40, blur: 8, focus: [-0.36, 1.4, 0.3] },                                   // BLUEPRINT hold
+  { f: 122, pos: [0.38, 1.5, 4.85], look: [-0.12, 1.3, -0.3], fov: 40, blur: 9, focus: [-0.36, 1.45, 0.3] },        // peel done (same axis)
+  { f: 149, pos: [0.36, 1.38, 4.4], look: [-0.12, 1.45, -0.3], fov: 40, blur: 9, focus: [-0.36, 1.5, 0.3] },        // creep, ropes above Gus
 ];
 const SHOT_B: K[] = [   // car space
-  { f: 150, pos: [0.78, 1.05, 0.95], look: [0.02, 1.45, -0.1], fov: 38, blur: 13, focus: [0.04, 1.2, -0.02] },     // macro: frayed cords whip over the crosshead
-  { f: 166, pos: [0.82, 0.98, 0.92], look: [0.1, 1.25, -0.1], fov: 38, blur: 13, focus: [0.04, 1.0, -0.02] },
-  { f: 188, pos: [0.42, 0.72, 0.85], look: [1.0, 0.3, -0.02], fov: 34, blur: 11, focus: [1.05, 0.3, 0.0] },          // X-RAY dive over the roof edge
-  { f: 208, pos: [-0.04, 0.32, -0.035], look: [1.2, 0.27, -0.035], fov: 31, blur: 11, focus: [1.0, 0.25, 0.0] },     // side-on jaw macro
-  { f: 261, pos: [0.02, 0.32, -0.035], look: [1.2, 0.27, -0.035], fov: 31, blur: 11, focus: [1.0, 0.25, 0.0] },
+  { f: 150, pos: [0.34, 0.98, 1.08], look: [0.02, 1.78, -0.1], fov: 40, blur: 13, focus: [0.02, 1.5, -0.02] },     // macro: low, looking up as the cut cords whip down
+  { f: 175, pos: [0.38, 0.96, 1.05], look: [0.06, 1.55, -0.1], fov: 40, blur: 13, focus: [0.02, 1.2, -0.02] },
+];
+const SHOT_B2: K[] = [   // car space: X-RAY dive into the side-on jaw macro
+  { f: 176, pos: [0.2, 0.46, 0.5], look: [1.1, 0.19, -0.03], fov: 40, blur: 11, focus: [1.0, 0.25, 0.0] },
+  { f: 208, pos: [0.08, 0.22, 0.2], look: [1.12, 0.165, -0.035], fov: 40, blur: 11, focus: [1.0, 0.25, 0.0] },      // side-on jaw macro (13° off axis), teeth above the caption band
+  { f: 261, pos: [0.14, 0.22, 0.19], look: [1.12, 0.167, -0.035], fov: 40, blur: 11, focus: [1.0, 0.25, 0.0] },
 ];
 const SHOT_C: K[] = [   // car space
-  { f: 262, pos: [0.4, 1.45, 4.15], look: [-0.15, 1.15, -0.3], fov: 41, blur: 9, focus: [-0.44, 1.4, 0.3] },
-  { f: 299, pos: [0.36, 1.4, 3.85], look: [-0.16, 1.17, -0.3], fov: 41, blur: 9, focus: [-0.44, 1.4, 0.3] },
+  { f: 262, pos: [0.4, 1.45, 4.15], look: [-0.15, 1.15, -0.3], fov: 41, blur: 9, focus: [-0.36, 1.4, 0.3] },
+  { f: 299, pos: [0.36, 1.4, 3.85], look: [-0.16, 1.17, -0.3], fov: 41, blur: 9, focus: [-0.36, 1.4, 0.3] },
 ];
 export function camAt(f: number): { cam: Cam; shot: "A" | "B" | "C" } {
   const S = story(f);
-  const keys = f < T.CUT1 ? SHOT_A : f < T.CUT2 ? SHOT_B : SHOT_C;
+  const keys = f < T.CUT1 ? SHOT_A : f < T.CUT1B ? SHOT_B : f < T.CUT2 ? SHOT_B2 : SHOT_C;
   const shot = f < T.CUT1 ? "A" : f < T.CUT2 ? "B" : "C";
   const g = (w: "pos" | "look" | "focus", i: number) => mono(keys, f, (k) => k[w][i]);
   const pos = V(g("pos", 0), g("pos", 1), g("pos", 2)), target = V(g("look", 0), g("look", 1), g("look", 2)), focus = V(g("focus", 0), g("focus", 1), g("focus", 2));
@@ -140,9 +142,11 @@ export function camAt(f: number): { cam: Cam; shot: "A" | "B" | "C" } {
   const C = V(...B_POS), zw = SH.zb + 0.002;
   const onWall = (p: THREE.Vector3) => { const t = (zw - C.z) / (p.z - C.z); return C.clone().lerp(p, t); };
   const add = (text: string, part: THREE.Vector3, at: [number, number]) => { const w = onWall(part); CALLOUTS.push({ text, at, to: [w.x, w.y], size: 0.15 }); };
-  add("SAFETY GEAR", V(GEAR.x - 0.02, GEAR.y + 0.3, 0.12), [0.62, 0.72]);
-  add("HOIST ROPES ×4", V(0.04, 2.3, -0.02), [0.62, 2.62]);
-  add("GUIDE RAIL", V(1.12, 2.4, 0.0), [0.62, 3.25]);
+  // text lives on solid wall only: right column x 0.6..1.2 and left column -1.0..-0.62 (the die-cut door hole is between)
+  add("SAFETY GEAR", V(GEAR.x - 0.02, GEAR.y + 0.3, 0.12), [1.2, 1.5]);
+  add("GUIDE RAIL", V(1.12, 2.5, 0.0), [1.2, 2.62]);
+  add("HOIST ×4", V(0.0, 2.35, -0.02), [-0.6, 2.75]);
+  CALLOUTS.forEach((c) => { c.size = c.text.length > 9 ? 0.078 : 0.085; c.right = true; });
 })();
 
 // ------------------------------------------------------------------------------------------- Gus (story, on 2s)
@@ -191,10 +195,10 @@ export function frameAt(f: number): Plan {
     wall: spring((f - T.WALL[0]) / (T.WALL[1] - T.WALL[0])),
     side: spring((f - T.SIDE[0]) / (T.SIDE[1] - T.SIDE[0])),
     pop: spring((f - T.POP[0]) / (T.POP[1] - T.POP[0])),
-    callouts: 1, opening: 1 - smooth(40, 74, f), gearLamp: f >= T.CUT1 && f < T.CUT2 ? smooth(170, 190, f) : 0,
+    callouts: 1, opening: 1 - smooth(40, 74, f), gearLamp: f >= T.CUT1 && f < T.CUT2 ? smooth(170, 190, f) : 0, tagMask: f >= T.CUT1 && f < T.CUT2 ? 2 : 1,
   });
   const meter = { level: meterAt(f), show: glide((f - T.METER_IN[0]) / (T.METER_IN[1] - T.METER_IN[0])) };
-  const flash = S >= T.BITE ? 0.9 * Math.exp(-(S - T.BITE) / 5) : 0;
+  const flash = S >= T.BITE ? 0.24 * Math.exp(-(S - T.BITE) / 5) : 0;
   const p: Plan = { a: base("solid"), meter, flash, S, shot };
   if (f < T.PEEL[0]) p.a = base("blueprint");
   else if (f < T.PEEL[1]) { p.a = base("blueprint"); p.b = base("solid"); p.mode = 0; const R = 0.13; p.L = -0.02 + (UMAX + R + 0.08) * glide((f - T.PEEL[0]) / (T.PEEL[1] - T.PEEL[0])); }
