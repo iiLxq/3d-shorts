@@ -127,7 +127,7 @@ const DETERMINERS = new Set("a an the your my his her their our this these those
 const AUX = new Set("is was are were be had has have do does did can could would will".split(" "));
 const PHRASAL_OK = new Set(["mixed up", "spins up", "pops open", "drops in", "ran dry"]);
 // pairs that must stay together (normalised bigrams)
-const KEEP = new Set(["almost never", "almost twenty", "just one", "no engines", "no power", "no serious", "ten feet", "feet forward", "forty one", "fortyone thousand", "twentyfive more", "car race", "car window", "glider pilot", "air canada", "canada 143", "own speed", "little propeller", "tiny windmill", "giant glider", "more than", "every foot", "pounds and", "and kilograms", "ran dry", "hydraulic pressure", "thousand feet", "forty one", "kept flying", "what saves", "saves you", "more years"]);
+const KEEP = new Set(["almost never", "almost twenty", "just one", "no engines", "no power", "no serious", "ten feet", "feet forward", "forty one", "fortyone thousand", "twentyfive more", "glider pilot", "air canada", "canada 143", "own speed", "little propeller", "tiny windmill", "giant glider", "more than", "every foot", "pounds and", "and kilograms", "ran dry", "hydraulic pressure", "forty one", "kept flying", "what saves", "saves you", "more years"]);
 const isPunctEnd = (t: string) => /[,;:.?!…—–]$/.test(t) || /\.\.\.$/.test(t);
 
 type Phrase = Aligned[];
@@ -148,9 +148,9 @@ function chunkPhrase(ph: Phrase, nextStart: number | null, o: Required<Pick<Chun
       if (!lastIsPhraseEnd) {
         const ln = last.norm;
         const pair2 = L > 1 ? ws[L - 2].norm + " " + ln : "";
-        if (DETERMINERS.has(ln)) c += 6;
-        else if (AUX.has(ln)) c += 1.5;
-        else if (WEAK.has(ln) && !NOT_WEAK_END.has(ln) && !PHRASAL_OK.has(pair2)) c += 4.5;
+        if (DETERMINERS.has(ln)) c += 8;
+        else if (AUX.has(ln)) c += 5;
+        else if (WEAK.has(ln) && !NOT_WEAK_END.has(ln) && !PHRASAL_OK.has(pair2)) c += 8;
         // keep-together pairs across the boundary
         if (KEEP.has(last.norm + " " + ph[j].norm)) c += 14;
         // rhythm: a natural pause after the chunk is a good place to cut
@@ -193,6 +193,7 @@ function scoreChunk(c: Aligned[], posInSentence: number, total: number): { s: nu
     if (/[A-Z]/.test(w.text[0]) && w.idx !== 0 && posInSentence > 0) s += 0.8; // proper noun
   }
   if (c.length === 1) s += 0.6;
+  { const l = c[c.length - 1]; if (WEAK.has(l.norm) && !/[,.;:!?…—]$/.test(l.text)) s -= 3; }
   if (posInSentence === total - 1) s += 0.5; // sentence landing
   if (posInSentence === 0) s -= 0.3;
   return { s, tone };

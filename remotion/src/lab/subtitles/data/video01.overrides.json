@@ -7,6 +7,7 @@
  "pops open": "safe",
  "Steering's back": "safe",
  "dry": "danger",
- "the captain": "person",
- "landed anyway": "safe"
+ "landed anyway": "safe",
+ "glider pilot": "person",
+ "ran dry": "danger"
 }

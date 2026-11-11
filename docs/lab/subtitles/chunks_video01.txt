@@ -22,10 +22,9 @@
  14.62  f 439  The screens
  15.14  f 454  go dark...  [EMPHASIS:danger]
  15.95  f 478  and the controls
- 16.77  f 503  steering
- 17.13  f 514  this giant glider
- 18.21  f 546  run on
- 18.51  f 555  hydraulic pressure —
+ 16.77  f 503  steering this
+ 17.39  f 522  giant glider run
+ 18.37  f 551  on hydraulic pressure —
  19.83  f 595  that's draining away.
 
  21.17  f 635  The yoke
@@ -49,27 +48,29 @@
 
  33.25  f 997  Steering's back.  [EMPHASIS:safe]
 
- 34.37  f1031  A pinwheel out
- 35.15  f1054  a car window —
- 36.06  f1082  powered by
- 36.62  f1099  your own speed.
+ 34.37  f1031  A pinwheel
+ 35.03  f1051  out a car
+ 35.51  f1065  window —
+ 36.06  f1082  powered by your
+ 36.86  f1106  own speed.
 
  38.07  f1142  In 1983,
  39.38  f1181  Air Canada 143
- 41.02  f1231  ran dry at  [EMPHASIS:danger]
- 41.96  f1259  forty-one thousand feet —
+ 41.02  f1231  ran dry  [EMPHASIS:danger]
+ 41.70  f1251  at forty-one thousand
+ 42.98  f1289  feet —
  43.52  f1306  someone mixed up
  44.22  f1327  pounds and kilograms.
 
  45.61  f1368  Luckily,
- 46.24  f1387  the captain was  [EMPHASIS:person]
- 46.94  f1408  a glider pilot.
+ 46.24  f1387  the captain was
+ 46.94  f1408  a glider pilot.  [EMPHASIS:person]
 
  48.06  f1442  Unluckily,
  48.97  f1469  the runway
- 49.47  f1484  they picked had
- 50.07  f1502  a car race
- 50.81  f1524  on it.
+ 49.47  f1484  they picked
+ 49.93  f1498  had a car
+ 50.51  f1515  race on it.
 
  51.26  f1538  He landed anyway.  [EMPHASIS:safe]
 
