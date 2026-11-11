@@ -29,12 +29,14 @@ export function fitText(text: string, measure: Measure, base = BASE_SIZE, maxW =
   return { size: MIN_SIZE, width: Math.max(...lines.map((l) => measure(l, MIN_SIZE))), lines };
 }
 
-export type FontKey = "montserrat-xb" | "montserrat-black" | "archivo-black" | "barlow-sc-bold" | "poppins-xb";
+export type FontKey = "barlow-sc-sb" | "barlow-sc-xb" | "montserrat-xb" | "montserrat-black" | "archivo-black" | "barlow-sc-bold" | "poppins-xb";
 export const FONTS: Record<FontKey, { family: string; file: string; label: string; weight: number; scale: number }> = {
   "montserrat-xb": { family: "SubMontserratXB", file: "fonts/Montserrat-ExtraBold.ttf", label: "Montserrat ExtraBold", weight: 800, scale: 1 },
   "montserrat-black": { family: "SubMontserratBlack", file: "fonts/Montserrat-Black.ttf", label: "Montserrat Black", weight: 900, scale: 1 },
   "archivo-black": { family: "SubArchivoBlack", file: "fonts/ArchivoBlack-Regular.ttf", label: "Archivo Black", weight: 400, scale: 1 },
-  "barlow-sc-bold": { family: "SubBarlowSCBold", file: "fonts/BarlowSemiCondensed-Bold.ttf", label: "Barlow Semi Condensed Bold", weight: 700, scale: 1.18 },
+  "barlow-sc-sb": { family: "SubBarlowSCSB", file: "fonts/BarlowSemiCondensed-SemiBold.ttf", label: "Barlow Semi Condensed SemiBold", weight: 600, scale: 1.2 },
+  "barlow-sc-xb": { family: "SubBarlowSCXB", file: "fonts/BarlowSemiCondensed-ExtraBold.ttf", label: "Barlow Semi Condensed ExtraBold", weight: 800, scale: 1.16 },
+  "barlow-sc-bold": { family: "SubBarlowSCBold", file: "fonts/BarlowSemiCondensed-Bold.ttf", label: "Barlow Semi Condensed Bold", weight: 700, scale: 1.1 },
   "poppins-xb": { family: "SubPoppinsXB", file: "fonts/Poppins-ExtraBold.ttf", label: "Poppins ExtraBold", weight: 800, scale: 1 },
 };
 

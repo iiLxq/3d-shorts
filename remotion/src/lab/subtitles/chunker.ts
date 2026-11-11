@@ -125,9 +125,9 @@ const WEAK = new Set("a an the of in on at to for with by from into onto and or 
 const NOT_WEAK_END = new Set(["you", "it", "back", "them", "away", "anyway"]);
 const DETERMINERS = new Set("a an the your my his her their our this these those its no".split(" "));
 const AUX = new Set("is was are were be had has have do does did can could would will".split(" "));
-const PHRASAL_OK = new Set(["mixed up", "spins up", "pops open", "drops in", "ran dry"]);
+const PHRASAL_OK = new Set(["run on", "powered by", "mixed up", "spins up", "pops open", "drops in", "ran dry"]);
 // pairs that must stay together (normalised bigrams)
-const KEEP = new Set(["almost never", "almost twenty", "just one", "no engines", "no power", "no serious", "ten feet", "feet forward", "forty one", "fortyone thousand", "twentyfive more", "glider pilot", "air canada", "canada 143", "own speed", "little propeller", "tiny windmill", "giant glider", "more than", "every foot", "pounds and", "and kilograms", "ran dry", "hydraulic pressure", "forty one", "kept flying", "what saves", "saves you", "more years"]);
+const KEEP = new Set(["almost never", "almost twenty", "just one", "no engines", "no power", "no serious", "ten feet", "feet forward", "forty one", "fortyone thousand", "twentyfive more", "glider pilot", "air canada", "canada 143", "little propeller", "tiny windmill", "giant glider", "more than", "every foot", "pounds and", "and kilograms", "ran dry", "hydraulic pressure", "forty one", "kept flying", "what saves", "saves you", "more years"]);
 const isPunctEnd = (t: string) => /[,;:.?!…—–]$/.test(t) || /\.\.\.$/.test(t);
 
 type Phrase = Aligned[];

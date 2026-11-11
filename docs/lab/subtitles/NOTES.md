@@ -1,5 +1,15 @@
 # Subtitle lab notes (Paper Case-File v2)
 
+**OWNER DECISION: style S2 DIE-CUT, font Barlow Semi Condensed Bold** (SemiBold = lighter alternative, ExtraBold clogs the border). S1/S3 and the other fonts are kept as code only.
+
+## Die-cut v2 look (comp `SubDiecutV2`, `Subtitles.tsx` style "diecut")
+Layers: key-light shadow (soft + tight contact) > ink hairline 2.2 px > darker paper underside edge (3 px, toward the shadow side) > lighter lit rim (offset toward the light) > card border with paper tooth (SVG noise, border only) > crisp solid face (white, or colour code on emphasis). No texture on letters. Resting tilt +-0.9 deg per chunk. Motion: `place` 4 frames + 1-2 deg settle; `stamp` for emphasis with a tiny ink-darkening flash on the rim (frames 2-6). `lightDir` prop = shadow direction (default lower-right = key light upper-left).
+Tested over brightest (orange face), darkest (blueprint/night motion) and x-ray frames: `diecut_v2_*_1080.jpg`.
+
+## Chunking fixes (director list)
+Penalties now: determiner/preposition/conjunction at chunk end +8, auxiliary (was/had/is) +5, except phrasal verbs (`run on`, `powered by`, `mixed up`, `spins up`). Result: `A pinwheel / out a car / window —`, `ran dry / at forty-one thousand / feet —`, `the runway / they picked / had a car / race on it.`, `steering / this giant glider / run on / hydraulic pressure —`, `powered by / your own speed.`. Emphasis moved to payload: `ran dry` (red), `a glider pilot.` (amber), not `the captain was`. Emphasis scoring is also penalised on function-word endings. Validator rule: every chunk ending on a function word (a, the, at, was, had, of, to, in, by, than, your...) fails unless it is a phrasal verb or in the documented exception list. Remaining exceptions (no 1-3 word split avoids them): `more than` (before `ten feet forward`, 'ten feet' kept intact) and `the captain was` (before `a glider pilot.`, 'glider pilot' kept intact).
+
+
 Code: `remotion/src/lab/subtitles/`. Test text: video #1 (`videos/01_ram_air_turbine/SCRIPT.md` VO-only section + `vo/words.json`). Nothing else used.
 
 ## Pipeline
@@ -16,7 +26,7 @@ Code: `remotion/src/lab/subtitles/`. Test text: video #1 (`videos/01_ram_air_tur
 Band centre y 1350 (band 1250-1450), base 104 px (x font scale), shrinks to min 78 px, then two lines. Advance width <= 820 px so outline + stamp peak stay inside x 100-980 (>= 60 px margins, clear of the right-hand buttons); nothing near y 1536.
 
 ## Validator (`cli/validate.ts`) - asserts
-text == script exactly (punctuation + capitalisation, char by char); 1-3 words; no punctuation inside a chunk; no lone/only article-preposition chunk; start frame within 0..-2 frames of an independently found ASR word start; >= 8 frames on screen; no overlap; no 1-3 frame gaps (flicker); <= 1 emphasis per sentence; for all 5 fonts every chunk fits the x margins, right-button zone, band y range and 1536 limit (measured with opentype.js on the real font files). Self-test with a tampered chunk file fails as expected. Result on video #1: PASSED (65 chunks, 11 emphasised, max 3 words). Warning only: 4 chunks end on a function word mid-phrase (`A pinwheel out`, `ran dry at`...).
+text == script exactly (punctuation + capitalisation, char by char); 1-3 words; no punctuation inside a chunk; no lone/only article-preposition chunk; start frame within 0..-2 frames of an independently found ASR word start; >= 8 frames on screen; no overlap; no 1-3 frame gaps (flicker); <= 1 emphasis per sentence; for all 5 fonts every chunk fits the x margins, right-button zone, band y range and 1536 limit (measured with opentype.js on the real font files). Self-test with a tampered chunk file fails as expected. Result on video #1: PASSED (67 chunks, 11 emphasised, max 3 words; Barlow SC Bold min size 85 px, no two-line chunks; 2 documented function-word exceptions).
 
 ## Styles (see styles_board.jpg, demos in scratchpad `lab/v2/subtitles/*_demo.mp4`, narration frames 660-1019)
 - S1 Clean: white, 17 % black stroke, soft 25 % shadow. Maximum legibility, zero identity (the generic convention the reference channels all use).

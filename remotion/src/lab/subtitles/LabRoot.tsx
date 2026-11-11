@@ -42,6 +42,7 @@ export const LabRoot: React.FC = () => (
   <>
     <Composition id="SubClean" component={Demo} durationInFrames={DURATION} fps={FPS} width={1080} height={1920} defaultProps={{ style: "clean" as StyleId, font: "montserrat-xb" as FontKey }} />
     <Composition id="SubDiecut" component={Demo} durationInFrames={DURATION} fps={FPS} width={1080} height={1920} defaultProps={{ style: "diecut" as StyleId, font: "montserrat-xb" as FontKey }} />
+    <Composition id="SubDiecutV2" component={Demo} durationInFrames={DURATION} fps={FPS} width={1080} height={1920} defaultProps={{ style: "diecut" as StyleId, font: "barlow-sc-bold" as FontKey }} />
     <Composition id="SubWorld" component={DemoWorld} durationInFrames={DURATION} fps={FPS} width={1080} height={1920} defaultProps={{ font: "archivo-black" as FontKey }} />
     <Composition id="SubFontCell" component={FontCell} durationInFrames={60} fps={FPS} width={1080} height={1920} defaultProps={{ font: "montserrat-xb" as FontKey, text: "what saves you.", emph: false, tone: "white" as Chunk["tone"], backdrop: 1, style: "diecut" as StyleId }} />
   </>

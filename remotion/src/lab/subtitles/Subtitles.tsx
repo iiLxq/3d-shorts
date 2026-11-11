@@ -73,11 +73,11 @@ export function fadeOutFactor(f: number, dur: number, fadeOut: boolean) {
 }
 
 // ------------------------------------------------------------------ SVG chunk renderers
-type CardProps = { lines: string[]; size: number; width: number; family: string; weight: number; fill: string; lift: number; lightDir: [number, number]; style: StyleId; emphasis: boolean };
+type CardProps = { lines: string[]; size: number; width: number; family: string; weight: number; fill: string; lift: number; lightDir: [number, number]; style: StyleId; emphasis: boolean; flash?: number };
 
 const PAPER = "#F3ECDD", PAPER_EDGE = "#CBBE9F", INK = "#0B1A33";
 
-const Card: React.FC<CardProps> = ({ lines, size, width, family, weight, fill, lift, lightDir, style, emphasis }) => {
+const Card: React.FC<CardProps> = ({ lines, size, width, family, weight, fill, lift, lightDir, style, emphasis, flash = 0 }) => {
   const lh = size * 1.08;
   const pad = 70;
   const w = Math.ceil(width) + pad * 2;
@@ -87,7 +87,7 @@ const Card: React.FC<CardProps> = ({ lines, size, width, family, weight, fill, l
   const ux = lx / n, uy = ly / n;
   const cap = size * 0.72;
   const base = (i: number) => pad + cap + i * lh + (lh - cap) * 0.0;
-  const common = { letterSpacing: style === "diecut" ? size * 0.018 : 0, fontFamily: family, fontWeight: weight, fontSize: size, textAnchor: "middle" as const, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
+  const common = { letterSpacing: style === "diecut" ? size * 0.02 : 0, fontFamily: family, fontWeight: weight, fontSize: size, textAnchor: "middle" as const, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
   const T = (props: React.SVGProps<SVGTextElement> & { dx?: number; dy?: number }) =>
     lines.map((ln, i) => {
       const { dx = 0, dy = 0, ...rest } = props;
@@ -102,28 +102,40 @@ const Card: React.FC<CardProps> = ({ lines, size, width, family, weight, fill, l
     el.push(<g key="st">{T({ fill: "#000", stroke: "#000", strokeWidth: sw, paintOrder: "stroke" })}</g>);
     el.push(<g key="fc">{T({ fill })}</g>);
   } else {
-    // die-cut: ink hairline > paper-edge thickness > paper card border > face; shadow follows key light
-    const B = size * 0.036; // visible paper border
-    const hair = 3.2;
-    const depth = 4;
-    const dist = 9 + lift * 14, blur = 6 + lift * 7;
+    // die-cut v2: letters are a card cut from paper. Layers (bottom -> top):
+    // key-light shadow (soft + contact) > ink hairline > darker underside edge (thickness) > lighter lit rim > card border (paper tooth) > crisp face
+    const B = size * 0.04; // visible card border around the letters
+    const hair = 2.2;
+    const depth = 3; // thickness steps (px) toward the shadow side
+    const dist = 13 + lift * 16, blur = 7 + lift * 7;
+    const PAPER_UNDER = "#BDB190", PAPER_RIM = "#FFFFFF";
+    const mix = (a: string, b: string, t: number) => {
+      const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16)), pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+      return "#" + pa.map((v, i) => Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, "0")).join("");
+    };
+    const cardFill = mix(PAPER, "#5C5444", flash); // stamp: tiny ink-darkening flash on the rim only
     el.push(<filter id="blur" key="f" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation={blur} /></filter>);
-    el.push(<g key="sh" filter="url(#blur)" opacity={0.34 + 0.08 * lift}>{T({ dx: ux * dist, dy: uy * dist, fill: "#05101F", stroke: "#05101F", strokeWidth: 2 * B + 6 })}</g>);
-    // thickness stack (edge of the card), lit side lighter
+    el.push(<filter id="blur2" key="f2" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation={2.2} /></filter>);
+    // paper tooth: noise multiplied into the card border only (face is drawn on top, solid)
+    el.push(
+      <filter id="tooth" key="ft" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n" />
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 -1.7 1.05" result="speck" />
+        <feComposite in="speck" in2="SourceAlpha" operator="in" result="sp" />
+        <feMerge><feMergeNode in="SourceGraphic" /><feMergeNode in="sp" /></feMerge>
+      </filter>,
+    );
+    el.push(<g key="sh" filter="url(#blur)" opacity={0.3 + 0.08 * lift}>{T({ dx: ux * dist, dy: uy * dist, fill: "#05101F", stroke: "#05101F", strokeWidth: 2 * B + 6 })}</g>);
+    el.push(<g key="sh2" filter="url(#blur2)" opacity={0.4}>{T({ dx: ux * (4 + lift * 6), dy: uy * (4 + lift * 6), fill: "#05101F", stroke: "#05101F", strokeWidth: 2 * B + 4 })}</g>);
     for (let k = depth; k >= 0; k--) {
-      const ox = ux * k * 1.0, oy = uy * k * 1.0;
-      el.push(<g key={"ink" + k}>{T({ dx: ox, dy: oy, fill: INK, stroke: INK, strokeWidth: 2 * B + 2 * hair, paintOrder: "stroke" })}</g>);
+      el.push(<g key={"ink" + k}>{T({ dx: ux * k, dy: uy * k, fill: INK, stroke: INK, strokeWidth: 2 * B + 2 * hair, paintOrder: "stroke" })}</g>);
     }
     for (let k = depth; k >= 1; k--) {
-      el.push(<g key={"ed" + k}>{T({ dx: ux * k, dy: uy * k, fill: PAPER_EDGE, stroke: PAPER_EDGE, strokeWidth: 2 * B, paintOrder: "stroke" })}</g>);
+      el.push(<g key={"ed" + k}>{T({ dx: ux * k, dy: uy * k, fill: PAPER_UNDER, stroke: PAPER_UNDER, strokeWidth: 2 * B, paintOrder: "stroke" })}</g>);
     }
-    el.push(<g key="card">{T({ fill: PAPER, stroke: PAPER, strokeWidth: 2 * B, paintOrder: "stroke" })}</g>);
+    el.push(<g key="rim">{T({ dx: -ux * 1.8, dy: -uy * 1.8, fill: PAPER_RIM, stroke: PAPER_RIM, strokeWidth: 2 * B, paintOrder: "stroke" })}</g>);
+    el.push(<g key="card" filter="url(#tooth)">{T({ fill: cardFill, stroke: cardFill, strokeWidth: 2 * B, paintOrder: "stroke" })}</g>);
     el.push(<g key="face">{T({ fill })}</g>);
-    // paper-print halftone on the face (same dot language as the scene's cards), subtle
-    el.push(<pattern id="ht" key="pt" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3.5" cy="3.5" r="1.1" fill="#000" opacity="0.13" /></pattern>);
-    el.push(<g key="faceht">{T({ fill: "url(#ht)" })}</g>);
-    // key-light sheen: lit edge on the upper-left of the face
-    el.push(<g key="sheen" opacity="0.55">{T({ dx: -1.2, dy: -1.4, fill: "none", stroke: "#FFFFFF", strokeWidth: 1.4 })}</g>);
   }
   return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible", display: "block" }}>{el}</svg>;
 };
@@ -147,7 +159,7 @@ export const ChunkCard: React.FC<{
   return (
     <div style={{ position: "absolute", left: 0, top: centerY, width: W, display: "flex", justifyContent: "center", transform: `translateY(-50%)` }}>
       <div style={{ transform: `translate(${pose.x}px, ${pose.y + fo.y}px) rotate(${pose.rot * rotDamp}deg) scale(${pose.scale * fo.s})`, opacity: Math.min(pose.opacity, fo.o), willChange: "transform" }}>
-        <Card lines={lines} size={size} width={width} family={F.family} weight={F.weight} fill={fill} lift={lift} lightDir={lightDir} style={style} emphasis={emph} />
+        <Card lines={lines} size={size} width={width} family={F.family} weight={F.weight} fill={fill} lift={lift} lightDir={lightDir} style={style} emphasis={emph} flash={emph ? Math.max(0, Math.sin(Math.PI * Math.min(1, Math.max(0, (f - 1.5) / 5)))) * 0.65 : 0} />
       </div>
     </div>
   );
@@ -162,7 +174,7 @@ export function activeChunk(chunks: Chunk[], frame: number, fps: number): { i: n
   return null;
 }
 
-export const Subtitles: React.FC<SubtitleProps> = ({ chunks, style = "diecut", font = "montserrat-xb", lightDir = [0.55, 0.85], centerY = BAND.center, only }) => {
+export const Subtitles: React.FC<SubtitleProps> = ({ chunks, style = "diecut", font = "barlow-sc-bold", lightDir = [0.55, 0.85], centerY = BAND.center, only }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const ready = useSubtitleFont(font);

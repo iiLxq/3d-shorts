@@ -63,7 +63,7 @@ export function carY(S: number): number {
   return y;
 }
 export const clampAt = (S: number) => (S < T.TRIP ? 0 : S >= T.BITE ? 1 : Math.pow((S - T.TRIP) / (T.BITE - T.TRIP), 2));
-export const glowAt = (S: number) => (S < T.BITE - 3 ? 0 : S < T.BITE ? 0.3 * (S - T.BITE + 3) / 3 : 0.35 + 0.65 * Math.exp(-(S - T.BITE) / 7));
+export const glowAt = (S: number) => (S < T.BITE - 3 ? 0 : S < T.BITE ? 0.3 * (S - T.BITE + 3) / 3 : 0.25 + 0.75 * Math.exp(-(S - T.BITE) / 7)) * (1 - smooth(T.BITE + 30, T.BITE + 60, S));
 export function alarmAt(S: number) {
   if (S < T.SNAP + 2) return 0;
   const p = 0.5 + 0.5 * Math.max(0, Math.sin((S - T.SNAP - 2) * 0.55));
@@ -100,26 +100,26 @@ function mono(keys: K[], f: number, get: (k: K) => number) {
   const m0 = tan(i) * h, m1 = tan(i + 1) * h, u2 = u * u, u3 = u2 * u;
   return (2 * u3 - 3 * u2 + 1) * get(k0) + (u3 - 2 * u2 + u) * m0 + (-2 * u3 + 3 * u2) * get(k1) + (u3 - u2) * m1;
 }
-const B_POS: [number, number, number] = [0.5, 1.7, 5.7], B_LOOK: [number, number, number] = [-0.1, 1.2, -0.3];
+const B_POS: [number, number, number] = [0.42, 1.7, 5.7], B_LOOK: [number, number, number] = [-0.12, 1.2, -0.3];
 const SHOT_A: K[] = [
-  { f: 0, pos: [0.95, -3.75, 7.75], look: [0.45, -5.15, 5.75], fov: 34, blur: 16, focus: [0.4, -5.15, 5.85] },       // macro: FAIL-SAFE FILES stamp
-  { f: 14, pos: [0.92, -3.6, 7.85], look: [0.42, -5.15, 5.7], fov: 34, blur: 15, focus: [0.4, -5.15, 5.85] },
+  { f: 0, pos: [0.35, -3.55, 8.3], look: [0.0, -5.16, 5.95], fov: 34, blur: 14, focus: [0.0, -5.16, 5.9] },        // macro: FAIL-SAFE FILES stamp
+  { f: 14, pos: [0.33, -3.45, 8.4], look: [0.0, -5.16, 5.92], fov: 34, blur: 13, focus: [0.0, -5.16, 5.9] },
   { f: 42, pos: [0.4, 3.6, 14.2], look: [0.0, -3.0, 2.2], fov: 40, blur: 6, focus: [0.0, -4.5, 3.0] },                // the whole case file
   { f: 66, pos: [0.6, 2.6, 9.6], look: [-0.05, 0.6, -0.4], fov: 40, blur: 6, focus: [-0.1, 1.2, 0.3] },             // pop-up stands
-  { f: 98, pos: B_POS, look: B_LOOK, fov: 40, blur: 8, focus: [-0.15, 1.4, 0.36] },                                   // BLUEPRINT hold
-  { f: 122, pos: [0.46, 1.5, 4.85], look: [-0.1, 1.28, -0.3], fov: 40, blur: 9, focus: [-0.15, 1.45, 0.36] },        // peel done (same axis)
-  { f: 149, pos: [0.42, 1.38, 4.4], look: [-0.1, 1.42, -0.3], fov: 40, blur: 9, focus: [-0.15, 1.5, 0.36] },        // creep, ropes above Gus
+  { f: 98, pos: B_POS, look: B_LOOK, fov: 40, blur: 8, focus: [-0.44, 1.4, 0.3] },                                   // BLUEPRINT hold
+  { f: 122, pos: [0.38, 1.5, 4.85], look: [-0.12, 1.3, -0.3], fov: 40, blur: 9, focus: [-0.44, 1.45, 0.3] },        // peel done (same axis)
+  { f: 149, pos: [0.36, 1.38, 4.4], look: [-0.12, 1.45, -0.3], fov: 40, blur: 9, focus: [-0.44, 1.5, 0.3] },        // creep, ropes above Gus
 ];
 const SHOT_B: K[] = [   // car space
-  { f: 150, pos: [0.62, 1.25, 1.15], look: [0.0, 1.62, -0.05], fov: 38, blur: 14, focus: [0.04, 1.35, -0.02] },     // macro: frayed cords on the crosshead
-  { f: 166, pos: [0.66, 1.12, 1.1], look: [0.08, 1.35, -0.05], fov: 38, blur: 14, focus: [0.04, 1.0, -0.02] },
-  { f: 186, pos: [0.62, 0.62, 0.62], look: [1.0, 0.3, -0.05], fov: 36, blur: 12, focus: [1.05, 0.3, 0.0] },          // X-RAY dive over the roof edge
-  { f: 208, pos: [0.36, 0.3, -0.03], look: [1.2, 0.24, -0.03], fov: 34, blur: 12, focus: [1.06, 0.26, 0.0] },       // side-on jaw macro
-  { f: 261, pos: [0.4, 0.3, -0.03], look: [1.2, 0.245, -0.03], fov: 34, blur: 12, focus: [1.06, 0.26, 0.0] },
+  { f: 150, pos: [0.78, 1.05, 0.95], look: [0.02, 1.45, -0.1], fov: 38, blur: 13, focus: [0.04, 1.2, -0.02] },     // macro: frayed cords whip over the crosshead
+  { f: 166, pos: [0.82, 0.98, 0.92], look: [0.1, 1.25, -0.1], fov: 38, blur: 13, focus: [0.04, 1.0, -0.02] },
+  { f: 188, pos: [0.42, 0.72, 0.85], look: [1.0, 0.3, -0.02], fov: 34, blur: 11, focus: [1.05, 0.3, 0.0] },          // X-RAY dive over the roof edge
+  { f: 208, pos: [-0.04, 0.32, -0.035], look: [1.2, 0.27, -0.035], fov: 31, blur: 11, focus: [1.0, 0.25, 0.0] },     // side-on jaw macro
+  { f: 261, pos: [0.02, 0.32, -0.035], look: [1.2, 0.27, -0.035], fov: 31, blur: 11, focus: [1.0, 0.25, 0.0] },
 ];
 const SHOT_C: K[] = [   // car space
-  { f: 262, pos: [0.55, 1.45, 4.15], look: [-0.05, 1.15, -0.3], fov: 41, blur: 9, focus: [-0.15, 1.4, 0.36] },
-  { f: 299, pos: [0.5, 1.4, 3.85], look: [-0.06, 1.17, -0.3], fov: 41, blur: 9, focus: [-0.15, 1.4, 0.36] },
+  { f: 262, pos: [0.4, 1.45, 4.15], look: [-0.15, 1.15, -0.3], fov: 41, blur: 9, focus: [-0.44, 1.4, 0.3] },
+  { f: 299, pos: [0.36, 1.4, 3.85], look: [-0.16, 1.17, -0.3], fov: 41, blur: 9, focus: [-0.44, 1.4, 0.3] },
 ];
 export function camAt(f: number): { cam: Cam; shot: "A" | "B" | "C" } {
   const S = story(f);
@@ -140,9 +140,9 @@ export function camAt(f: number): { cam: Cam; shot: "A" | "B" | "C" } {
   const C = V(...B_POS), zw = SH.zb + 0.002;
   const onWall = (p: THREE.Vector3) => { const t = (zw - C.z) / (p.z - C.z); return C.clone().lerp(p, t); };
   const add = (text: string, part: THREE.Vector3, at: [number, number]) => { const w = onWall(part); CALLOUTS.push({ text, at, to: [w.x, w.y], size: 0.15 }); };
-  add("SAFETY GEAR", V(GEAR.x - 0.02, GEAR.y + 0.3, 0.12), [0.45, -0.75]);
-  add("HOIST ROPES ×4", V(0.04, 2.3, -0.02), [0.5, 3.45]);
-  add("GUIDE RAIL", V(1.12, 3.0, 0.0), [0.35, 4.3]);
+  add("SAFETY GEAR", V(GEAR.x - 0.02, GEAR.y + 0.3, 0.12), [0.62, 0.72]);
+  add("HOIST ROPES ×4", V(0.04, 2.3, -0.02), [0.62, 2.62]);
+  add("GUIDE RAIL", V(1.12, 2.4, 0.0), [0.62, 3.25]);
 })();
 
 // ------------------------------------------------------------------------------------------- Gus (story, on 2s)
@@ -191,7 +191,7 @@ export function frameAt(f: number): Plan {
     wall: spring((f - T.WALL[0]) / (T.WALL[1] - T.WALL[0])),
     side: spring((f - T.SIDE[0]) / (T.SIDE[1] - T.SIDE[0])),
     pop: spring((f - T.POP[0]) / (T.POP[1] - T.POP[0])),
-    callouts: 1, opening: 1 - smooth(40, 74, f),
+    callouts: 1, opening: 1 - smooth(40, 74, f), gearLamp: f >= T.CUT1 && f < T.CUT2 ? smooth(170, 190, f) : 0,
   });
   const meter = { level: meterAt(f), show: glide((f - T.METER_IN[0]) / (T.METER_IN[1] - T.METER_IN[0])) };
   const flash = S >= T.BITE ? 0.9 * Math.exp(-(S - T.BITE) / 5) : 0;

@@ -14,7 +14,7 @@ export const SH = { x: 1.3, zb: -1.15, zf: 1.25 };
 export const LANDINGS = [-2.2, 1.1, 4.4];
 export const BREAK_Y = 2.62;
 export const CAR = { w: 2.0, d: 1.7, h: 2.5 };
-export const GUS = { x: -0.18, z: 0.34 };
+export const GUS = { x: -0.44, z: 0.3 };
 const ROPE_X = [-0.11, -0.037, 0.037, 0.11];
 const ROPE_Z = -0.02;
 const HITCH_Y = 0.98;
@@ -32,6 +32,7 @@ export interface Frame {
   cover: number; wall: number; side: number; pop: number;   // case-file pop-up 0..1
   callouts: number;                                         // blueprint callout print 0..1
   opening: number;                                          // desk-lamp phase 0..1
+  gearLamp: number;                                         // insert practical 0..1
 }
 
 // ------------------------------------------------------------------------------------------------ prints
@@ -148,6 +149,8 @@ export class World {
   lookFns: ((l: Look) => void)[] = [];
   look: Look | null = null;
   ropeSpecs: RopeSpec[] = [];
+  stampCard: Card | null = null;
+  gearLamp!: THREE.SpotLight;
   ropeKey = "";
 
   constructor() {
@@ -224,26 +227,35 @@ export class World {
     const cover = this.card(this.coverPivot, roundRect(0, -FOLDER.z1, fw, fd, 0.12), {
       lock: "solid", stock: "manila", thick: 0.05, px: 140, maxPx: 2048, seed: 9003, inset: false,
       print: (p) => {
-        // typed label (glued strip) + FAIL-SAFE FILES rubber stamp, slightly rotated with uneven ink
-        p.rect(0.5, -2.35, 3.2, 0.95, "#efe8d6", { line: 0.02, lineColor: "rgba(80,60,30,0.35)" });
-        p.text("CASE No. 01", 0.7, -1.78, 0.26, "#2a2a2e", { font: MONO, weight: 700 });
-        p.text("ELEVATOR · SAFETY GEAR", 0.7, -2.18, 0.2, "#2a2a2e", { font: MONO, weight: 600 });
-        const g = p.g; g.save();
-        g.translate(2.5, -5.9); g.rotate(0.09);
-        const ink = "rgba(28,40,96,0.88)";
-        p.stroke([[-2.05, -0.62], [2.05, -0.62], [2.05, 0.62], [-2.05, 0.62]], ink, 0.07, true);
-        p.stroke([[-1.9, -0.48], [1.9, -0.48], [1.9, 0.48], [-1.9, 0.48]], ink, 0.025, true);
-        p.text("FAIL-SAFE FILES", 0, -0.17, 0.5, ink, { align: "center", font: "'Inter Display', Inter, sans-serif", weight: 900, spacing: 0.02 });
-        // ink starvation: knock back random specks so it reads as a real stamp
-        const r = rng(51); g.globalCompositeOperation = "destination-out";
-        for (let i = 0; i < 160; i++) { g.globalAlpha = 0.25 + r() * 0.5; g.beginPath(); g.arc(-2 + r() * 4, -0.6 + r() * 1.2, 0.01 + r() * 0.05, 0, Math.PI * 2); g.fill(); }
-        g.restore();
         p.text("CONFIDENTIAL · ENGINEERING", 2.5, -9.6, 0.16, "rgba(60,45,25,0.6)", { align: "center", font: MONO });
       },
-      relief: (h) => { h.rect(0.5, -2.35, 3.2, 0.95, "#a8a8a8"); },
-      reliefPx: 120, bump: 3,
     }, [0, 0, 0], [-Math.PI / 2, 0, 0]);
     void cover;
+    // typed label strip (coated card glued on, real thickness) + FAIL-SAFE FILES rubber stamp (hi-res ink layer)
+    this.card(this.coverPivot, roundRect(0.5, -2.35, 3.2, 0.95, 0.03), { lock: "solid", stock: { base: "#efe8d6", mottle: 0.04, core: "#fffaf0", kind: "coated" }, thick: 0.012, px: 600, maxPx: 2048, seed: 9005, inset: false,
+      print: (p) => {
+        p.text("CASE No. 01", 0.72, -1.76, 0.27, "#2a2a2e", { font: MONO, weight: 700 });
+        p.text("ELEVATOR · SAFETY GEAR", 0.72, -2.16, 0.2, "#2a2a2e", { font: MONO, weight: 600 });
+        p.stroke([[0.65, -1.88], [3.55, -1.88]], "rgba(60,60,70,0.4)", 0.01);
+      } }, [0, 0.026, 0], [-Math.PI / 2, 0, 0]);
+    const stamp = new THREE.Shape(); stamp.moveTo(-2.2, -0.75); stamp.lineTo(2.2, -0.75); stamp.lineTo(2.2, 0.75); stamp.lineTo(-2.2, 0.75); stamp.closePath();
+    const ink = "rgba(28,40,96,0.9)";
+    const stampC = new Card(stamp, { lock: "solid", stock: { base: "#d6b77c", mottle: 0.0, core: "#d6b77c", kind: "paper" }, thick: 0.001, px: 470, maxPx: 2048, seed: 9006, inset: false,
+      print: (p) => {
+        const g = p.g; g.clearRect(-3, -1, 6, 2);
+        g.save();
+        p.stroke([[-2.05, -0.62], [2.05, -0.62], [2.05, 0.62], [-2.05, 0.62]], ink, 0.075, true);
+        p.stroke([[-1.88, -0.47], [1.88, -0.47], [1.88, 0.47], [-1.88, 0.47]], ink, 0.025, true);
+        p.text("FAIL-SAFE FILES", 0, -0.18, 0.52, ink, { align: "center", font: "'Inter Display', Inter, sans-serif", weight: 900, spacing: 0.015 });
+        const r = rng(51); g.globalCompositeOperation = "destination-out";
+        for (let i = 0; i < 260; i++) { g.globalAlpha = 0.2 + r() * 0.55; g.beginPath(); g.arc(-2.1 + r() * 4.2, -0.65 + r() * 1.3, 0.008 + r() * 0.035, 0, Math.PI * 2); g.fill(); }
+        g.restore();
+      } });
+    stampC.setLook("solid");
+    const sm = stampC.mesh; const sms = sm.material as THREE.MeshStandardMaterial[];
+    sms[0].transparent = true; sms[0].depthWrite = false; sms[0].bumpMap = null; sms[0].roughness = 0.75; sms[1].visible = false;
+    sm.position.set(2.5, 0.027, 5.9); sm.rotation.set(-Math.PI / 2, 0, 0.09); sm.castShadow = false; this.coverPivot.add(sm);
+    this.stampCard = stampC;
     // folder tab
     this.card(this.coverPivot, roundRect(fw - 0.02, -6.5, 0.45, 2.4, 0.15), { lock: "solid", stock: "manila", thick: 0.05, seed: 9004, inset: false,
       print: (p) => p.text("01", fw + 0.2, -5.4, 0.25, "#4a3a20", { align: "center", font: MONO, rot: Math.PI / 2 }) }, [0, 0, 0], [-Math.PI / 2, 0, 0]);
@@ -427,21 +439,21 @@ export class World {
     tb.position.set(0.3, 0, 0.5); tb.rotation.y = 0.3; c.add(tb);
     // work lamp: kraft tube post + folded kraft cone shade + bulb (the KEY)
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 1.45, 12), new THREE.MeshStandardMaterial({ color: "#6b5236", roughness: 0.85 }));
-    post.position.set(-0.78, 0.72, 0.62); post.castShadow = true; c.add(post);
+    post.position.set(-0.94, 0.75, 0.8); post.castShadow = true; c.add(post);
     const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.04, 20), new THREE.MeshStandardMaterial({ color: "#6b5236", roughness: 0.85 }));
-    foot.position.set(-0.78, 0.02, 0.62); foot.castShadow = foot.receiveShadow = true; c.add(foot);
+    foot.position.set(-0.94, 0.02, 0.8); foot.castShadow = foot.receiveShadow = true; c.add(foot);
     const shade = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.2, 9, 1, true), new THREE.MeshStandardMaterial({ color: "#9a7149", roughness: 0.9, side: THREE.DoubleSide, flatShading: true }));
     c.add(shade);
     this.bulbMat = new THREE.MeshBasicMaterial({ color: untone("#ffe2b0", 3.0) });
     const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 12), this.bulbMat); c.add(bulb);
-    const lampPos = new THREE.Vector3(-0.78, 1.5, 0.62), lampAim = new THREE.Vector3(0.1, 0.7, -0.35);
+    const lampPos = new THREE.Vector3(-0.94, 1.55, 0.8), lampAim = new THREE.Vector3(0.15, 1.0, -1.15);
     const dir = lampAim.clone().sub(lampPos).normalize();
     shade.position.copy(lampPos).addScaledVector(dir, -0.05);
     shade.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
     bulb.position.copy(lampPos).addScaledVector(dir, 0.02);
     this.car.userData.lampPos = lampPos; this.car.userData.lampAim = lampAim;
     // hero tag: printed kraft tag tied to the hitch
-    this.tags.push(this.tag(c, "HOIST ROPES ×4", [0.36, 1.12, ROPE_Z + 0.12], 0.08, 0.13, 7001));
+    this.tags.push(this.tag(c, "HOIST ROPES ×4", [0.14, 1.06, ROPE_Z + 0.12], 0.06, 0.07, 7001));
   }
 
   /** a pinned paper tag: coated tag card with a reinforced punch hole, string, brass pin; faces +z by default */
@@ -467,7 +479,7 @@ export class World {
     const G = new THREE.Group(); G.position.set(GEAR.x, GEAR.y, GEAR.z); this.car.add(G);
     // local frame: x toward the wall (+), z across the blade, y up. Blade tip at local x = RAIL_TIP - GEAR.x.
     // guide blocks (kraft-laminated foil): inclined inner faces, narrower at the top
-    const HG = 0.42, ZO = 0.2;
+    const HG = 0.42, ZO = 0.14;
     for (const face of [-1, 1]) {
       const prof: Pt[] = face > 0
         ? [[BT + 0.085, 0], [ZO, 0], [ZO, HG], [BT + 0.05, HG]]
@@ -486,8 +498,8 @@ export class World {
       const g = new THREE.Group(); G.add(g);
       // profile in (z, y): inner face at z = 0 (relative), teeth along it; outer face inclined (thicker at bottom)
       const teeth: Pt[] = [];
-      const n = 11;
-      for (let i = 0; i <= n; i++) { const y = (i / n) * JH; teeth.push([i % 2 ? 0.0 : 0.012, y]); }
+      const n = 9;
+      for (let i = 0; i <= n; i++) { const y = (i / n) * JH; teeth.push([i % 2 ? 0.0 : 0.016, y]); }
       const prof: Pt[] = [[0.06, 0], ...teeth.slice(0), [0.03, JH]];
       // order: bottom-outer -> along teeth (inner) -> top-outer
       const pts: Pt[] = [[0.072, 0.0], ...teeth.map(([z, y]) => [z, y] as Pt), [0.034, JH]];
@@ -497,16 +509,22 @@ export class World {
       const jc = new Card(shape, { stock: "foil", thick: 0.2, seed: 1520 + face, role: "mech", inset: false, edge: 1.0, metal: 0.85, rough: 0.28 });
       jc.mesh.position.z = 0.2; gb.add(jc.mesh);
       // green printed stock laminated on the near face (inset from the teeth, so the bite edge stays bare foil)
-      const gpts: Pt[] = [[0.066, 0.012], [0.02, 0.012], [0.02, JH - 0.012], [0.038, JH - 0.012]];
+      const gpts: Pt[] = [[0.07, 0.03], [0.03, 0.03], [0.03, JH - 0.03], [0.044, JH - 0.03]];
       const green = new Card(shapeFromPts(gpts.map(([z, y]) => [face > 0 ? -z : z, y] as Pt)), { stock: "green", thick: 0.004, seed: 1530 + face, role: "mech", inset: false,
         print: (p, pp) => { if (!p.bp && !p.xr) p.stroke(pp, "rgba(10,60,30,0.35)", 0.003, true); } });
       green.mesh.position.z = 0.204; gb.add(green.mesh);
       this.jaws.push({ g, face, green });
     }
     // SAFETY GEAR tag on the guide block, facing the insert camera (-x)
-    this.tags.push(this.tag(G, "SAFETY GEAR", [-0.13, 0.5, -0.17], -Math.PI / 2, 0.045, 7002));
+    this.tags.push(this.tag(G, "SAFETY GEAR", [-0.13, 0.5, -0.13], -Math.PI / 2, 0.026, 7002));
     // GUIDE RAIL tag pinned beside the rail blade, a little above
-    this.tags.push(this.tag(G, "GUIDE RAIL", [-0.02, 0.72, 0.06], -Math.PI / 2, 0.04, 7003));
+    this.tags.push(this.tag(G, "GUIDE RAIL", [-0.01, 0.62, 0.03], -Math.PI / 2, 0.022, 7003));
+    // gear inspection lamp: small warm practical clipped to the crosshead, raking down over the teeth
+    this.gearLamp = new THREE.SpotLight("#ffc890", 0, 2.5, 0.55, 0.6, 1.5);
+    this.gearLamp.position.set(GEAR.x - 0.42, GEAR.y + 0.78, 0.32); this.gearLamp.target.position.set(GEAR.x + 0.02, GEAR.y + 0.15, 0);
+    this.gearLamp.shadow.mapSize.set(1024, 1024); this.gearLamp.shadow.bias = -0.0004; this.gearLamp.shadow.normalBias = 0.004; this.gearLamp.shadow.radius = 2;
+    this.gearLamp.shadow.camera.near = 0.05; this.gearLamp.shadow.camera.far = 2;
+    this.car.add(this.gearLamp, this.gearLamp.target);
   }
 
   // ---------------------------------------------------------------- lights
@@ -514,7 +532,7 @@ export class World {
     const s = this.scene;
     this.hemi = new THREE.HemisphereLight("#2b4270", "#2a1d14", 0.6); s.add(this.hemi);
     // KEY: car-top work lamp, warm tungsten, raking from camera-left across Gus and the back wall
-    this.key = new THREE.SpotLight("#ffb46e", 9, 10, 0.62, 0.55, 1.6);
+    this.key = new THREE.SpotLight("#ffb46e", 9, 10, 0.78, 0.5, 1.3);
     this.key.castShadow = true; this.key.shadow.mapSize.set(2048, 2048);
     this.key.shadow.camera.near = 0.1; this.key.shadow.camera.far = 10;
     this.key.shadow.bias = -0.0003; this.key.shadow.normalBias = 0.008; this.key.shadow.radius = 3;
@@ -587,9 +605,10 @@ export class World {
       c.mesh.castShadow = true;
       return c.mesh;
     };
-    const down = arrow(1.0, 0.2, 5001); down.rotation.z = Math.PI; down.position.set(0.62, 1.55, 0.62); this.car.add(down);
-    const brk = arrow(0.55, 0.12, 5003); brk.rotation.z = 0; brk.position.set(0.32, BREAK_Y + 0.1, ROPE_Z + 0.2); this.wallInner.add(brk);
-    this.arrows = [down, brk];
+    const down = arrow(0.62, 0.13, 5001);
+    const dg = new THREE.Group(); dg.position.set(GEAR.x - 0.12, GEAR.y + 0.98, 0.3); dg.rotation.set(0, -Math.PI / 2 + 0.35, 0); this.car.add(dg);
+    down.rotation.z = Math.PI; dg.add(down);
+    this.arrows = [down];
   }
 
   setLook(look: Look) {
@@ -611,10 +630,10 @@ export class World {
     const sol = look === "solid";
     if (sol) {
       this.hemi.color.set("#2b4270"); this.hemi.groundColor.set("#2a1d14"); this.hemi.intensity = 0.55;
-      this.key.color.set("#ffb46e"); this.key.intensity = 11;
-      this.corr.color.set("#ffc27a"); this.corr.intensity = 26;
-      this.vent.color.set("#86a8ff"); this.vent.intensity = 34;
-      this.bounce.intensity = 0.55; this.scene.environmentIntensity = 0.8;
+      this.key.color.set("#ffb46e"); this.key.intensity = 24;
+      this.corr.color.set("#ffc27a"); this.corr.intensity = 45;
+      this.vent.color.set("#86a8ff"); this.vent.intensity = 70;
+      this.bounce.intensity = 1.0; this.scene.environmentIntensity = 0.9;
     } else if (look === "blueprint") {
       this.hemi.color.set("#9fd0ff"); this.hemi.groundColor.set("#0b1a33"); this.hemi.intensity = 0.7;
       this.key.color.set("#d8f2ff"); this.key.intensity = 5;
@@ -706,10 +725,10 @@ export class World {
       j.g.position.set(0, 0.05 * t, -j.face * 0.0 + (j.face > 0 ? 1 : -1) * (BT + 0.03 - 0.03 * t));
       for (const m of j.green.mesh.material as THREE.MeshStandardMaterial[]) {
         if (!m.emissive || st.look === "blueprint") continue;
-        m.emissive = untone(BRAND.green); m.emissiveMap = null; m.emissiveIntensity = 0.25 + 0.55 * st.glow; m.needsUpdate = true;
+        m.emissive = untone(BRAND.green); m.emissiveMap = null; m.emissiveIntensity = 0.04 + 0.7 * st.glow; m.needsUpdate = true;
       }
     }
-    this.clampL.intensity = st.look === "blueprint" ? 0 : 1.8 * st.glow;
+    this.clampL.intensity = st.look === "blueprint" ? 0 : 0.9 * st.glow;
     // sparks (cut paper): fly from the bite toward the camera side (-x)
     this.sparks.forEach((sp, i) => {
       const t = st.clampT - (i % 4) * 0.012;
@@ -720,9 +739,11 @@ export class World {
       (sp.m.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - t / 0.6);
     });
     // alarm practical, arrows, tags
-    this.alarmL.intensity = st.look === "solid" ? 3.5 * st.alarm : 0;
+    this.alarmL.intensity = st.look === "solid" ? 1.4 * st.alarm : 0;
+    this.gearLamp.intensity = st.gearLamp * (st.look === "solid" ? 5 : 2);
+    if (this.gearLamp.castShadow !== st.gearLamp > 0.01) this.gearLamp.castShadow = st.gearLamp > 0.01;
     (this.alarmDome.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.1 + 1.4 * st.alarm;
-    this.arrows.forEach((m, i) => { m.visible = st.arrows > 0.01 && (i === 0 || st.snap >= 0); m.scale.set(1, Math.max(0.001, st.arrows), 1); });
+    this.arrows.forEach((m) => { m.visible = st.arrows > 0.01; m.scale.set(1, Math.max(0.001, st.arrows), 1); });
     this.tags.forEach((t) => (t.visible = st.tags > 0.01));
     this.tags.forEach((t) => (t.scale.setScalar(Math.max(0.001, st.tags))));
     // camera

@@ -108,7 +108,7 @@ export const STOCK: Record<string, PaperStock> = {
   grey: { base: "#7f7b74", mottle: 0.08, core: "#c4beb2", kind: "board" },
   board: { base: "#4a4e57", mottle: 0.07, core: "#b1aa9d", kind: "board" },
   // v2 roles
-  rag: { base: "#59657a", mottle: 0.06, core: "#e9e4d8", kind: "paper" },        // cotton rag board: shaft walls (cool, so warm key + navy fill split cleanly)
+  rag: { base: "#6c7890", mottle: 0.06, core: "#e9e4d8", kind: "paper" },        // cotton rag board: shaft walls (cool, so warm key + navy fill split cleanly)
   ragDeep: { base: "#3f4a5f", mottle: 0.05, core: "#ded8ca", kind: "paper" },
   ragWarm: { base: "#8d877c", mottle: 0.06, core: "#efe9dc", kind: "paper" },    // landing slabs
   foil: { base: "#aeb8c4", mottle: 0.03, core: "#8a8f96", kind: "foil" },        // steel = foil laminated on grey board (grey core shows at cuts)

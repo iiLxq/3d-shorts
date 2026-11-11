@@ -22,9 +22,10 @@
  14.62  f 439  The screens
  15.14  f 454  go dark...  [EMPHASIS:danger]
  15.95  f 478  and the controls
- 16.77  f 503  steering this
- 17.39  f 522  giant glider run
- 18.37  f 551  on hydraulic pressure —
+ 16.77  f 503  steering
+ 17.13  f 514  this giant glider
+ 18.21  f 546  run on
+ 18.51  f 555  hydraulic pressure —
  19.83  f 595  that's draining away.
 
  21.17  f 635  The yoke
@@ -51,8 +52,8 @@
  34.37  f1031  A pinwheel
  35.03  f1051  out a car
  35.51  f1065  window —
- 36.06  f1082  powered by your
- 36.86  f1106  own speed.
+ 36.06  f1082  powered by
+ 36.62  f1099  your own speed.
 
  38.07  f1142  In 1983,
  39.38  f1181  Air Canada 143

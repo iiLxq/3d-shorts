@@ -12325,7 +12325,9 @@ var FONTS = {
   "montserrat-xb": { family: "SubMontserratXB", file: "fonts/Montserrat-ExtraBold.ttf", label: "Montserrat ExtraBold", weight: 800, scale: 1 },
   "montserrat-black": { family: "SubMontserratBlack", file: "fonts/Montserrat-Black.ttf", label: "Montserrat Black", weight: 900, scale: 1 },
   "archivo-black": { family: "SubArchivoBlack", file: "fonts/ArchivoBlack-Regular.ttf", label: "Archivo Black", weight: 400, scale: 1 },
-  "barlow-sc-bold": { family: "SubBarlowSCBold", file: "fonts/BarlowSemiCondensed-Bold.ttf", label: "Barlow Semi Condensed Bold", weight: 700, scale: 1.18 },
+  "barlow-sc-sb": { family: "SubBarlowSCSB", file: "fonts/BarlowSemiCondensed-SemiBold.ttf", label: "Barlow Semi Condensed SemiBold", weight: 600, scale: 1.2 },
+  "barlow-sc-xb": { family: "SubBarlowSCXB", file: "fonts/BarlowSemiCondensed-ExtraBold.ttf", label: "Barlow Semi Condensed ExtraBold", weight: 800, scale: 1.16 },
+  "barlow-sc-bold": { family: "SubBarlowSCBold", file: "fonts/BarlowSemiCondensed-Bold.ttf", label: "Barlow Semi Condensed Bold", weight: 700, scale: 1.1 },
   "poppins-xb": { family: "SubPoppinsXB", file: "fonts/Poppins-ExtraBold.ttf", label: "Poppins ExtraBold", weight: 800, scale: 1 }
 };
 
@@ -12340,6 +12342,9 @@ var warns = [];
 var err = (m) => errors.push(m);
 var warn = (m) => warns.push(m);
 var norm2 = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+var EXCEPTIONS = /* @__PURE__ */ new Set(["more than", "the captain was"]);
+var PHRASAL = /* @__PURE__ */ new Set(["run on", "powered by", "mixed up", "spins up", "pops open"]);
+var WEAK_END = new Set("a an the of to at in on by for with from into onto and or but as than that this these those your my its their his her our like is was are were had has have do does did can could would will".split(" "));
 var ARTPREP = new Set("a an the of in on at to for with by from into and or but that this your my its as than".split(" "));
 var script = tokenizeScript(text).map((w) => w.text + w.after).join(" ");
 var joined = chunks.map((c) => c.text).join(" ");
@@ -12361,7 +12366,13 @@ chunks.forEach((c, i) => {
   if (toks.every((t) => ARTPREP.has(norm2(t)))) err(`${where}: only article/preposition words`);
   if (toks.length === 1 && ARTPREP.has(norm2(toks[0]))) err(`${where}: lone article/preposition`);
   const last = norm2(toks[toks.length - 1]);
-  if (ARTPREP.has(last) && !/[,.;:!?…—]$/.test(c.text)) weakEnds++;
+  const lastTwo = toks.slice(-2).map(norm2).join(" ");
+  if (WEAK_END.has(last) && !/[,.;:!?…—]$/.test(c.text) && !PHRASAL.has(lastTwo)) {
+    if (EXCEPTIONS.has(c.text.toLowerCase().replace(/[^a-z' ]/g, "").trim())) {
+      weakEnds++;
+      warn(`EXCEPTION (documented): chunk ${i} "${c.text}" ends on a function word; no 1-3 word split avoids it`);
+    } else err(`${where}: ends on a dangling function word ("${last}")`);
+  }
   const first = norm2(toks[0]);
   const cand = asr.filter((w) => norm2(w.text) === first && Math.abs(w.start - c.wordStart) < 0.8).sort((a, b) => Math.abs(a.start - c.wordStart) - Math.abs(b.start - c.wordStart))[0];
   if (cand) {
@@ -12379,7 +12390,6 @@ chunks.forEach((c, i) => {
   if (c.emphasis) sentenceEmph.set(c.sentence, (sentenceEmph.get(c.sentence) ?? 0) + 1);
 });
 for (const [s, n] of sentenceEmph) if (n > 1) err(`sentence ${s}: ${n} emphasised chunks`);
-if (weakEnds) warn(`${weakEnds} chunks end in an article/preposition/conjunction (mid-phrase)`);
 var dir = path.resolve("src/lab/subtitles/public");
 var layoutRows = [];
 for (const key of Object.keys(FONTS)) {
