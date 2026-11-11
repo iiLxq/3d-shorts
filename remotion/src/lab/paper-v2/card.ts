@@ -29,6 +29,8 @@ export interface CardOpts {
   edge?: number;
 }
 const _tiles = new Map<string, THREE.Texture>();
+/** bump strength scale: three's bump is per screen pixel, so scale with the buffer (dpr 0.5 preview = 0.5) */
+export const BUMPK = { v: 1 };
 export interface Bounds { x0: number; y0: number; x1: number; y1: number; w: number; h: number }
 
 const REG: Card[] = [];
@@ -182,7 +184,7 @@ export class Card {
       const kind = stock.kind ?? "paper";
       const foil = kind === "foil" || (o.metal ?? 0) > 0.5;
       const face = new THREE.MeshStandardMaterial({
-        map, bumpMap: bump, bumpScale: o.bump ?? (foil ? 1.2 : kind === "coated" ? 0.8 : 2.0),
+        map, bumpMap: bump, bumpScale: BUMPK.v * (o.bump ?? (foil ? 1.2 : kind === "coated" ? 0.8 : 2.0)),
         roughness: o.rough ?? (foil ? 0.34 : kind === "coated" ? 0.62 : kind === "kraft" ? 0.9 : 0.94),
         metalness: o.metal ?? (foil ? 0.88 : 0), envMapIntensity: foil ? 1.0 : 0.25,
       });
